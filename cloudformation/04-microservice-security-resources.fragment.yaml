@@ -1,0 +1,63 @@
+# Part 7 CloudFormation resource fragment.
+# Merge these resources into 04-microservice-stack.yaml.
+# This is NOT a standalone stack.
+#
+# Required in the containing template:
+#   Parameters:
+#     VpcId:
+#       Type: AWS::EC2::VPC::Id
+#     PublicAlbSecurityGroupId:
+#       Type: AWS::EC2::SecurityGroup::Id
+
+Resources:
+  CatalogueSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Catalogue Fargate service - traffic only from public ALB
+      VpcId:
+        Ref: VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          SourceSecurityGroupId:
+            Ref: PublicAlbSecurityGroupId
+          Description: Catalogue API traffic from ALB only
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: HTTPS to ECR CloudWatch DynamoDB S3 and required AWS endpoints
+      Tags:
+        - Key: Name
+          Value: anygroup-gp2-sg-catalogue
+        - Key: Project
+          Value: INFOSYS735-GP2
+        - Key: Environment
+          Value: LearnerLab
+        - Key: ManagedBy
+          Value: CloudFormation
+
+# The containing 04-microservice-stack.yaml also needs an ALB egress rule
+# because the ALB Security Group is owned by the core stack:
+#
+#   AlbToCatalogueEgress:
+#     Type: AWS::EC2::SecurityGroupEgress
+#     Properties:
+#       GroupId:
+#         Ref: PublicAlbSecurityGroupId
+#       IpProtocol: tcp
+#       FromPort: 8080
+#       ToPort: 8080
+#       DestinationSecurityGroupId:
+#         Ref: CatalogueSecurityGroup
+#       Description: ALB to catalogue Fargate service
+#
+# Whether this rule is placed in the core or microservice stack should be
+# decided by dependency direction in Part 12. Do not create duplicate rules.
+
+Outputs:
+  CatalogueSecurityGroupId:
+    Value:
+      Ref: CatalogueSecurityGroup

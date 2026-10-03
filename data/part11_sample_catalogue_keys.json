@@ -1,0 +1,17 @@
+[
+  {
+    "product_id": "P1001",
+    "name": "New Zealand Honey",
+    "image_key": "products/P1001.jpg"
+  },
+  {
+    "product_id": "P1002",
+    "name": "Fresh Apples",
+    "image_key": "products/P1002.jpg"
+  },
+  {
+    "product_id": "P1003",
+    "name": "Whole Milk",
+    "image_key": "products/P1003.jpg"
+  }
+]

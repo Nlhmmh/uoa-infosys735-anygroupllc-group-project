@@ -1,0 +1,221 @@
+# Part 7 CloudFormation resource fragment.
+# Merge these resources into 02-core-infrastructure-stack.yaml.
+# This is NOT a standalone stack.
+#
+# Required in the containing template:
+#   Parameters:
+#     VpcId:
+#       Type: AWS::EC2::VPC::Id
+#
+# The later ALB/EC2 resources should reference these Security Groups by logical ID.
+
+Resources:
+  PublicAlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Public ALB - internet HTTP ingress and restricted tier egress
+      VpcId:
+        Ref: VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: Public HTTP for Learner Lab demo
+      SecurityGroupEgress: []
+      Tags:
+        - Key: Name
+          Value: anygroup-gp2-sg-public-alb
+        - Key: Project
+          Value: INFOSYS735-GP2
+        - Key: Environment
+          Value: LearnerLab
+        - Key: ManagedBy
+          Value: CloudFormation
+
+  FrontendSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Frontend EC2 - HTTP only from ALB
+      VpcId:
+        Ref: VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+      Tags:
+        - Key: Name
+          Value: anygroup-gp2-sg-frontend
+        - Key: Project
+          Value: INFOSYS735-GP2
+        - Key: Environment
+          Value: LearnerLab
+        - Key: ManagedBy
+          Value: CloudFormation
+
+  BackendSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Legacy backend - application traffic only from ALB
+      VpcId:
+        Ref: VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+      Tags:
+        - Key: Name
+          Value: anygroup-gp2-sg-backend
+        - Key: Project
+          Value: INFOSYS735-GP2
+        - Key: Environment
+          Value: LearnerLab
+        - Key: ManagedBy
+          Value: CloudFormation
+
+  DbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Dummy DB tier - Oracle-like listener only from backend
+      VpcId:
+        Ref: VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+      Tags:
+        - Key: Name
+          Value: anygroup-gp2-sg-db
+        - Key: Project
+          Value: INFOSYS735-GP2
+        - Key: Environment
+          Value: LearnerLab
+        - Key: ManagedBy
+          Value: CloudFormation
+
+  AlbToFrontendEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: PublicAlbSecurityGroup
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      DestinationSecurityGroupId:
+        Ref: FrontendSecurityGroup
+      Description: ALB to frontend HTTP
+
+  FrontendFromAlbIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Ref: FrontendSecurityGroup
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      SourceSecurityGroupId:
+        Ref: PublicAlbSecurityGroup
+      Description: Frontend HTTP only from ALB
+
+  AlbToBackendEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: PublicAlbSecurityGroup
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+      DestinationSecurityGroupId:
+        Ref: BackendSecurityGroup
+      Description: ALB to legacy backend API
+
+  BackendFromAlbIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Ref: BackendSecurityGroup
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+      SourceSecurityGroupId:
+        Ref: PublicAlbSecurityGroup
+      Description: Backend API only from ALB
+
+  BackendToDbEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: BackendSecurityGroup
+      IpProtocol: tcp
+      FromPort: 1521
+      ToPort: 1521
+      DestinationSecurityGroupId:
+        Ref: DbSecurityGroup
+      Description: Backend to dummy Oracle-like DB tier
+
+  DbFromBackendIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Ref: DbSecurityGroup
+      IpProtocol: tcp
+      FromPort: 1521
+      ToPort: 1521
+      SourceSecurityGroupId:
+        Ref: BackendSecurityGroup
+      Description: DB listener only from backend
+
+  FrontendHttpEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: FrontendSecurityGroup
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      CidrIp: 0.0.0.0/0
+      Description: Package/update HTTP through NAT
+
+  FrontendHttpsEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: FrontendSecurityGroup
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      CidrIp: 0.0.0.0/0
+      Description: SSM/package HTTPS through NAT
+
+  BackendHttpEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: BackendSecurityGroup
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      CidrIp: 0.0.0.0/0
+      Description: Package/update HTTP through NAT
+
+  BackendHttpsEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: BackendSecurityGroup
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      CidrIp: 0.0.0.0/0
+      Description: SSM/AWS service HTTPS through NAT
+
+Outputs:
+  PublicAlbSecurityGroupId:
+    Value:
+      Ref: PublicAlbSecurityGroup
+
+  FrontendSecurityGroupId:
+    Value:
+      Ref: FrontendSecurityGroup
+
+  BackendSecurityGroupId:
+    Value:
+      Ref: BackendSecurityGroup
+
+  DbSecurityGroupId:
+    Value:
+      Ref: DbSecurityGroup

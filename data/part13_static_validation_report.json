@@ -1,0 +1,16 @@
+{
+  "status": "LOCAL_STATIC_VALIDATION_COMPLETE",
+  "aws_runtime_validation": "NOT_PERFORMED",
+  "revision": "two backend EC2 via ASG; dummy DB primary+standby; public+internal ALB; modern storefront with product cards/status",
+  "baseline_ec2_count": 7,
+  "frontend_peak_ec2_count": 9,
+  "resource_counts": {
+    "01-network-stack.yaml": 44,
+    "02-core-infrastructure-stack_UPDATED.yaml": 32,
+    "03-observability-stack_UPDATED.yaml": 7,
+    "04-microservice-stack_UPDATED.yaml": 11
+  },
+  "total_declared_resources": 94,
+  "matched_imports": 35,
+  "unmatched_imports": []
+}

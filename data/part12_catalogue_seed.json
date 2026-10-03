@@ -1,0 +1,26 @@
+[
+  {
+    "product_id": "P1001",
+    "name": "New Zealand Honey",
+    "category": "Grocery",
+    "price": 14.99,
+    "availability": true,
+    "image_key": "products/P1001.jpg"
+  },
+  {
+    "product_id": "P1002",
+    "name": "Fresh Apples",
+    "category": "Fresh Produce",
+    "price": 5.49,
+    "availability": true,
+    "image_key": "products/P1002.jpg"
+  },
+  {
+    "product_id": "P1003",
+    "name": "Whole Milk",
+    "category": "Dairy",
+    "price": 4.79,
+    "availability": true,
+    "image_key": "products/P1003.jpg"
+  }
+]

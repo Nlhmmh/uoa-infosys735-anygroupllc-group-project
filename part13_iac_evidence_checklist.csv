@@ -1,0 +1,21 @@
+ID,Area,Evidence,Expected,Status
+IAC-01,Static validation,All 4 YAML templates parse locally,PASS,Local PASS
+IAC-02,Cross-stack,Every ImportValue resolves to a declared export,PASS,Local PASS
+IAC-03,Dependencies,Dependency graph is acyclic,PASS,Local PASS
+IAC-04,AWS validation,aws cloudformation validate-template for all stacks,PASS,Pending live AWS
+IAC-05,Network create,anygroup-gp2-network,CREATE_COMPLETE,Pending live AWS
+IAC-06,Core create/update,anygroup-gp2-core,CREATE/UPDATE_COMPLETE,Pending live AWS
+IAC-07,Observability create,anygroup-gp2-observability,CREATE_COMPLETE,Pending live AWS
+IAC-08,Microservice phase 1,DeployService=false,CREATE_COMPLETE,Pending live AWS
+IAC-09,ECR delivery,v1 image pushed,Image visible,Pending live AWS
+IAC-10,DynamoDB data,seed items inserted,P1001-P1003 visible,Pending live AWS
+IAC-11,Microservice phase 2,DeployService=true,UPDATE_COMPLETE,Pending live AWS
+IAC-12,Feature routing,/catalogue/* listener rule,Route active,Pending live AWS
+IAC-13,Coexistence,"/, /api/*, /catalogue/*",All work simultaneously,Pending Part 14
+IAC-14,Update,Change image v1→v2 or safe parameter,UPDATE_COMPLETE,Pending live AWS
+IAC-15,Source of truth,No manual duplicate infrastructure,Confirmed,Pending team audit
+IAC-16,Teardown,Delete dependency order,All stacks DELETE_COMPLETE,Pending live AWS
+IAC-17,S3 cleanup,Bucket emptied before core delete,No DELETE_FAILED,Pending live AWS
+IAC-18,ECR cleanup,Images/repository removed with micro stack,No orphan repository/images,Pending live AWS
+IAC-19,Recreate,Redeploy after teardown,Same intended architecture,Pending live AWS
+IAC-20,Inventory,Final resources match templates,No unexpected manual resources,Pending team audit

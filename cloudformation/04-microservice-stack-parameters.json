@@ -1,0 +1,38 @@
+[
+  {
+    "ParameterKey": "EnvironmentName",
+    "ParameterValue": "anygroup-gp2"
+  },
+  {
+    "ParameterKey": "NetworkStackName",
+    "ParameterValue": "anygroup-gp2-network"
+  },
+  {
+    "ParameterKey": "CoreStackName",
+    "ParameterValue": "anygroup-gp2-core"
+  },
+  {
+    "ParameterKey": "ObservabilityStackName",
+    "ParameterValue": "anygroup-gp2-observability"
+  },
+  {
+    "ParameterKey": "LabRoleName",
+    "ParameterValue": "LabRole"
+  },
+  {
+    "ParameterKey": "ContainerImageTag",
+    "ParameterValue": "v1"
+  },
+  {
+    "ParameterKey": "CatalogueDesiredCount",
+    "ParameterValue": "2"
+  },
+  {
+    "ParameterKey": "DeployService",
+    "ParameterValue": "false"
+  },
+  {
+    "ParameterKey": "EnableCatalogueAlarm",
+    "ParameterValue": "true"
+  }
+]

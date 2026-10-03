@@ -1,0 +1,1357 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  INFOSYS 735 GP2 - AnyGroupLLC updated Learner Lab core infrastructure. Creates a public ALB, frontend ASG across two AZs,
+  internal ALB, legacy backend ASG across two AZs, dummy DB primary/standby nodes across private DB subnets, private S3 catalogue
+  image storage, security controls and frontend scaling. Frontend Apache reverse-proxies /api/* and /catalogue/* to the internal
+  ALB.
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: anygroup-gp2
+
+  NetworkStackName:
+    Type: String
+    Default: anygroup-gp2-network
+    Description: Name of the deployed Part 6 network CloudFormation stack.
+
+  ApplicationAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+    Description: Amazon Linux 2023 AMI resolved through AWS public SSM parameter.
+
+  ExistingInstanceProfileName:
+    Type: String
+    Default: LabInstanceProfile
+    Description: Existing AWS Academy Learner Lab instance profile.
+
+  FrontendInstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+    - t3.nano
+    - t3.micro
+    - t3.small
+    - t3.medium
+    - t3.large
+
+  BackendInstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+    - t3.nano
+    - t3.micro
+    - t3.small
+    - t3.medium
+    - t3.large
+
+  BackendMinSize:
+    Type: Number
+    Default: 2
+    MinValue: 2
+    MaxValue: 2
+    Description: Backend ASG minimum; fixed at two for one backend per AZ at steady state.
+  BackendDesiredCapacity:
+    Type: Number
+    Default: 2
+    MinValue: 2
+    MaxValue: 2
+    Description: Backend ASG desired capacity across the two private app subnets.
+  BackendMaxSize:
+    Type: Number
+    Default: 2
+    MinValue: 2
+    MaxValue: 2
+    Description: Backend ASG maximum; fixed at two to protect Learner Lab EC2 quota.
+  DbInstanceType:
+    Type: String
+    Default: t3.micro
+    AllowedValues:
+    - t3.nano
+    - t3.micro
+    - t3.small
+    - t3.medium
+    - t3.large
+
+  FrontendMinSize:
+    Type: Number
+    Default: 2
+    MinValue: 1
+    MaxValue: 4
+
+  FrontendDesiredCapacity:
+    Type: Number
+    Default: 2
+    MinValue: 1
+    MaxValue: 4
+
+  FrontendMaxSize:
+    Type: Number
+    Default: 4
+    MinValue: 2
+    MaxValue: 6
+
+  FrontendRequestCountTarget:
+    Type: Number
+    Default: 50
+    MinValue: 10
+    MaxValue: 1000
+    Description: >
+      Target ALB requests per frontend target per minute. The low Learner Lab
+      default is intentional so scaling can be demonstrated with a small load test.
+
+Resources:
+  PublicAlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Public ALB - public HTTP ingress and restricted tier egress
+      VpcId:
+        Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-VpcId
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+        Description: Public HTTP for Learner Lab demo
+      SecurityGroupEgress: []
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-sg-public-alb
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Core
+
+  InternalAlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Internal ALB - service traffic only from frontend EC2
+      VpcId:
+        Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-sg-internal-alb
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Core
+  FrontendSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Frontend EC2 - HTTP from public ALB and reverse-proxy access to internal ALB
+      VpcId:
+        Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-sg-frontend
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Core
+
+  BackendSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Legacy backend ASG - API traffic only from internal ALB
+      VpcId:
+        Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-sg-backend
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Core
+
+  DbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Dummy DB primary/standby - TCP 1521 only from backend
+      VpcId:
+        Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-VpcId
+      SecurityGroupIngress: []
+      SecurityGroupEgress: []
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-sg-db
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Core
+
+  AlbToFrontendEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: PublicAlbSecurityGroup
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      DestinationSecurityGroupId:
+        Ref: FrontendSecurityGroup
+      Description: ALB to frontend HTTP
+
+  FrontendFromAlbIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Ref: FrontendSecurityGroup
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      SourceSecurityGroupId:
+        Ref: PublicAlbSecurityGroup
+      Description: Frontend HTTP only from ALB
+
+  InternalAlbFromFrontendIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Ref: InternalAlbSecurityGroup
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      SourceSecurityGroupId:
+        Ref: FrontendSecurityGroup
+      Description: Frontend EC2 to internal ALB HTTP
+  InternalAlbToBackendEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: InternalAlbSecurityGroup
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+      DestinationSecurityGroupId:
+        Ref: BackendSecurityGroup
+      Description: Internal ALB to legacy backend API
+  BackendFromInternalAlbIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Ref: BackendSecurityGroup
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+      SourceSecurityGroupId:
+        Ref: InternalAlbSecurityGroup
+      Description: Backend API only from internal ALB
+  BackendToDbEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: BackendSecurityGroup
+      IpProtocol: tcp
+      FromPort: 1521
+      ToPort: 1521
+      DestinationSecurityGroupId:
+        Ref: DbSecurityGroup
+      Description: Backend to dummy Oracle-like DB tier
+
+  DbFromBackendIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId:
+        Ref: DbSecurityGroup
+      IpProtocol: tcp
+      FromPort: 1521
+      ToPort: 1521
+      SourceSecurityGroupId:
+        Ref: BackendSecurityGroup
+      Description: DB listener only from backend
+
+  FrontendHttpEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: FrontendSecurityGroup
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      CidrIp: 0.0.0.0/0
+      Description: Package installation through NAT
+
+  FrontendHttpsEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: FrontendSecurityGroup
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      CidrIp: 0.0.0.0/0
+      Description: SSM and HTTPS through NAT
+
+  BackendHttpEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: BackendSecurityGroup
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      CidrIp: 0.0.0.0/0
+      Description: Package installation through NAT
+
+  BackendHttpsEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Ref: BackendSecurityGroup
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      CidrIp: 0.0.0.0/0
+      Description: SSM and AWS service HTTPS through NAT
+
+  DummyDbPrimaryInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId:
+        Ref: ApplicationAmiId
+      InstanceType:
+        Ref: DbInstanceType
+      SubnetId:
+        Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-PrivateDbSubnetAId
+      SecurityGroupIds:
+      - Ref: DbSecurityGroup
+      MetadataOptions:
+        HttpEndpoint: enabled
+        HttpTokens: required
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          set -eux
+
+          cat > /opt/anygroup_dummy_db.py <<'PY'
+          import socket
+
+          HOST = "0.0.0.0"
+          PORT = 1521
+          MESSAGE = b"ANYGROUP-DUMMY-DB-PRIMARY OK\n"
+
+          with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
+              server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+              server.bind((HOST, PORT))
+              server.listen(20)
+              while True:
+                  conn, addr = server.accept()
+                  with conn:
+                      conn.sendall(MESSAGE)
+          PY
+
+          cat > /etc/systemd/system/anygroup-dummy-db.service <<'EOF'
+          [Unit]
+          Description=AnyGroupLLC Dummy DB Primary Listener
+          After=network.target
+
+          [Service]
+          Type=simple
+          ExecStart=/usr/bin/python3 /opt/anygroup_dummy_db.py
+          Restart=always
+          RestartSec=2
+
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+
+          systemctl daemon-reload
+          systemctl enable --now anygroup-dummy-db.service
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-dummy-db-primary
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Tier
+        Value: Database
+  DummyDbStandbyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId:
+        Ref: ApplicationAmiId
+      InstanceType:
+        Ref: DbInstanceType
+      SubnetId:
+        Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-PrivateDbSubnetBId
+      SecurityGroupIds:
+      - Ref: DbSecurityGroup
+      MetadataOptions:
+        HttpEndpoint: enabled
+        HttpTokens: required
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          set -eux
+
+          cat > /opt/anygroup_dummy_db.py <<'PY'
+          import socket
+
+          HOST = "0.0.0.0"
+          PORT = 1521
+          MESSAGE = b"ANYGROUP-DUMMY-DB-STANDBY OK\n"
+
+          with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
+              server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+              server.bind((HOST, PORT))
+              server.listen(20)
+              while True:
+                  conn, addr = server.accept()
+                  with conn:
+                      conn.sendall(MESSAGE)
+          PY
+
+          cat > /etc/systemd/system/anygroup-dummy-db.service <<'EOF'
+          [Unit]
+          Description=AnyGroupLLC Dummy DB Standby Listener
+          After=network.target
+
+          [Service]
+          Type=simple
+          ExecStart=/usr/bin/python3 /opt/anygroup_dummy_db.py
+          Restart=always
+          RestartSec=2
+
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+
+          systemctl daemon-reload
+          systemctl enable --now anygroup-dummy-db.service
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-dummy-db-standby
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Tier
+        Value: Database
+  BackendLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName:
+        Fn::Sub: ${EnvironmentName}-backend-lt
+      LaunchTemplateData:
+        ImageId:
+          Ref: ApplicationAmiId
+        InstanceType:
+          Ref: BackendInstanceType
+        IamInstanceProfile:
+          Name:
+            Ref: ExistingInstanceProfileName
+        SecurityGroupIds:
+        - Ref: BackendSecurityGroup
+        MetadataOptions:
+          HttpEndpoint: enabled
+          HttpTokens: required
+        TagSpecifications:
+        - ResourceType: instance
+          Tags:
+          - Key: Name
+            Value:
+              Fn::Sub: ${EnvironmentName}-backend
+          - Key: Project
+            Value: INFOSYS735-GP2
+          - Key: Environment
+            Value: LearnerLab
+          - Key: ManagedBy
+            Value: CloudFormation
+          - Key: Tier
+            Value: Application
+        UserData:
+          Fn::Base64:
+            Fn::Sub:
+            - |
+              #!/bin/bash
+              set -eux
+
+              cat > /opt/anygroup_backend.py <<'PY'
+              import json
+              import socket
+              import urllib.request
+              from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+              DBS = [
+                  {"role": "primary", "host": "${PrimaryDbIp}", "port": 1521},
+                  {"role": "standby", "host": "${StandbyDbIp}", "port": 1521},
+              ]
+
+              def metadata(path):
+                  try:
+                      req = urllib.request.Request(
+                          "http://169.254.169.254/latest/api/token",
+                          method="PUT",
+                          headers={"X-aws-ec2-metadata-token-ttl-seconds": "21600"},
+                      )
+                      token = urllib.request.urlopen(req, timeout=1).read().decode()
+                      req = urllib.request.Request(
+                          "http://169.254.169.254/latest/meta-data/" + path,
+                          headers={"X-aws-ec2-metadata-token": token},
+                      )
+                      return urllib.request.urlopen(req, timeout=1).read().decode()
+                  except Exception:
+                      return "unknown"
+
+              INSTANCE_ID = metadata("instance-id")
+              AZ = metadata("placement/availability-zone")
+
+              def check_db(db):
+                  try:
+                      with socket.create_connection((db["host"], db["port"]), timeout=3) as sock:
+                          response = sock.recv(1024).decode("utf-8").strip()
+                      return {
+                          "role": db["role"], "status": "reachable",
+                          "host": db["host"], "port": db["port"], "response": response,
+                      }
+                  except Exception as exc:
+                      return {
+                          "role": db["role"], "status": "unreachable",
+                          "host": db["host"], "port": db["port"], "error": str(exc),
+                      }
+
+              class Handler(BaseHTTPRequestHandler):
+                  def send_json(self, payload, status=200):
+                      body = json.dumps(payload, indent=2).encode("utf-8")
+                      self.send_response(status)
+                      self.send_header("Content-Type", "application/json")
+                      self.send_header("Content-Length", str(len(body)))
+                      self.send_header("Cache-Control", "no-store")
+                      self.end_headers()
+                      self.wfile.write(body)
+
+                  def do_GET(self):
+                      if self.path == "/api/health":
+                          self.send_json({
+                              "service": "legacy-backend",
+                              "status": "healthy",
+                              "instance_id": INSTANCE_ID,
+                              "availability_zone": AZ,
+                              "host": socket.gethostname(),
+                          })
+                          return
+
+                      if self.path == "/api/orders":
+                          self.send_json({
+                              "service": "legacy-backend",
+                              "orders": [
+                                  {"order_id": "ORD-1001", "status": "Processing"},
+                                  {"order_id": "ORD-1002", "status": "Ready"},
+                              ],
+                          })
+                          return
+
+                      if self.path == "/api/account":
+                          self.send_json({
+                              "service": "legacy-backend",
+                              "customer": {"name": "Demo Customer", "status": "Active"},
+                          })
+                          return
+
+                      if self.path == "/api/db":
+                          checks = [check_db(db) for db in DBS]
+                          all_reachable = all(item["status"] == "reachable" for item in checks)
+                          self.send_json({
+                              "service": "legacy-backend",
+                              "backend_instance_id": INSTANCE_ID,
+                              "backend_availability_zone": AZ,
+                              "database_tier": "dummy primary/standby multi-AZ representation",
+                              "all_reachable": all_reachable,
+                              "databases": checks,
+                              "note": "The two EC2 database nodes simulate placement/connectivity only; this is not RDS replication.",
+                          }, status=200 if all_reachable else 503)
+                          return
+
+                      self.send_json({"error": "not_found", "path": self.path}, status=404)
+
+                  def log_message(self, fmt, *args):
+                      print("%s - %s" % (self.address_string(), fmt % args), flush=True)
+
+              ThreadingHTTPServer(("0.0.0.0", 8080), Handler).serve_forever()
+              PY
+
+              cat > /etc/systemd/system/anygroup-backend.service <<'EOF'
+              [Unit]
+              Description=AnyGroupLLC Legacy Backend Demo API
+              After=network-online.target
+              Wants=network-online.target
+
+              [Service]
+              Type=simple
+              ExecStart=/usr/bin/python3 /opt/anygroup_backend.py
+              Restart=always
+              RestartSec=2
+
+              [Install]
+              WantedBy=multi-user.target
+              EOF
+
+              systemctl daemon-reload
+              systemctl enable --now anygroup-backend.service
+            - PrimaryDbIp:
+                Fn::GetAtt:
+                - DummyDbPrimaryInstance
+                - PrivateIp
+              StandbyDbIp:
+                Fn::GetAtt:
+                - DummyDbStandbyInstance
+                - PrivateIp
+      TagSpecifications:
+      - ResourceType: launch-template
+        Tags:
+        - Key: Name
+          Value:
+            Fn::Sub: ${EnvironmentName}-backend-lt
+        - Key: Project
+          Value: INFOSYS735-GP2
+        - Key: Environment
+          Value: LearnerLab
+        - Key: ManagedBy
+          Value: CloudFormation
+  BackendTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name:
+        Fn::Sub: ${EnvironmentName}-backend-tg
+      VpcId:
+        Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-VpcId
+      Protocol: HTTP
+      Port: 8080
+      TargetType: instance
+      HealthCheckEnabled: true
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: traffic-port
+      HealthCheckPath: /api/health
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      Matcher:
+        HttpCode: '200'
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+
+      TargetGroupAttributes:
+      - Key: deregistration_delay.timeout_seconds
+        Value: '30'
+  InternalApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name:
+        Fn::Sub: ${EnvironmentName}-internal-alb
+      Scheme: internal
+      Type: application
+      IpAddressType: ipv4
+      SecurityGroups:
+      - Ref: InternalAlbSecurityGroup
+      Subnets:
+      - Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-PrivateAppSubnetAId
+      - Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-PrivateAppSubnetBId
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Core
+  InternalHttpListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn:
+        Ref: InternalApplicationLoadBalancer
+      Protocol: HTTP
+      Port: 80
+      DefaultActions:
+      - Type: fixed-response
+        FixedResponseConfig:
+          StatusCode: '404'
+          ContentType: application/json
+          MessageBody: '{"error":"route_not_found"}'
+  BackendApiInternalListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn:
+        Ref: InternalHttpListener
+      Priority: 100
+      Conditions:
+      - Field: path-pattern
+        PathPatternConfig:
+          Values:
+          - /api
+          - /api/*
+      Actions:
+      - Type: forward
+        TargetGroupArn:
+          Ref: BackendTargetGroup
+  BackendAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn:
+    - BackendApiInternalListenerRule
+    Properties:
+      AutoScalingGroupName:
+        Fn::Sub: ${EnvironmentName}-backend-asg
+      VPCZoneIdentifier:
+      - Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-PrivateAppSubnetAId
+      - Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-PrivateAppSubnetBId
+      LaunchTemplate:
+        LaunchTemplateId:
+          Ref: BackendLaunchTemplate
+        Version:
+          Fn::GetAtt:
+          - BackendLaunchTemplate
+          - LatestVersionNumber
+      MinSize:
+        Ref: BackendMinSize
+      MaxSize:
+        Ref: BackendMaxSize
+      DesiredCapacity:
+        Ref: BackendDesiredCapacity
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 180
+      DefaultInstanceWarmup: 120
+      MetricsCollection:
+      - Granularity: 1Minute
+        Metrics:
+        - GroupDesiredCapacity
+        - GroupInServiceInstances
+        - GroupPendingInstances
+        - GroupTerminatingInstances
+        - GroupTotalInstances
+      TargetGroupARNs:
+      - Ref: BackendTargetGroup
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-backend
+        PropagateAtLaunch: true
+      - Key: Project
+        Value: INFOSYS735-GP2
+        PropagateAtLaunch: true
+      - Key: ManagedBy
+        Value: CloudFormation
+        PropagateAtLaunch: true
+  FrontendLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName:
+        Fn::Sub: ${EnvironmentName}-frontend-lt
+      LaunchTemplateData:
+        ImageId:
+          Ref: ApplicationAmiId
+        InstanceType:
+          Ref: FrontendInstanceType
+        IamInstanceProfile:
+          Name:
+            Ref: ExistingInstanceProfileName
+        SecurityGroupIds:
+        - Ref: FrontendSecurityGroup
+        MetadataOptions:
+          HttpEndpoint: enabled
+          HttpTokens: required
+        TagSpecifications:
+        - ResourceType: instance
+          Tags:
+          - Key: Name
+            Value:
+              Fn::Sub: ${EnvironmentName}-frontend
+          - Key: Project
+            Value: INFOSYS735-GP2
+          - Key: Environment
+            Value: LearnerLab
+          - Key: ManagedBy
+            Value: CloudFormation
+          - Key: Tier
+            Value: Web
+        UserData:
+          Fn::Base64:
+            Fn::Sub:
+            - |
+              #!/bin/bash
+              set -eux
+
+              dnf install -y httpd
+              systemctl enable httpd
+
+              TOKEN=$(curl -sS -X PUT \
+                -H "X-aws-ec2-metadata-token-ttl-seconds: 21600" \
+                http://169.254.169.254/latest/api/token || true)
+
+              INSTANCE_ID=$(curl -sS \
+                -H "X-aws-ec2-metadata-token: ${!TOKEN}" \
+                http://169.254.169.254/latest/meta-data/instance-id || echo unknown)
+
+              AZ=$(curl -sS \
+                -H "X-aws-ec2-metadata-token: ${!TOKEN}" \
+                http://169.254.169.254/latest/meta-data/placement/availability-zone || echo unknown)
+
+              cat > /etc/httpd/conf.d/anygroup-proxy.conf <<EOF
+              ProxyRequests Off
+              ProxyPreserveHost On
+
+              ProxyPass        /api/        http://${InternalAlbDns}/api/
+              ProxyPassReverse /api/        http://${InternalAlbDns}/api/
+
+              ProxyPass        /catalogue/  http://${InternalAlbDns}/catalogue/
+              ProxyPassReverse /catalogue/  http://${InternalAlbDns}/catalogue/
+              EOF
+
+              cat > /var/www/html/index.html <<EOF
+              <!doctype html>
+              <html lang="en">
+              <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width,initial-scale=1">
+                <title>AnyGroup Market</title>
+                <style>
+                  :root{--ink:#183027;--muted:#66736d;--line:#e3e9e5;--paper:#fbfcfb;--panel:#fff;--brand:#2f7656;--brand2:#e8f4ed;--good:#1f7a4f;--shadow:0 16px 38px rgba(36,65,52,.10)}
+                  *{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--paper);color:var(--ink)}
+                  a{color:inherit;text-decoration:none}header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+                  .nav{max-width:1180px;margin:auto;min-height:74px;padding:0 24px;display:flex;align-items:center;gap:24px}.brand{font-size:22px;font-weight:850;color:var(--brand)}.brand span{color:var(--ink)}
+                  .navlinks{display:flex;gap:22px;margin-left:auto;color:var(--muted);font-size:14px}.cart{border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;font-weight:800}
+                  .hero{max-width:1180px;margin:34px auto 18px;padding:0 24px}.heroBox{border-radius:28px;overflow:hidden;min-height:330px;padding:56px;display:grid;grid-template-columns:1.15fr .85fr;align-items:center;background:linear-gradient(135deg,#eaf5ee,#f8f2e7);box-shadow:var(--shadow)}
+                  .eyebrow{color:var(--brand);font-size:13px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}h1{margin:10px 0 16px;max-width:650px;font-size:clamp(42px,6vw,72px);line-height:.98;letter-spacing:-.055em}.lead{max-width:580px;color:var(--muted);font-size:18px;line-height:1.65}
+                  .actions{margin-top:28px;display:flex;gap:12px;flex-wrap:wrap}.btn{border:none;border-radius:12px;padding:13px 18px;font-weight:800;cursor:pointer}.primary{background:var(--brand);color:#fff}.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+                  .heroArt{display:flex;justify-content:center}.basket{width:min(320px,90%);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 38% 35%,#fff 0 15%,#f5d79a 16% 31%,#8dc5a2 32% 47%,#f2b868 48% 63%,#d8eadf 64%);box-shadow:inset 0 0 0 20px rgba(255,255,255,.42),0 24px 45px rgba(53,100,74,.18)}
+                  main{max-width:1180px;margin:auto;padding:18px 24px 60px}.sectionHead{display:flex;align-items:end;justify-content:space-between;gap:20px;margin:34px 0 18px}.sectionHead h2{margin:0;font-size:28px;letter-spacing:-.03em}.sectionHead p{margin:5px 0 0;color:var(--muted)}
+                  .search{width:min(320px,100%);border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}.products{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+                  .product{overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:20px;box-shadow:0 10px 28px rgba(34,57,47,.06);transition:.18s}.product:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+                  .productImage{aspect-ratio:4/3;background:#eef2ef;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#829087}.productImage img{width:100%;height:100%;object-fit:cover}.productBody{padding:18px}.category{color:var(--brand);font-size:12px;text-transform:uppercase;font-weight:850;letter-spacing:.09em}.product h3{margin:7px 0 4px;font-size:19px}
+                  .priceRow{display:flex;align-items:center;justify-content:space-between;margin-top:18px}.price{font-size:22px;font-weight:850}.stock{color:var(--good);font-size:12px;font-weight:800}.add{width:100%;margin-top:14px;background:var(--brand2);color:var(--brand)}
+                  .empty{grid-column:1/-1;padding:30px;border:1px dashed var(--line);border-radius:18px;color:var(--muted);background:#fff}.statusWrap{margin-top:48px;border:1px solid var(--line);border-radius:24px;background:#fff;padding:24px}
+                  .statusGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}.statusCard{border:1px solid var(--line);border-radius:16px;padding:17px;background:#fcfdfc}.statusTop{display:flex;justify-content:space-between;gap:10px}.statusTitle{font-weight:850}
+                  .pill{font-size:11px;font-weight:850;padding:5px 8px;border-radius:999px;background:#eef2ef;color:var(--muted)}.pill.good{background:#e8f5ee;color:var(--good)}.pill.bad{background:#fff0ec;color:#a53a28}.statusBody{margin-top:12px;color:var(--muted);font-size:13px;line-height:1.7;min-height:66px}.techNote{margin-top:16px;color:var(--muted);font-size:12px;line-height:1.6}
+                  footer{border-top:1px solid var(--line);color:var(--muted);padding:30px 24px 40px;text-align:center;font-size:13px}@media(max-width:850px){.heroBox{grid-template-columns:1fr;padding:36px}.heroArt{display:none}.products{grid-template-columns:repeat(2,1fr)}.statusGrid{grid-template-columns:1fr}.navlinks{display:none}}@media(max-width:560px){.products{grid-template-columns:1fr}.sectionHead{align-items:stretch;flex-direction:column}.heroBox{padding:30px 24px}}
+                </style>
+              </head>
+              <body>
+              <header><div class="nav"><a class="brand" href="/">AnyGroup <span>Market</span></a><nav class="navlinks"><a href="#products">Products</a><a href="#platform">Platform status</a></nav><div class="cart">Cart <span id="cartCount">0</span></div></div></header>
+
+              <section class="hero"><div class="heroBox"><div><div class="eyebrow">Fresh everyday essentials</div><h1>Good food, made simple.</h1><p class="lead">Browse a small live catalogue powered by AnyGroup's cloud platform. Product information and images are loaded dynamically while existing customer services remain available.</p><div class="actions"><button class="btn primary" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Shop products</button><button class="btn ghost" onclick="refreshStatus()">Refresh platform status</button></div></div><div class="heroArt"><div class="basket"></div></div></div></section>
+
+              <main>
+              <section id="products"><div class="sectionHead"><div><h2>Featured products</h2><p>Live catalogue products with images stored privately in S3.</p></div><input id="search" class="search" type="search" placeholder="Search products..." oninput="renderProducts()"></div><div id="productGrid" class="products"><div class="empty">Loading catalogue…</div></div></section>
+
+              <section id="platform" class="statusWrap"><div class="sectionHead" style="margin:0"><div><h2>Live platform status</h2><p>A compact technical view for the cloud demonstration.</p></div><button class="btn ghost" onclick="refreshStatus()">Refresh</button></div>
+              <div class="statusGrid">
+              <div class="statusCard"><div class="statusTop"><span class="statusTitle">Web tier</span><span class="pill good">HEALTHY</span></div><div class="statusBody">Frontend EC2<br>Instance: ${!INSTANCE_ID}<br>Availability Zone: ${!AZ}</div></div>
+              <div class="statusCard"><div class="statusTop"><span class="statusTitle">Legacy API</span><span id="apiPill" class="pill">CHECKING</span></div><div id="apiBody" class="statusBody">Frontend → internal ALB → backend</div></div>
+              <div class="statusCard"><div class="statusTop"><span class="statusTitle">Database tier</span><span id="dbPill" class="pill">CHECKING</span></div><div id="dbBody" class="statusBody">Backend → primary / standby DB simulation</div></div>
+              </div>
+              <div class="techNote">Status calls pass through this frontend Apache node to the internal ALB, then to the backend ASG. The backend checks both private dummy DB nodes on TCP 1521.</div>
+              </section>
+              </main>
+
+              <footer>AnyGroup Market · Learner Lab prototype</footer>
+
+              <script>
+              let products=[],cart=0;
+              function money(v){const n=Number(v);return Number.isFinite(n)?"$"+n.toFixed(2):String(v||"")}
+              function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","'":"&#39;"}[c]})}
+              async function imgUrl(id){try{const r=await fetch("/catalogue/products/"+encodeURIComponent(id)+"/image-url",{cache:"no-store"});if(!r.ok)return null;const d=await r.json();return d.image_url||d.url||d.presigned_url||null}catch(e){return null}}
+              async function loadProducts(){const g=document.getElementById("productGrid");try{const r=await fetch("/catalogue/products",{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);const d=await r.json();products=Array.isArray(d)?d:(d.products||d.items||[]);await Promise.all(products.map(async p=>p._image=await imgUrl(p.product_id)));renderProducts()}catch(e){g.innerHTML='<div class="empty"><strong>Catalogue is not available yet.</strong><br>The storefront remains online while the catalogue service is being deployed or updated.</div>'}}
+              function renderProducts(){const q=document.getElementById("search").value.trim().toLowerCase();const list=products.filter(p=>!q||String(p.name||"").toLowerCase().includes(q)||String(p.category||"").toLowerCase().includes(q));const g=document.getElementById("productGrid");if(!list.length){g.innerHTML='<div class="empty">No matching products.</div>';return}g.innerHTML=list.map(function(p){const image=p._image?'<img src="'+esc(p._image)+'" alt="'+esc(p.name)+'">':'<div>Image unavailable</div>';const ok=p.availability!==false&&String(p.availability).toLowerCase()!=="false";return'<article class="product"><div class="productImage">'+image+'</div><div class="productBody"><div class="category">'+esc(p.category||"Everyday")+'</div><h3>'+esc(p.name||p.product_id)+'</h3><div class="priceRow"><span class="price">'+money(p.price)+'</span><span class="stock">'+(ok?"● In stock":"Out of stock")+'</span></div><button class="btn add" '+(ok?"":"disabled")+' onclick="addToCart()">'+(ok?"Add to cart":"Unavailable")+'</button></div></article>'}).join("")}
+              function addToCart(){cart++;document.getElementById("cartCount").textContent=String(cart)}
+              function pill(id,ok,text){const e=document.getElementById(id);e.className="pill "+(ok?"good":"bad");e.textContent=text}
+              async function refreshStatus(){document.getElementById("apiPill").className="pill";document.getElementById("apiPill").textContent="CHECKING";document.getElementById("dbPill").className="pill";document.getElementById("dbPill").textContent="CHECKING";
+              try{const r=await fetch("/api/health",{cache:"no-store"}),d=await r.json();pill("apiPill",r.ok,r.ok?"CONNECTED":"ERROR");document.getElementById("apiBody").innerHTML="Backend EC2<br>Instance: "+esc(d.instance_id||"unknown")+"<br>Availability Zone: "+esc(d.availability_zone||"unknown")}catch(e){pill("apiPill",false,"OFFLINE");document.getElementById("apiBody").textContent="Legacy backend request failed."}
+              try{const r=await fetch("/api/db",{cache:"no-store"}),d=await r.json();const rows=(d.databases||[]).map(x=>esc(x.role)+": "+esc(x.status));pill("dbPill",!!d.all_reachable,d.all_reachable?"CONNECTED":"DEGRADED");document.getElementById("dbBody").innerHTML=(rows.length?rows.join("<br>"):"No database status returned")+"<br><small>Dummy primary/standby representation</small>"}catch(e){pill("dbPill",false,"OFFLINE");document.getElementById("dbBody").textContent="Database connectivity check failed."}}
+              loadProducts();refreshStatus();
+              </script>
+              </body>
+              </html>
+              EOF
+
+              systemctl restart httpd
+            - InternalAlbDns:
+                Fn::GetAtt:
+                - InternalApplicationLoadBalancer
+                - DNSName
+      TagSpecifications:
+      - ResourceType: launch-template
+        Tags:
+        - Key: Name
+          Value:
+            Fn::Sub: ${EnvironmentName}-frontend-lt
+        - Key: Project
+          Value: INFOSYS735-GP2
+        - Key: ManagedBy
+          Value: CloudFormation
+
+  FrontendTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name:
+        Fn::Sub: ${EnvironmentName}-web-tg
+      VpcId:
+        Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-VpcId
+      Protocol: HTTP
+      Port: 80
+      TargetType: instance
+      HealthCheckEnabled: true
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: traffic-port
+      HealthCheckPath: /
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      Matcher:
+        HttpCode: '200'
+      TargetGroupAttributes:
+      - Key: deregistration_delay.timeout_seconds
+        Value: '30'
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name:
+        Fn::Sub: ${EnvironmentName}-alb
+      Scheme: internet-facing
+      Type: application
+      IpAddressType: ipv4
+      SecurityGroups:
+      - Ref: PublicAlbSecurityGroup
+      Subnets:
+      - Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-PublicSubnetAId
+      - Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-PublicSubnetBId
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Core
+
+  HttpListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn:
+        Ref: ApplicationLoadBalancer
+      Protocol: HTTP
+      Port: 80
+      DefaultActions:
+      - Type: forward
+        TargetGroupArn:
+          Ref: FrontendTargetGroup
+
+  FrontendAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn:
+    - HttpListener
+    Properties:
+      AutoScalingGroupName:
+        Fn::Sub: ${EnvironmentName}-frontend-asg
+      VPCZoneIdentifier:
+      - Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-PrivateAppSubnetAId
+      - Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-PrivateAppSubnetBId
+      LaunchTemplate:
+        LaunchTemplateId:
+          Ref: FrontendLaunchTemplate
+        Version:
+          Fn::GetAtt:
+          - FrontendLaunchTemplate
+          - LatestVersionNumber
+      MinSize:
+        Ref: FrontendMinSize
+      MaxSize:
+        Ref: FrontendMaxSize
+      DesiredCapacity:
+        Ref: FrontendDesiredCapacity
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 180
+      DefaultInstanceWarmup: 120
+      MetricsCollection:
+      - Granularity: 1Minute
+        Metrics:
+        - GroupDesiredCapacity
+        - GroupInServiceInstances
+        - GroupPendingInstances
+        - GroupTerminatingInstances
+        - GroupTotalInstances
+      TargetGroupARNs:
+      - Ref: FrontendTargetGroup
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-frontend
+        PropagateAtLaunch: true
+      - Key: Project
+        Value: INFOSYS735-GP2
+        PropagateAtLaunch: true
+      - Key: ManagedBy
+        Value: CloudFormation
+        PropagateAtLaunch: true
+
+
+  FrontendRequestCountScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    DependsOn:
+    - HttpListener
+    Properties:
+      AutoScalingGroupName:
+        Ref: FrontendAutoScalingGroup
+      PolicyType: TargetTrackingScaling
+      EstimatedInstanceWarmup: 120
+      TargetTrackingConfiguration:
+        DisableScaleIn: false
+        TargetValue:
+          Ref: FrontendRequestCountTarget
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ALBRequestCountPerTarget
+          ResourceLabel:
+            Fn::Join:
+            - /
+            - - Fn::GetAtt:
+                - ApplicationLoadBalancer
+                - LoadBalancerFullName
+              - Fn::GetAtt:
+                - FrontendTargetGroup
+                - TargetGroupFullName
+
+
+  CatalogueImageBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+        - ObjectOwnership: BucketOwnerEnforced
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-catalogue-images
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Core
+      - Key: Purpose
+        Value: CatalogueImages
+
+  CatalogueImageBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: CatalogueImageBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: DenyInsecureTransport
+          Effect: Deny
+          Principal: '*'
+          Action: 's3:*'
+          Resource:
+          - Fn::GetAtt:
+            - CatalogueImageBucket
+            - Arn
+          - Fn::Sub:
+            - ${BucketArn}/*
+            - BucketArn:
+                Fn::GetAtt:
+                - CatalogueImageBucket
+                - Arn
+          Condition:
+            Bool:
+              aws:SecureTransport: false
+
+Outputs:
+  AlbDnsName:
+    Description: Open this DNS name in a browser for the live demo.
+    Value:
+      Fn::GetAtt:
+      - ApplicationLoadBalancer
+      - DNSName
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-AlbDnsName
+
+  AlbArn:
+    Value:
+      Ref: ApplicationLoadBalancer
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-AlbArn
+
+  AlbFullName:
+    Description: Application Load Balancer full name used by CloudWatch dimensions.
+    Value:
+      Fn::GetAtt:
+      - ApplicationLoadBalancer
+      - LoadBalancerFullName
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-AlbFullName
+
+  PublicAlbSecurityGroupId:
+    Value:
+      Ref: PublicAlbSecurityGroup
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-PublicAlbSecurityGroupId
+
+  HttpListenerArn:
+    Value:
+      Ref: HttpListener
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-HttpListenerArn
+
+  FrontendTargetGroupArn:
+    Value:
+      Ref: FrontendTargetGroup
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-FrontendTargetGroupArn
+
+  FrontendTargetGroupFullName:
+    Description: Frontend target group full name used by CloudWatch dimensions.
+    Value:
+      Fn::GetAtt:
+      - FrontendTargetGroup
+      - TargetGroupFullName
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-FrontendTargetGroupFullName
+
+  BackendTargetGroupArn:
+    Value:
+      Ref: BackendTargetGroup
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-BackendTargetGroupArn
+
+  BackendTargetGroupFullName:
+    Description: Backend target group full name for monitoring and later diagnostics.
+    Value:
+      Fn::GetAtt:
+      - BackendTargetGroup
+      - TargetGroupFullName
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-BackendTargetGroupFullName
+
+  FrontendSecurityGroupId:
+    Value:
+      Ref: FrontendSecurityGroup
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-FrontendSecurityGroupId
+
+  BackendSecurityGroupId:
+    Value:
+      Ref: BackendSecurityGroup
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-BackendSecurityGroupId
+
+  DbSecurityGroupId:
+    Value:
+      Ref: DbSecurityGroup
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DbSecurityGroupId
+
+  FrontendAutoScalingGroupName:
+    Value:
+      Ref: FrontendAutoScalingGroup
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-FrontendAutoScalingGroupName
+
+  FrontendScalingPolicyArn:
+    Value:
+      Ref: FrontendRequestCountScalingPolicy
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-FrontendScalingPolicyArn
+
+  FrontendRequestCountTarget:
+    Value:
+      Ref: FrontendRequestCountTarget
+
+  DummyDbInstanceId:
+    Description: Backward-compatible alias for primary dummy DB.
+    Value:
+      Ref: DummyDbPrimaryInstance
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DummyDbInstanceId
+  DummyDbPrivateIp:
+    Description: Backward-compatible alias for primary dummy DB private IP.
+    Value:
+      Fn::GetAtt:
+      - DummyDbPrimaryInstance
+      - PrivateIp
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DummyDbPrivateIp
+  CatalogueImageBucketName:
+    Description: Private S3 bucket used for catalogue product images and demo objects.
+    Value:
+      Ref: CatalogueImageBucket
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-CatalogueImageBucketName
+
+  CatalogueImageBucketArn:
+    Description: ARN of the private catalogue image bucket.
+    Value:
+      Fn::GetAtt:
+      - CatalogueImageBucket
+      - Arn
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-CatalogueImageBucketArn
+  InternalAlbDnsName:
+    Description: Internal ALB DNS used by frontend reverse proxy.
+    Value:
+      Fn::GetAtt:
+      - InternalApplicationLoadBalancer
+      - DNSName
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-InternalAlbDnsName
+  InternalAlbArn:
+    Value:
+      Ref: InternalApplicationLoadBalancer
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-InternalAlbArn
+  InternalAlbFullName:
+    Value:
+      Fn::GetAtt:
+      - InternalApplicationLoadBalancer
+      - LoadBalancerFullName
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-InternalAlbFullName
+  InternalAlbSecurityGroupId:
+    Value:
+      Ref: InternalAlbSecurityGroup
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-InternalAlbSecurityGroupId
+  InternalHttpListenerArn:
+    Value:
+      Ref: InternalHttpListener
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-InternalHttpListenerArn
+  BackendAutoScalingGroupName:
+    Value:
+      Ref: BackendAutoScalingGroup
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-BackendAutoScalingGroupName
+  DummyDbPrimaryInstanceId:
+    Value:
+      Ref: DummyDbPrimaryInstance
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DummyDbPrimaryInstanceId
+  DummyDbPrimaryPrivateIp:
+    Value:
+      Fn::GetAtt:
+      - DummyDbPrimaryInstance
+      - PrivateIp
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DummyDbPrimaryPrivateIp
+  DummyDbStandbyInstanceId:
+    Value:
+      Ref: DummyDbStandbyInstance
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DummyDbStandbyInstanceId
+  DummyDbStandbyPrivateIp:
+    Value:
+      Fn::GetAtt:
+      - DummyDbStandbyInstance
+      - PrivateIp
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DummyDbStandbyPrivateIp

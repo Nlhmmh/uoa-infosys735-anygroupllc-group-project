@@ -1,0 +1,42 @@
+[
+  {
+    "ParameterKey": "EnvironmentName",
+    "ParameterValue": "anygroup-gp2"
+  },
+  {
+    "ParameterKey": "VpcCidr",
+    "ParameterValue": "10.0.0.0/16"
+  },
+  {
+    "ParameterKey": "PublicSubnetACidr",
+    "ParameterValue": "10.0.0.0/24"
+  },
+  {
+    "ParameterKey": "PublicSubnetBCidr",
+    "ParameterValue": "10.0.1.0/24"
+  },
+  {
+    "ParameterKey": "PrivateAppSubnetACidr",
+    "ParameterValue": "10.0.10.0/24"
+  },
+  {
+    "ParameterKey": "PrivateAppSubnetBCidr",
+    "ParameterValue": "10.0.11.0/24"
+  },
+  {
+    "ParameterKey": "PrivateDbSubnetACidr",
+    "ParameterValue": "10.0.20.0/24"
+  },
+  {
+    "ParameterKey": "PrivateDbSubnetBCidr",
+    "ParameterValue": "10.0.21.0/24"
+  },
+  {
+    "ParameterKey": "NatInstanceType",
+    "ParameterValue": "t3.micro"
+  },
+  {
+    "ParameterKey": "ExistingInstanceProfileName",
+    "ParameterValue": "LabInstanceProfile"
+  }
+]

@@ -1,0 +1,271 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  INFOSYS 735 GP2 - AnyGroupLLC updated observability stack. Creates SNS notifications plus CloudWatch alarms for frontend/public
+  ALB, backend/internal ALB and service health.
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: anygroup-gp2
+
+  CoreStackName:
+    Type: String
+    Default: anygroup-gp2-core
+    Description: Name of the deployed Part 8/9 core CloudFormation stack.
+
+  NotificationEmail:
+    Type: String
+    Default: ''
+    Description: >
+      Optional email address for SNS alarm notifications. If supplied, AWS sends
+      a confirmation email that must be manually accepted before notifications
+      are delivered.
+
+  MinimumHealthyFrontendTargets:
+    Type: Number
+    Default: 2
+    MinValue: 1
+    MaxValue: 4
+    Description: Expected minimum healthy frontend capacity.
+
+  Target5xxThreshold:
+    Type: Number
+    Default: 1
+    MinValue: 1
+    Description: Target-generated 5XX responses in one minute before alarm.
+
+Conditions:
+  HasNotificationEmail:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: NotificationEmail
+      - ''
+
+Resources:
+  OperationsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName:
+        Fn::Sub: ${EnvironmentName}-operations
+      DisplayName: AnyGroup GP2 Operations
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-operations
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Observability
+
+  OperationsEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Condition: HasNotificationEmail
+    Properties:
+      TopicArn:
+        Ref: OperationsTopic
+      Protocol: email
+      Endpoint:
+        Ref: NotificationEmail
+
+  FrontendUnhealthyHostAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName:
+        Fn::Sub: ${EnvironmentName}-frontend-unhealthy-target
+      AlarmDescription: >
+        Alarm when one or more frontend ALB targets are unhealthy. Used as
+        Reliability and Operational Excellence evidence during controlled tests.
+      Namespace: AWS/ApplicationELB
+      MetricName: UnHealthyHostCount
+      Dimensions:
+      - Name: LoadBalancer
+        Value:
+          Fn::ImportValue:
+            Fn::Sub: ${CoreStackName}-AlbFullName
+      - Name: TargetGroup
+        Value:
+          Fn::ImportValue:
+            Fn::Sub: ${CoreStackName}-FrontendTargetGroupFullName
+      Statistic: Maximum
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+      - Ref: OperationsTopic
+      OKActions:
+      - Ref: OperationsTopic
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
+
+  FrontendInServiceCapacityAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName:
+        Fn::Sub: ${EnvironmentName}-frontend-capacity-below-minimum
+      AlarmDescription: >
+        Alarm when frontend Auto Scaling in-service capacity is below the expected
+        baseline. The ASG should normally maintain at least two frontend instances.
+      Namespace: AWS/AutoScaling
+      MetricName: GroupInServiceInstances
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value:
+          Fn::ImportValue:
+            Fn::Sub: ${CoreStackName}-FrontendAutoScalingGroupName
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold:
+        Ref: MinimumHealthyFrontendTargets
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+      - Ref: OperationsTopic
+      OKActions:
+      - Ref: OperationsTopic
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
+
+  AlbTarget5xxAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName:
+        Fn::Sub: ${EnvironmentName}-alb-target-5xx
+      AlarmDescription: >
+        Alarm when targets behind the ALB return one or more HTTP 5XX responses
+        during a one-minute period.
+      Namespace: AWS/ApplicationELB
+      MetricName: HTTPCode_Target_5XX_Count
+      Dimensions:
+      - Name: LoadBalancer
+        Value:
+          Fn::ImportValue:
+            Fn::Sub: ${CoreStackName}-AlbFullName
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold:
+        Ref: Target5xxThreshold
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+      - Ref: OperationsTopic
+      OKActions:
+      - Ref: OperationsTopic
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
+
+  BackendUnhealthyHostAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName:
+        Fn::Sub: ${EnvironmentName}-backend-unhealthy-target
+      AlarmDescription: Alarm when one or more backend targets behind the internal ALB are unhealthy.
+      Namespace: AWS/ApplicationELB
+      MetricName: UnHealthyHostCount
+      Dimensions:
+      - Name: LoadBalancer
+        Value:
+          Fn::ImportValue:
+            Fn::Sub: ${CoreStackName}-InternalAlbFullName
+      - Name: TargetGroup
+        Value:
+          Fn::ImportValue:
+            Fn::Sub: ${CoreStackName}-BackendTargetGroupFullName
+      Statistic: Maximum
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+      - Ref: OperationsTopic
+      OKActions:
+      - Ref: OperationsTopic
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Observability
+  BackendInServiceCapacityAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName:
+        Fn::Sub: ${EnvironmentName}-backend-capacity-below-two
+      AlarmDescription: Alarm when the two-node legacy backend ASG has fewer than two in-service instances.
+      Namespace: AWS/AutoScaling
+      MetricName: GroupInServiceInstances
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value:
+          Fn::ImportValue:
+            Fn::Sub: ${CoreStackName}-BackendAutoScalingGroupName
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 2
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: breaching
+      AlarmActions:
+      - Ref: OperationsTopic
+      OKActions:
+      - Ref: OperationsTopic
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Observability
+Outputs:
+  OperationsTopicArn:
+    Description: SNS topic used by CloudWatch alarms.
+    Value:
+      Ref: OperationsTopic
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-OperationsTopicArn
+
+  FrontendUnhealthyHostAlarmName:
+    Value:
+      Ref: FrontendUnhealthyHostAlarm
+
+  FrontendInServiceCapacityAlarmName:
+    Value:
+      Ref: FrontendInServiceCapacityAlarm
+
+  AlbTarget5xxAlarmName:
+    Value:
+      Ref: AlbTarget5xxAlarm
+  BackendUnhealthyHostAlarmName:
+    Value:
+      Ref: BackendUnhealthyHostAlarm
+  BackendInServiceCapacityAlarmName:
+    Value:
+      Ref: BackendInServiceCapacityAlarm

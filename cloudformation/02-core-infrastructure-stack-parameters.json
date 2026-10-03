@@ -1,0 +1,54 @@
+[
+  {
+    "ParameterKey": "EnvironmentName",
+    "ParameterValue": "anygroup-gp2"
+  },
+  {
+    "ParameterKey": "NetworkStackName",
+    "ParameterValue": "anygroup-gp2-network"
+  },
+  {
+    "ParameterKey": "ExistingInstanceProfileName",
+    "ParameterValue": "LabInstanceProfile"
+  },
+  {
+    "ParameterKey": "FrontendInstanceType",
+    "ParameterValue": "t3.micro"
+  },
+  {
+    "ParameterKey": "BackendInstanceType",
+    "ParameterValue": "t3.micro"
+  },
+  {
+    "ParameterKey": "DbInstanceType",
+    "ParameterValue": "t3.micro"
+  },
+  {
+    "ParameterKey": "FrontendMinSize",
+    "ParameterValue": "2"
+  },
+  {
+    "ParameterKey": "FrontendDesiredCapacity",
+    "ParameterValue": "2"
+  },
+  {
+    "ParameterKey": "FrontendMaxSize",
+    "ParameterValue": "4"
+  },
+  {
+    "ParameterKey": "FrontendRequestCountTarget",
+    "ParameterValue": "50"
+  },
+  {
+    "ParameterKey": "BackendMinSize",
+    "ParameterValue": "2"
+  },
+  {
+    "ParameterKey": "BackendDesiredCapacity",
+    "ParameterValue": "2"
+  },
+  {
+    "ParameterKey": "BackendMaxSize",
+    "ParameterValue": "2"
+  }
+]

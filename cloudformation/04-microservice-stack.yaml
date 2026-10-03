@@ -1,0 +1,486 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  INFOSYS 735 GP2 - AnyGroupLLC updated Strangler Fig catalogue microservice. Catalogue traffic is received from frontend
+  EC2 through the core internal ALB.
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: anygroup-gp2
+    AllowedPattern: '[a-z0-9-]+'
+    Description: Lowercase resource-name prefix.
+
+  NetworkStackName:
+    Type: String
+    Default: anygroup-gp2-network
+
+  CoreStackName:
+    Type: String
+    Default: anygroup-gp2-core
+
+  ObservabilityStackName:
+    Type: String
+    Default: anygroup-gp2-observability
+
+  LabRoleName:
+    Type: String
+    Default: LabRole
+    Description: Existing Learner Lab IAM role used for ECS task and execution roles.
+
+  ContainerImageTag:
+    Type: String
+    Default: v1
+    Description: ECR image tag to deploy. Push this tag before enabling the service.
+
+  CatalogueDesiredCount:
+    Type: Number
+    Default: 2
+    MinValue: 1
+    MaxValue: 2
+    Description: Fargate task count. Use 2 for the Reliability demonstration.
+
+  DeployService:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+    - 'true'
+    - 'false'
+    Description: >
+      Phase-1 false creates ECR/table/cluster/task definition without starting
+      Fargate or activating /catalogue/*. Push the image and seed DynamoDB, then
+      update this parameter to true.
+
+  EnableCatalogueAlarm:
+    Type: String
+    Default: 'true'
+    AllowedValues:
+    - 'true'
+    - 'false'
+    Description: Create an unhealthy-catalogue-target alarm after the service is enabled.
+
+Conditions:
+  DeployServiceCondition:
+    Fn::Equals:
+    - Ref: DeployService
+    - 'true'
+
+  CreateCatalogueAlarmCondition:
+    Fn::And:
+    - Condition: DeployServiceCondition
+    - Fn::Equals:
+      - Ref: EnableCatalogueAlarm
+      - 'true'
+
+Resources:
+  CatalogueRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName:
+        Fn::Sub: ${EnvironmentName}-catalogue
+      ImageTagMutability: MUTABLE
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      EncryptionConfiguration:
+        EncryptionType: AES256
+      EmptyOnDelete: true
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep only the five most recent catalogue images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 5
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-catalogue-ecr
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Microservice
+
+  CatalogueTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      TableName:
+        Fn::Sub: ${EnvironmentName}-catalogue
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: product_id
+        AttributeType: S
+      KeySchema:
+      - AttributeName: product_id
+        KeyType: HASH
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-catalogue
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Microservice
+
+  CatalogueLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      LogGroupName:
+        Fn::Sub: /${EnvironmentName}/catalogue
+      RetentionInDays: 3
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Microservice
+
+  CatalogueCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName:
+        Fn::Sub: ${EnvironmentName}-catalogue-cluster
+      ClusterSettings:
+      - Name: containerInsights
+        Value: disabled
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Microservice
+
+  CatalogueSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Catalogue Fargate service - traffic only from internal ALB
+      VpcId:
+        Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-VpcId
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 8080
+        ToPort: 8080
+        SourceSecurityGroupId:
+          Fn::ImportValue:
+            Fn::Sub: ${CoreStackName}-InternalAlbSecurityGroupId
+        Description: Catalogue API traffic from internal ALB only
+      SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 0.0.0.0/0
+        Description: HTTPS to ECR CloudWatch DynamoDB S3 and required AWS endpoints
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-sg-catalogue
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Microservice
+
+  CatalogueTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name:
+        Fn::Sub: ${EnvironmentName}-catalogue-tg
+      VpcId:
+        Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-VpcId
+      Protocol: HTTP
+      Port: 8080
+      TargetType: ip
+      HealthCheckEnabled: true
+      HealthCheckProtocol: HTTP
+      HealthCheckPort: traffic-port
+      HealthCheckPath: /catalogue/health
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      Matcher:
+        HttpCode: '200'
+      TargetGroupAttributes:
+      - Key: deregistration_delay.timeout_seconds
+        Value: '30'
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Microservice
+
+  CatalogueTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family:
+        Fn::Sub: ${EnvironmentName}-catalogue
+      Cpu: '256'
+      Memory: '512'
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+      TaskRoleArn:
+        Fn::Sub: arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${LabRoleName}
+      ExecutionRoleArn:
+        Fn::Sub: arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${LabRoleName}
+      RuntimePlatform:
+        CpuArchitecture: X86_64
+        OperatingSystemFamily: LINUX
+      ContainerDefinitions:
+      - Name: catalogue
+        Essential: true
+        Image:
+          Fn::Sub:
+          - ${RepositoryUri}:${ImageTag}
+          - RepositoryUri:
+              Fn::GetAtt:
+              - CatalogueRepository
+              - RepositoryUri
+            ImageTag:
+              Ref: ContainerImageTag
+        PortMappings:
+        - ContainerPort: 8080
+          Protocol: tcp
+        Environment:
+        - Name: CATALOGUE_TABLE
+          Value:
+            Ref: CatalogueTable
+        - Name: IMAGE_BUCKET
+          Value:
+            Fn::ImportValue:
+              Fn::Sub: ${CoreStackName}-CatalogueImageBucketName
+        - Name: AWS_REGION_NAME
+          Value:
+            Ref: AWS::Region
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: CatalogueLogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: catalogue
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Microservice
+
+  CatalogueListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Condition: DeployServiceCondition
+    Properties:
+      ListenerArn:
+        Fn::ImportValue:
+          Fn::Sub: ${CoreStackName}-InternalHttpListenerArn
+      Priority: 50
+      Conditions:
+      - Field: path-pattern
+        PathPatternConfig:
+          Values:
+          - /catalogue
+          - /catalogue/*
+      Actions:
+      - Type: forward
+        TargetGroupArn:
+          Ref: CatalogueTargetGroup
+
+  CatalogueService:
+    Type: AWS::ECS::Service
+    Condition: DeployServiceCondition
+    DependsOn:
+    - CatalogueListenerRule
+    Properties:
+      ServiceName:
+        Fn::Sub: ${EnvironmentName}-catalogue-service
+      Cluster:
+        Ref: CatalogueCluster
+      TaskDefinition:
+        Ref: CatalogueTaskDefinition
+      DesiredCount:
+        Ref: CatalogueDesiredCount
+      LaunchType: FARGATE
+      PlatformVersion: LATEST
+      HealthCheckGracePeriodSeconds: 60
+      EnableECSManagedTags: true
+      PropagateTags: SERVICE
+      DeploymentConfiguration:
+        MinimumHealthyPercent: 50
+        MaximumPercent: 200
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          SecurityGroups:
+          - Ref: CatalogueSecurityGroup
+          Subnets:
+          - Fn::ImportValue:
+              Fn::Sub: ${NetworkStackName}-PrivateAppSubnetAId
+          - Fn::ImportValue:
+              Fn::Sub: ${NetworkStackName}-PrivateAppSubnetBId
+      LoadBalancers:
+      - ContainerName: catalogue
+        ContainerPort: 8080
+        TargetGroupArn:
+          Ref: CatalogueTargetGroup
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Microservice
+
+  CatalogueUnhealthyTargetAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: CreateCatalogueAlarmCondition
+    Properties:
+      AlarmName:
+        Fn::Sub: ${EnvironmentName}-catalogue-unhealthy-target
+      AlarmDescription: Alarm when one or more catalogue Fargate targets are unhealthy.
+      Namespace: AWS/ApplicationELB
+      MetricName: UnHealthyHostCount
+      Dimensions:
+      - Name: LoadBalancer
+        Value:
+          Fn::ImportValue:
+            Fn::Sub: ${CoreStackName}-InternalAlbFullName
+      - Name: TargetGroup
+        Value:
+          Fn::GetAtt:
+          - CatalogueTargetGroup
+          - TargetGroupFullName
+      Statistic: Maximum
+      Period: 60
+      EvaluationPeriods: 1
+      DatapointsToAlarm: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+      - Fn::ImportValue:
+          Fn::Sub: ${ObservabilityStackName}-OperationsTopicArn
+      OKActions:
+      - Fn::ImportValue:
+          Fn::Sub: ${ObservabilityStackName}-OperationsTopicArn
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Microservice
+
+  InternalAlbToCatalogueEgress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      GroupId:
+        Fn::ImportValue:
+          Fn::Sub: ${CoreStackName}-InternalAlbSecurityGroupId
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+      DestinationSecurityGroupId:
+        Ref: CatalogueSecurityGroup
+      Description: Internal ALB to catalogue Fargate service
+Outputs:
+  EcrRepositoryName:
+    Value:
+      Ref: CatalogueRepository
+
+  EcrRepositoryUri:
+    Description: Build/tag/push the catalogue image to this repository URI.
+    Value:
+      Fn::GetAtt:
+      - CatalogueRepository
+      - RepositoryUri
+
+  CatalogueTableName:
+    Value:
+      Ref: CatalogueTable
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-CatalogueTableName
+
+  CatalogueClusterName:
+    Value:
+      Ref: CatalogueCluster
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-CatalogueClusterName
+
+  CatalogueTargetGroupArn:
+    Value:
+      Ref: CatalogueTargetGroup
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-CatalogueTargetGroupArn
+
+  CatalogueTargetGroupFullName:
+    Value:
+      Fn::GetAtt:
+      - CatalogueTargetGroup
+      - TargetGroupFullName
+
+  CatalogueSecurityGroupId:
+    Value:
+      Ref: CatalogueSecurityGroup
+
+  CatalogueLogGroupName:
+    Value:
+      Ref: CatalogueLogGroup
+
+  CatalogueServiceName:
+    Condition: DeployServiceCondition
+    Value:
+      Fn::GetAtt:
+      - CatalogueService
+      - Name
+
+  CatalogueListenerRuleArn:
+    Condition: DeployServiceCondition
+    Value:
+      Ref: CatalogueListenerRule

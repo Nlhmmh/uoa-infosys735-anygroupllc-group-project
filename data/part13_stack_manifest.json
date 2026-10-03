@@ -1,0 +1,21 @@
+{
+  "region": "us-east-1",
+  "baseline_ec2_count": 7,
+  "routing": {
+    "public_alb": "default -> frontend ASG",
+    "frontend_apache": [
+      "/api/* -> internal ALB",
+      "/catalogue/* -> internal ALB"
+    ],
+    "internal_alb": {
+      "priority_50": "/catalogue/* -> Fargate",
+      "priority_100": "/api/* -> backend ASG",
+      "default": "404"
+    }
+  },
+  "database": {
+    "primary": "dummy EC2 in private DB subnet A",
+    "standby": "dummy EC2 in private DB subnet B",
+    "replication": "not implemented; simulation only"
+  }
+}

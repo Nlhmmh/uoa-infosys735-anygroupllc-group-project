@@ -1,0 +1,22 @@
+[
+  {
+    "ParameterKey": "EnvironmentName",
+    "ParameterValue": "anygroup-gp2"
+  },
+  {
+    "ParameterKey": "CoreStackName",
+    "ParameterValue": "anygroup-gp2-core"
+  },
+  {
+    "ParameterKey": "NotificationEmail",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "MinimumHealthyFrontendTargets",
+    "ParameterValue": "2"
+  },
+  {
+    "ParameterKey": "Target5xxThreshold",
+    "ParameterValue": "1"
+  }
+]
