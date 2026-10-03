@@ -45,7 +45,7 @@ deploy_network() {
 
 deploy_core() {
   aws cloudformation deploy \
-    --template-file cloudformation/02-core-infrastructure-stack_UPDATED.yaml \
+    --template-file cloudformation/02-core-infrastructure-stack.yaml \
     --stack-name "$CORE_STACK" \
     --parameter-overrides \
       NetworkStackName="$NETWORK_STACK" \
@@ -63,7 +63,7 @@ deploy_core() {
 deploy_observability() {
   local email="${1:-}"
   aws cloudformation deploy \
-    --template-file cloudformation/03-observability-stack_UPDATED.yaml \
+    --template-file cloudformation/03-observability-stack.yaml \
     --stack-name "$OBS_STACK" \
     --parameter-overrides \
       EnvironmentName=anygroup-gp2 \
@@ -76,7 +76,7 @@ deploy_observability() {
 
 deploy_micro_phase1() {
   aws cloudformation deploy \
-    --template-file cloudformation/04-microservice-stack_UPDATED.yaml \
+    --template-file cloudformation/04-microservice-stack.yaml \
     --stack-name "$MICRO_STACK" \
     --parameter-overrides \
       EnvironmentName=anygroup-gp2 \
@@ -127,7 +127,7 @@ deploy_micro_phase2() {
   echo "Found ECR image $repo:$image_tag ($digest)"
 
   aws cloudformation deploy \
-    --template-file cloudformation/04-microservice-stack_UPDATED.yaml \
+    --template-file cloudformation/04-microservice-stack.yaml \
     --stack-name "$MICRO_STACK" \
     --parameter-overrides \
       EnvironmentName=anygroup-gp2 \
@@ -156,9 +156,9 @@ status() {
 case "$MODE" in
   validate)
     cf_validate cloudformation/01-network-stack.yaml
-    cf_validate cloudformation/02-core-infrastructure-stack_UPDATED.yaml
-    cf_validate cloudformation/03-observability-stack_UPDATED.yaml
-    cf_validate cloudformation/04-microservice-stack_UPDATED.yaml
+    cf_validate cloudformation/02-core-infrastructure-stack.yaml
+    cf_validate cloudformation/03-observability-stack.yaml
+    cf_validate cloudformation/04-microservice-stack.yaml
     echo "AWS validate-template completed for all four templates."
     ;;
 

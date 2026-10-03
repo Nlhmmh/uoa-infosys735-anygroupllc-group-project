@@ -6,9 +6,9 @@
   "frontend_peak_ec2_count": 9,
   "resource_counts": {
     "01-network-stack.yaml": 44,
-    "02-core-infrastructure-stack_UPDATED.yaml": 32,
-    "03-observability-stack_UPDATED.yaml": 7,
-    "04-microservice-stack_UPDATED.yaml": 11
+    "02-core-infrastructure-stack.yaml": 32,
+    "03-observability-stack.yaml": 7,
+    "04-microservice-stack.yaml": 11
   },
   "total_declared_resources": 94,
   "matched_imports": 35,
