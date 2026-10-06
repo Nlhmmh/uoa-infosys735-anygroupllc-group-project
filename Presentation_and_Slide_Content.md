@@ -30,33 +30,39 @@ For assessment requirements and the complete four-pillar check, use [Rubric_and_
 
 **Required order:** Show basic and additional component configuration in the AWS Management Console **before** demonstrating the additional services. Slides 5–8 show configuration: CloudFormation, CloudWatch/SNS, VPC/network/compute/load balancing/scaling, SGs/NACLs/S3 and ECR/ECS/DynamoDB. Slide 9 demonstrates the working catalogue feature. Slide 10 revisits monitoring and scaling to explain reliability behaviour. CloudShell results and screenshots support the console demonstration. They do not replace it.
 
+### Architecture diagram as the presentation's anchor
+
+Show the final solution diagram prominently on **Slide 3 for two minutes**. Walk through the customer request path, the retained application, the integrated catalogue feature and the design decisions supporting all four pillars. Explain the areas being improved and the corresponding updates while pointing to the affected components. The diagram and its WAF explanation belong in the main recorded presentation; the appendix provides the detailed assessment.
+
+Use the Task 1 architecture slide as the basis for this final diagram, updating it to match the proposal and clearly identifying production recommendations. Show the actual prototype diagram on Slide 4 before opening the console. Reuse the same diagram or a readable cropped view on Slides 5–11 to orient viewers to the component being demonstrated and the pillar it supports. Keep component names, colours and request arrows consistent across slides and console narration.
+
 ### Main deck timing and speaking allocation
 
 These are allocated times, not verified rehearsal timings. Target **14 minutes 15 seconds**, leaving 45 seconds inside the 15-minute limit. All four members must speak. Change the member labels to real names.
 
 | Slide | Title | Total time including console | Speaker | Rubric / pillar focus |
 |---|---|---:|---|---|
-| 1 | AWS website proposal for New Zealand growth | 0:30 | Member 1 | Whole solution and client recommendation |
-| 2 | Business priorities and the proposed response | 1:00 | Member 1 | Case study, value proposition, four pillars |
-| 3 | Website architecture with an independent catalogue | 1:10 | Member 1 | Complete production proposal and additional feature |
+| 1 | AWS website proposal for New Zealand growth | 0:20 | Member 1 | Whole solution and client recommendation |
+| 2 | Business priorities and the proposed response | 0:50 | Member 1 | Case study, value proposition, four pillars |
+| 3 | Website architecture with an independent catalogue | 2:00 | Member 1 | Main diagram walkthrough, additional feature, four-pillar alignment and design updates |
 | 4 | Implemented website prototype | 0:40 | Member 2 | Actual architecture and scope |
 | 5 | Repeatable operations for the IT team | 1:20 | Member 2 | Operational Excellence, CloudFormation |
 | 6 | Two AZs separate public entry from private tiers | 2:00 | Member 2 | Basic infrastructure configuration |
 | 7 | Layered protection for the website and its data | 1:20 | Member 3 | Security, SGs/NACLs/S3 |
 | 8 | Catalogue service configuration and integration | 1:00 | Member 3 | Additional services and technical rationale |
-| 9 | Customer browsing through the integrated catalogue | 1:30 | Member 3 | Additional-feature demonstration |
-| 10 | Availability and capacity for launch and promotions | 1:40 | Member 4 | Reliability, monitoring, scaling evidence |
+| 9 | Customer browsing through the integrated catalogue | 1:20 | Member 3 | Additional-feature demonstration |
+| 10 | Availability and capacity for launch and promotions | 1:30 | Member 4 | Reliability, monitoring, scaling evidence |
 | 11 | Control production expenditure as demand changes | 1:10 | Member 4 | Cost Optimisation and investment comparison |
-| 12 | Approve the cloud direction and staged rollout | 0:55 | Member 4 | Stakeholder decision and production readiness |
+| 12 | Approve the cloud direction and staged rollout | 0:45 | Member 4 | Stakeholder decision and production readiness |
 | **Total** | **Slides and demonstrations** | **14:15** | **All four** | |
 
-Member 1: 0:00–2:40. Member 2: 2:40–6:40. Member 3: 6:40–10:30. Member 4: 10:30–14:15. Slides 5–10 allocate 8:50 to configuration, function and operational evidence. Narrate while showing the relevant console; do not give a full lecture and then repeat it during navigation.
+Member 1: 0:00–3:10. Member 2: 3:10–7:10. Member 3: 7:10–10:50. Member 4: 10:50–14:15. Slides 3–4 allocate 2:40 to the production/prototype architecture diagrams; Slides 5–10 allocate 8:30 to configuration, function and operational evidence. Narrate while showing the relevant console; use brief diagram highlights to connect the configuration to the proposal.
 
 ## 2. Slide-by-slide authoring content
 
 ### Slide 1 — AWS website proposal for New Zealand growth
 
-**Speaker / duration:** Member 1, 0:30. **Purpose:** State the recommendation and client outcome immediately.
+**Speaker / duration:** Member 1, 0:20. **Purpose:** State the recommendation and client outcome immediately.
 
 **Copy-ready content**
 
@@ -74,13 +80,13 @@ Member 1: 0:00–2:40. Member 2: 2:40–6:40. Member 3: 6:40–10:30. Member 4: 
 
 **Speaker notes**
 
-> For your New Zealand expansion, we recommend an AWS website platform designed for availability, changing demand, protected data and manageable operations. An independent Product Catalogue service introduces microservices while retaining your existing application path. We will show how the architecture addresses your business priorities, demonstrate its prototype and explain the investment and rollout decisions.
+> We recommend an AWS website platform for your New Zealand expansion, with resilient capacity, protected data and manageable operations. An independent catalogue introduces microservices. We will explain the architecture, demonstrate the prototype and recommend a staged rollout.
 
 **Transition:** “The proposal responds to four stakeholder needs.”
 
 ### Slide 2 — Business priorities and the proposed response
 
-**Speaker / duration:** Member 1, 1:00. **Purpose:** Establish the business problem and link the whole proposal to the four stakeholders.
+**Speaker / duration:** Member 1, 0:50. **Purpose:** Establish the business problem and link the whole proposal to the four stakeholders.
 
 **Copy-ready content**
 
@@ -103,7 +109,7 @@ Footer: **Additional feature: independent Product Catalogue service. Image stora
 
 ### Slide 3 — Website architecture with an independent catalogue
 
-**Speaker / duration:** Member 1, 1:10. **Purpose:** Pitch the complete production website architecture, its rationale and the integrated additional feature.
+**Speaker / duration:** Member 1, 2:00. **Purpose:** Use the main architecture diagram to explain the whole proposal, the integrated catalogue feature, four-pillar alignment and the areas improved by the design updates.
 
 **Copy-ready content**
 
@@ -114,13 +120,38 @@ Footer: **Additional feature: independent Product Catalogue service. Image stora
 
 Footer: **Production recommendation. Components beyond the lab are proposed, not deployed by the lab templates.**
 
-**Visual specification:** Build the production diagram in Section 3.1. Trace the customer request through edge delivery, public entry, private website/app tiers and the database. Then highlight the catalogue branch and private S3 image delivery. Label production recommendations separately from demonstrated components. Explain the whole architecture before zooming into the additional feature.
+**Visual specification:** Make the production diagram in Section 3.1 the dominant content of the slide, using most of the canvas. Use the copy-ready bullets as short labels or presenter notes rather than a large text block beside a small diagram. Trace the customer request through edge delivery, public entry, private website/app tiers and the database. Highlight the catalogue branch and private S3 image delivery. Label production recommendations separately from demonstrated components. Use four concise pillar callouts attached to the relevant components; retain the full diagram as context when highlighting an area.
+
+**Diagram walkthrough, two minutes**
+
+| Time within Slide 3 | What to point to | What to explain |
+|---|---|---|
+| 0:00–0:20 | Customer → CloudFront/edge → public ALB | Website entry, global delivery and protection against the attacks described in the case |
+| 0:20–0:45 | Two AZs, private web/app tiers and proposed Oracle availability | The whole website request path, tier separation and the continuity design |
+| 0:45–1:10 | Catalogue route, Fargate, data boundary and S3 image delivery | How the additional feature integrates; independent releases and replacement of fixed image-server capacity dependence |
+| 1:10–1:50 | Four pillar callouts and operational plane | Specific alignment and improvements using the table below; relate each decision to a stakeholder benefit |
+| 1:50–2:00 | Production/prototype legend | What is proposed versus demonstrated; hand over to the actual prototype diagram |
+
+**Pillar callouts and design updates to explain on the diagram**
+
+| Pillar | Point to | Area addressed and design response |
+|---|---|---|
+| Operational Excellence | CloudFormation, monitoring and catalogue release boundary | Address manual operating effort and release coupling with reproducible configuration, observable services, owned procedures and small reversible changes |
+| Reliability | Two AZs, load balancers, scaling and proposed database availability | Address failure exposure and changing demand with distributed capacity, health-based recovery, tested scaling and database recovery objectives |
+| Security | Edge protection, private tiers, controlled roles and encrypted data paths | Address previous attacks and valuable-data exposure with layered access controls, TLS, auditing and an incident-response plan |
+| Cost Optimisation | Elastic compute, managed storage/services and cost ownership | Address peak-capacity purchasing and opaque expenditure with demand-based capacity and attributed production costs, while preserving the resilience/security baseline |
+
+These are areas the proposal addresses, not automatically proven omissions in the original GP1 design. Identify retained alignment and confirmed updates from the Task 1 assessment, and verify any historical comparison before labelling it an improvement over the original proposal.
 
 **Speaker notes**
 
-> Customers enter through CloudFront and the protected website entry point. Load balancers distribute requests to private web and application tiers across two AZs, with managed Oracle availability proposed for the retained application. S3 removes the fixed image-server capacity dependence and CloudFront provides global image delivery. The highlighted catalogue branch runs separately, so catalogue releases can be managed without coupling every release to the retained backend. CloudFormation and monitoring support the operating model. Our prototype demonstrates the routing and catalogue integration; production data ownership, migration, licensing and security readiness still need validation.
+> Follow the customer request from CloudFront and the protected entry point to the public load balancer. Traffic reaches private web and application tiers across two AZs, with managed Oracle availability proposed for the retained application. The highlighted catalogue route reaches a separate Fargate service. It supplies product metadata and image references while other application requests retain their existing path. S3 replaces dependence on the nearly full image server, with CloudFront proposed for global delivery.
+>
+> The diagram also explains our four design priorities. For Operational Excellence, CloudFormation and monitoring make configuration reproducible and service behaviour visible, while the catalogue has an independent release boundary. For Reliability, AZ distribution, health checks and demand-based capacity support continuity; recovery and promotional capacity still require testing. For Security, edge protection, private tiers and controlled encrypted access address attack and data-exposure risks. For Cost Optimisation, capacity follows demand and costs have an owner, preserving the availability and security baseline.
+>
+> These decisions address image capacity, operational effort, continuity and expenditure together. The production controls shown are recommendations; next we will show which parts the prototype implements and demonstrate them in the console.
 
-**Design decisions to explain if asked:** AZ distribution addresses launch continuity; S3 addresses image capacity; an independent catalogue addresses release coupling; automation addresses manual operating effort. Validate the original GP1 alignment in the submitted appendix, without making it the main client narrative. Do not describe a previous proposal as a deployed system.
+**Narration rule:** Explain the request path, feature integration and four pillar callouts during the recording. Detailed principle tables and verified original-design comparisons support this explanation in the submitted appendix. Do not leave the architecture rationale or improvement explanation only for questions or appendix reading.
 
 **Transition:** “We have implemented a prototype of the website tiers and catalogue integration; we will now show its configuration.”
 
@@ -269,7 +300,7 @@ Evidence footer: **Prototype signed image GET succeeds; unsigned GET returns 403
 
 ### Slide 9 — Customer browsing through the integrated catalogue
 
-**Speaker / duration:** Member 3, 1:30 including demonstration. **Purpose:** Demonstrate the additional feature after its configuration has been shown.
+**Speaker / duration:** Member 3, 1:20 including demonstration. **Purpose:** Demonstrate the additional feature after its configuration has been shown.
 
 **Copy-ready content**
 
@@ -280,7 +311,7 @@ Evidence footer: **Prototype signed image GET succeeds; unsigned GET returns 403
 
 Footer: **Synthetic catalogue; browser cart counter only; no checkout or Oracle migration.**
 
-**Demonstration sequence, about 1:05**
+**Demonstration sequence, about 1:00**
 
 1. Open the public ALB storefront; show the three product cards and images. Briefly use search if it visibly supports catalogue browsing.
 2. Open `/api/health` and `/api/db`: identify backend EC2/AZ and both dummy listeners reachable.
@@ -288,7 +319,7 @@ Footer: **Synthetic catalogue; browser cart counter only; no checkout or Oracle 
 4. Open `/catalogue/ready`: explain DynamoDB and S3 accessibility. `/catalogue/health` is process liveness; readiness alone does not prove data was seeded.
 5. Show a saved smoke PASS and running version. Do not display full presigned query strings in a recording.
 
-**Speaker notes, about 0:25**
+**Speaker notes, about 0:20**
 
 > Customers browse one website while the catalogue supplies metadata and images independently. The retained API still responds and reaches the dummy database tier, demonstrating coexistence. Saved smoke runs verified integration and selected access controls. This browsing prototype uses synthetic products and a browser cart counter; checkout and production data migration are outside it.
 
@@ -296,7 +327,7 @@ Footer: **Synthetic catalogue; browser cart counter only; no checkout or Oracle 
 
 ### Slide 10 — Availability and capacity for launch and promotions
 
-**Speaker / duration:** Member 4, 1:40 including console/evidence. **Purpose:** Explain continuity and capacity for the CTO, then demonstrate CloudWatch/SNS/Auto Scaling configuration and actual observations.
+**Speaker / duration:** Member 4, 1:30 including console/evidence. **Purpose:** Explain continuity and capacity for the CTO, then demonstrate CloudWatch/SNS/Auto Scaling configuration and actual observations.
 
 **Copy-ready content**
 
@@ -312,7 +343,7 @@ Evidence footer: **Two-AZ healthy baseline. Probe: 273/280 successes (97.5%). Lo
 
 **Visual:** Highlight the AZ distribution on the prototype diagram, then show a compact dated probe/load evidence strip during console narration. If using a probe timeline, derive it from the actual JSONL samples. Add replacement/scaling events only after capturing them. Keep detailed test statistics in presenter notes or an evidence appendix rather than filling the slide with test output.
 
-**Console/evidence sequence, about 1:10**
+**Console/evidence sequence, about 1:00**
 
 1. Show CloudWatch target/capacity/error alarms and catalogue log group. Connect each selected signal to a response in the runbook.
 2. Show SNS confirmed subscription; show a delivered matching message only if preserved. Confirmation is currently verified, actual receipt is not.
@@ -380,7 +411,7 @@ Footer: **Compare normal and promotional demand with co-location at equivalent a
 
 ### Slide 12 — Approve the cloud direction and staged rollout
 
-**Speaker / duration:** Member 4, 0:55. **Purpose:** End with a client decision, acceptance criteria and a credible path to production.
+**Speaker / duration:** Member 4, 0:45. **Purpose:** End with a client decision, acceptance criteria and a credible path to production.
 
 **Copy-ready content**
 
@@ -448,6 +479,20 @@ flowchart TD
 
 The signed URL response travels back through the normal ALB/frontend request path; the dotted line represents a logical response, not direct Internet exposure of a task. Add actual AZ/subnet boundaries in the finished slide graphic. Lab CloudFront, WAF, managed Oracle and database replication must not appear as deployed components.
 
+### 3.3 Connect the diagram to the console demonstration
+
+Use brief highlights of the same architecture before showing each relevant console view. Say where the component sits, what it does and which client need it supports, then show its actual configuration. A cropped view must preserve enough context to locate the component in the whole solution. This orientation is included in each slide's allocated time; it is not another full architecture lecture.
+
+| Slide | Diagram area to highlight | Console / explanation connection |
+|---|---|---|
+| 5 — Operational Excellence | Provisioning, monitoring and release controls | CloudFormation dependencies, CloudWatch actions and SNS ownership |
+| 6 — Basic infrastructure | AZ/subnet boundaries and the main request path | VPC routes, NAT, EC2 tiers, ALBs and ASG configuration |
+| 7 — Security | Entry point, tier access boundaries and image storage | SGs, NACLs and S3 controls; production edge/identity/TLS remain labelled proposals |
+| 8 — Additional services | Catalogue route → Fargate → metadata/images | ECS/ECR, DynamoDB, S3 references and listener integration |
+| 9 — Feature | Customer → website → catalogue → image delivery | Trace one browsing request through the implemented components |
+| 10 — Reliability | Two AZs, health checks and demand-based capacity | Target health, metrics, replacement/scaling observations and unresolved validation |
+| 11 — Cost Optimisation | Baseline capacity, elastic capacity and managed services | Explain fixed/variable production costs and accountable ownership; separate cost assumptions from observed usage |
+
 ## 4. Evidence the group can use now
 
 The following observations are from the supplied 6 October 2026 run. Label later runs separately and preserve unsuccessful outcomes. Saved evidence remains under `evidence/`; operational steps are in the main IaC guide, Section 4.
@@ -479,6 +524,8 @@ Do not hide these gaps in footnotes while claiming they passed in the narration.
 6. Confirm URLs and local files are accessible. Avoid displaying AWS credentials, complete signed URL query strings or personal subscription addresses.
 7. Run a timed rehearsal including switching applications and loading console pages. Cut repeated narration first. Keep architecture diagrams and required component configuration visible and readable.
 
+Before rehearsing, prepare the final Task 1 solution diagram and the actual prototype diagram. Check that their labels and routing match the proposal and implementation, that the catalogue is visibly integrated, and that a viewer can read the diagram at the recording's playback size. Rehearse pointing to components while explaining their role and four-pillar rationale; simply displaying an unexplained diagram does not communicate the design.
+
 ### Slide layout guidance
 
 Use 16:9 slides, one main point per title and a consistent service/colour legend. Use readable body text and limit on-slide prose to the copy-ready content. Speaker notes contain the explanation, caveats and transitions. Large architecture diagrams can use incremental highlighting; do not force a full diagram plus a long table onto one slide. Use native/editable text and tables where possible so the group can revise details.
@@ -490,7 +537,7 @@ Prepare readable submitted appendix slides from the full principle assessment in
 ### Recording requirements to preserve
 
 - Finish within 15 minutes, including console navigation and speaker handoffs; every member presents a meaningful portion.
-- Show the whole solution architecture and the integrated additional feature. Explain WAF alignment, areas for improvement and design updates as decisions that address business needs.
+- Show and narrate the whole solution architecture prominently on Slide 3, using the final Task 1 architecture slide. Trace the integrated additional feature and explain four-pillar alignment, areas for improvement and design updates on the diagram. Show the actual prototype architecture on Slide 4 and connect later demonstrations to it.
 - Demonstrate functioning infrastructure through the AWS Management Console. Show basic and additional configuration first, then demonstrate the catalogue service and its website integration.
 - Explain why each selected service fits the workload and how it contributes to stakeholder outcomes. Keep recommendations, implementation and measured results distinguishable.
 - Close with a clear value proposition and a stakeholder decision about rollout, responsibilities and investment.
