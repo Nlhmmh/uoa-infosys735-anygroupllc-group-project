@@ -395,6 +395,10 @@ Resources:
 
   NatInstance:
     Type: AWS::EC2::Instance
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT15M
     DependsOn: PublicDefaultRoute
     Properties:
       ImageId:
@@ -408,13 +412,17 @@ Resources:
       IamInstanceProfile:
         Ref: ExistingInstanceProfileName
       SourceDestCheck: false
+      MetadataOptions:
+        HttpEndpoint: enabled
+        HttpTokens: required
       UserData:
         Fn::Base64:
           Fn::Sub: |
             #!/bin/bash
-            set -eux
+            set -euo pipefail
 
-            dnf install -y iptables-services
+            dnf install -y iptables-services aws-cfn-bootstrap
+            trap '/opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource NatInstance --region ${AWS::Region}' EXIT
             systemctl enable iptables
             systemctl start iptables
 
@@ -426,8 +434,9 @@ Resources:
 
             PRIMARY_IF=$(ip route show default | awk '{print $5; exit}')
 
-            iptables -t nat -A POSTROUTING -o "$PRIMARY_IF" -j MASQUERADE
+            iptables -t nat -A POSTROUTING -s ${VpcCidr} -o "$PRIMARY_IF" -j MASQUERADE
             iptables -F FORWARD
+            iptables -P FORWARD ACCEPT
 
             service iptables save
       Tags:
@@ -445,7 +454,6 @@ Resources:
 
   PrivateAppDefaultRouteA:
     Type: AWS::EC2::Route
-    DependsOn: NatInstance
     Properties:
       RouteTableId:
         Ref: PrivateAppRouteTableA
@@ -455,7 +463,6 @@ Resources:
 
   PrivateAppDefaultRouteB:
     Type: AWS::EC2::Route
-    DependsOn: NatInstance
     Properties:
       RouteTableId:
         Ref: PrivateAppRouteTableB

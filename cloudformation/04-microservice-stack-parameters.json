@@ -24,6 +24,10 @@
     "ParameterValue": "v1"
   },
   {
+    "ParameterKey": "ContainerImageDigest",
+    "ParameterValue": ""
+  },
+  {
     "ParameterKey": "CatalogueDesiredCount",
     "ParameterValue": "2"
   },

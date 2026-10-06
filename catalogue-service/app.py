@@ -3,8 +3,10 @@ import os
 from decimal import Decimal
 
 import boto3
-from botocore.exceptions import ClientError
+from botocore.config import Config
+from botocore.exceptions import BotoCoreError, ClientError
 from flask import Flask, jsonify
+from werkzeug.exceptions import HTTPException
 
 app = Flask(__name__)
 
@@ -16,10 +18,12 @@ logger = logging.getLogger("catalogue")
 
 TABLE_NAME = os.environ["CATALOGUE_TABLE"]
 IMAGE_BUCKET = os.environ["IMAGE_BUCKET"]
+APP_VERSION = os.getenv("APP_VERSION", "local")
 
-dynamodb = boto3.resource("dynamodb")
+AWS_CONFIG = Config(connect_timeout=2, read_timeout=3, retries={"mode": "standard", "total_max_attempts": 2})
+dynamodb = boto3.resource("dynamodb", config=AWS_CONFIG)
 table = dynamodb.Table(TABLE_NAME)
-s3 = boto3.client("s3")
+s3 = boto3.client("s3", config=AWS_CONFIG)
 
 
 def normalise(value):
@@ -47,19 +51,42 @@ def health():
         {
             "service": "catalogue-microservice",
             "status": "healthy",
-            "table": TABLE_NAME,
-            "image_bucket": IMAGE_BUCKET,
+            "version": APP_VERSION,
+            "check": "process_liveness_only",
         }
     )
+
+
+@app.get("/catalogue/ready")
+def readiness():
+    """Check read access to both dependencies without coupling ALB liveness to them."""
+    checks = {}
+    for name, check in (
+        ("dynamodb", lambda: table.scan(Limit=1, ProjectionExpression="product_id")),
+        ("s3", lambda: s3.list_objects_v2(Bucket=IMAGE_BUCKET, Prefix="products/", MaxKeys=1)),
+    ):
+        try:
+            check()
+            checks[name] = "accessible"
+        except (BotoCoreError, ClientError):
+            logger.exception("readiness_dependency_failed dependency=%s", name)
+            checks[name] = "unavailable"
+    ready = all(value == "accessible" for value in checks.values())
+    return jsonify({"service": "catalogue-microservice", "version": APP_VERSION,
+                    "status": "ready" if ready else "degraded", "dependencies": checks}), 200 if ready else 503
 
 
 @app.get("/catalogue/products")
 def list_products():
     response = table.scan()
-    items = sorted(response.get("Items", []), key=lambda item: item["product_id"])
+    items = response.get("Items", [])
+    while response.get("LastEvaluatedKey"):
+        response = table.scan(ExclusiveStartKey=response["LastEvaluatedKey"])
+        items.extend(response.get("Items", []))
+    items.sort(key=lambda item: item["product_id"])
 
     # The seed dataset is intentionally tiny. A production catalogue would use
-    # query/index/pagination patterns rather than an unrestricted table scan.
+    # query/index and bounded client pagination rather than a full table scan.
     logger.info("catalogue_list count=%s", len(items))
     return jsonify({"service": "catalogue-microservice", "products": normalise(items)})
 
@@ -94,15 +121,16 @@ def product_image_url(product_id):
             image_key,
             code,
         )
+        missing = code in {"404", "NoSuchKey", "NotFound"}
         return (
             jsonify(
                 {
-                    "error": "image_not_available",
+                    "error": "image_not_available" if missing else "image_storage_unavailable",
                     "product_id": product_id,
                     "image_key": image_key,
                 }
             ),
-            404,
+            404 if missing else 503,
         )
 
     url = s3.generate_presigned_url(
@@ -123,6 +151,11 @@ def product_image_url(product_id):
 
 @app.errorhandler(Exception)
 def unhandled_error(exc):
+    if isinstance(exc, HTTPException):
+        return jsonify({"error": exc.name.lower().replace(" ", "_")}), exc.code
+    if isinstance(exc, (BotoCoreError, ClientError)):
+        logger.exception("aws_dependency_unavailable")
+        return jsonify({"error": "dependency_unavailable"}), 503
     logger.exception("unhandled_error")
     return jsonify({"error": "internal_server_error"}), 500
 

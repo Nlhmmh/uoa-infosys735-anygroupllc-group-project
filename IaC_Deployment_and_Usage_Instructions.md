@@ -1,5 +1,13 @@
 # INFOSYS 735 Group Project 2 — IaC Deployment and Usage Instructions
 
+**Main project instructions:** Use this file for preparation, deployment, testing, evidence capture, troubleshooting and teardown. Section 4.27 contains the complete four-pillar test workflow and the supplied run's results. For slide creation and recording, use [Presentation_and_Slide_Content.md](Presentation_and_Slide_Content.md).
+
+**Verification:** The 6 October lab baseline, configuration release/reversal and scoped cleanup are verified. Recovery/scaling/delivery/cost evidence remains incomplete; the group reports that the saved load test did not create additional instances.
+
+**Implementation changes:** Explicit default-egress suppression; NAT/ASG bootstrap signals; one-instance EC2 update batches; immutable amd64 image tags and pinned digests; ECS deployment circuit breaker; liveness/readiness separation; functional smoke assertions, request probes, read-only configuration/orphan capture and blank cost inputs. Re-running foundation preserves an existing active service.
+
+For an existing ECR `v1`, use a new tag such as `v2` for this fixed application. Use that same tag for build and activation. The parameter JSON file describes a fresh phase-1 stack; manual activation also requires a verified `ContainerImageDigest`.
+
 **Case:** AnyGroupLLC  
 **Prototype Region:** `us-east-1`  
 **Infrastructure as Code:** AWS CloudFormation  
@@ -86,6 +94,10 @@ Keep the project in this structure:
 │   ├── part13_stack_manifest.json
 │   └── part13_static_validation_report.json
 │
+├── README.md
+├── IaC_Deployment_and_Usage_Instructions.md
+├── Presentation_and_Slide_Content.md
+├── Rubric_and_Assessment_Checklist.md
 ├── part13_iac_evidence_checklist.csv
 │
 ├── sample-images
@@ -125,7 +137,22 @@ Keep the project in this structure:
 | `scripts/part13_teardown_all.sh` | Delete resources in dependency-safe order |
 | `scripts/part13_validate_iac.py` | Local static validation of IaC and supporting files |
 
-The two `*.fragment.yaml` files are reference/security fragments. The main deployment script deploys the four full stack templates, not the fragment files directly.
+Additional verification tools:
+
+| File | Purpose |
+|---|---|
+| `scripts/part12_test_catalogue.py` / `lab_support.py` | Functional assertions, readiness, images/access denial, ECS/target/AZ checks |
+| `scripts/part14_collect_evidence.py` | Read-only dated configuration capture and post-teardown orphan checks |
+| `scripts/part14_probe_availability.py` | Functional endpoint sampling during a separately initiated failure |
+| `scripts/sync_security_reference.py` | Regenerate the security matrix/fragments; `--check` compares without writing |
+| `scripts/part13_package.py` | Package the source allowlist and current runbook |
+| `tests/` / `requirements-validation.txt` | Local mocked regression and schema-validation dependencies |
+| `data/cost_model_inputs.json` | Blank price, usage, ownership and efficiency inputs |
+| This guide, Section 4.27 | Four-pillar tests, evidence interpretation and operating procedure |
+| `Presentation_and_Slide_Content.md` | Detailed slide text, speaker notes, diagrams and console-recording plan |
+| `Rubric_and_Assessment_Checklist.md` | Full four-pillar assessment and checks against marking/submission requirements |
+
+The two `*.fragment.yaml` files are generated reference/security snapshots. The main deployment script deploys the four full stack templates. Do not deploy or merge the fragments as duplicate resources.
 
 ---
 
@@ -388,19 +415,7 @@ After uploading the project later, the normal status command is:
 However, if you already know you have previous stacks, you can check them immediately with:
 
 ```bash
-for stack in \
-  anygroup-gp2-network \
-  anygroup-gp2-core \
-  anygroup-gp2-observability \
-  anygroup-gp2-microservice
-do
-  echo -n "$stack: "
-  aws cloudformation describe-stacks \
-    --stack-name "$stack" \
-    --region us-east-1 \
-    --query "Stacks[0].StackStatus" \
-    --output text 2>/dev/null || echo "NOT_FOUND"
-done
+./scripts/part13_deploy_all.sh status
 ```
 
 ### Important Case: Network Healthy, Core Failed
@@ -430,40 +445,19 @@ Do **not** delete the healthy network stack in this case.
 
 ### If an Older Full Architecture Is Already Deployed
 
-If old core, observability, and microservice stacks are already deployed using the previous architecture, the cleanest Learner Lab approach is to tear them down and recreate them using the final artefacts. This avoids stale listener rules, exports, and old single-instance resources.
+For an existing healthy deployment, the script preserves catalogue activation and uses controlled stack updates. Capture your current state first. If an older architecture has incompatible exports or a failed stack cannot be updated, preserve evidence/data and explicitly choose cleanup/recreation in your own lab. Do not assume an access error means a resource is absent. A first failed update can use the old update policy for rollback; inspect the resulting instance versions.
 
 ---
 
 ## 2.4 Create the Deployment ZIP Locally
 
-Do not put AWS credentials, access keys, secret keys, session tokens, or downloaded Learner Lab credential files inside the ZIP.
-
-### Windows PowerShell
-
-Run from the project root:
-
-```powershell
-Compress-Archive `
-  -Path catalogue-service,cloudformation,data,sample-images,scripts,part13_iac_evidence_checklist.csv `
-  -DestinationPath anygroup-gp2-deployment.zip `
-  -Force
-```
-
-### macOS / Linux
-
-Run from the project root:
+Use the refreshed ZIP supplied in the repository, or run this portable packaging command from the project root:
 
 ```bash
-zip -r anygroup-gp2-deployment.zip \
-  catalogue-service \
-  cloudformation \
-  data \
-  sample-images \
-  scripts \
-  part13_iac_evidence_checklist.csv
+python3 scripts/part13_package.py
 ```
 
-The ZIP should contain the folders themselves, not only loose files.
+On Windows, `python scripts/part13_package.py` is equivalent. The packager includes the application, four stacks, supporting references/data, tests, scripts and current documentation. It excludes live evidence, `.env` files, caches and credentials. Keep credentials outside the source directories. Preserve live evidence separately before cleanup.
 
 ---
 
@@ -574,7 +568,7 @@ Network stack
 → Microservice Phase 1
 ```
 
-Microservice Phase 1 uses:
+For a fresh stack, Microservice Phase 1 defaults to:
 
 ```text
 DeployService=false
@@ -592,7 +586,7 @@ catalogue Security Group
 CloudWatch log group
 ```
 
-The ECS service is not started yet because its container image has not been pushed to ECR.
+For a fresh deployment, ECS is not started until an image, seed records and product images exist. For an existing active stack, foundation preserves activation and image parameters; it does not disable the catalogue.
 
 ### Stage B — Feature Activation
 
@@ -612,7 +606,7 @@ Phase 2 then creates/activates:
 /catalogue/* internal ALB rule
 ECS/Fargate service
 2 Fargate tasks
-catalogue health alarm
+catalogue unhealthy-target and healthy-capacity alarms
 ```
 
 ---
@@ -624,7 +618,7 @@ Run:
 ```bash
 ./scripts/part13_deploy_all.sh \
   foundation \
-  nhte538@aucklanduni.ac.nz
+  your-email@example.com
 ```
 
 Expected sequence:
@@ -683,7 +677,7 @@ The observability stack creates the SNS topic and email subscription.
 Check:
 
 ```text
-nhte538@aucklanduni.ac.nz
+your-email@example.com
 ```
 
 Look for an AWS email similar to:
@@ -753,9 +747,9 @@ The script:
 ```text
 discovers the ECR repository from CloudFormation
 logs Docker into ECR
-builds the image
-tags the image
-pushes tag v1
+builds explicitly for linux/amd64 and checks architecture
+tags the image with a unique immutable tag
+pushes tag v1 for a fresh repository
 ```
 
 Expected final message:
@@ -890,7 +884,7 @@ Run:
   v1
 ```
 
-The script first verifies that ECR tag `v1` exists.
+The script first verifies the tag and resolves its ECR digest, then checks all three DynamoDB records and S3 objects. Tags are immutable. Use `v2` if `v1` already exists; preserve the working baseline image for reversal.
 
 It then updates the microservice stack with:
 
@@ -898,6 +892,7 @@ It then updates the microservice stack with:
 DeployService=true
 CatalogueDesiredCount=2
 ContainerImageTag=v1
+ContainerImageDigest=sha256:<verified ECR digest>
 ```
 
 Expected:
@@ -1464,7 +1459,7 @@ tag v1 exists
 Run the supplied test script:
 
 ```bash
-./scripts/part12_test_catalogue.sh
+./scripts/part12_test_catalogue.sh --wait --output evidence/baseline/smoke.json
 ```
 
 It checks:
@@ -1492,7 +1487,7 @@ pending = 0
 
 ## 4.16 Test Catalogue Target Group
 
-The supplied test script already checks it.
+The supplied smoke script checks healthy counts and can wait for registration. It also asserts readiness, image retrieval/unsigned denial, a pinned task definition, completed ECS rollout and actual task AZ distribution.
 
 Manual check:
 
@@ -1681,6 +1676,7 @@ public ALB target 5XX
 backend unhealthy target
 backend capacity below two
 catalogue unhealthy target
+catalogue healthy capacity below two
 ```
 
 Optional notification-path test:
@@ -1711,13 +1707,15 @@ First obtain the public URL:
 ALB_URL="http://$ALB_DNS/"
 ```
 
-Generate a small load:
+Generate sustained load at the same five requests/second for eight minutes:
 
 ```bash
 python3 scripts/part09_load_test.py \
   "$ALB_URL" \
-  --requests 400 \
-  --workers 20
+  --requests 2400 \
+  --workers 8 \
+  --duration 480 \
+  --output evidence/scaling/load-8min.json
 ```
 
 Then monitor:
@@ -1740,6 +1738,25 @@ AWS Console
 
 Auto Scaling is not instantaneous.
 
+### If no additional frontend instance is created
+
+The saved run used 5 requests/second, about 300/minute. At two healthy targets that is about 150 requests/target/minute, above the configured target of 50. AWS target tracking interprets this throughput target per minute. This policy uses request count; it does not require high CPU. Source: [AWS target tracking](https://docs.aws.amazon.com/autoscaling/ec2/userguide/as-scaling-target-tracking.html).
+
+The eight-minute example extends observation time while retaining the same traffic rate; it does not guarantee scaling or repair a missing metric/launch error. Inspect **Automatic scaling → policy → AWS-managed CloudWatch alarm** and **ASG Activity** during the test. Do not modify the AWS-managed target-tracking alarms manually.
+
+Capture the policy, alarms and activity while the environment still exists:
+
+```bash
+mkdir -p evidence/scaling
+aws autoscaling describe-policies --auto-scaling-group-name anygroup-gp2-frontend-asg --region us-east-1 --output json > evidence/scaling/policies.json
+aws cloudwatch describe-alarms --region us-east-1 --output json > evidence/scaling/all-alarms.json
+aws autoscaling describe-scaling-activities --auto-scaling-group-name anygroup-gp2-frontend-asg --region us-east-1 --output json > evidence/scaling/activity.json
+```
+
+The policy response identifies its actual alarm names. The configuration collector filters alarms by the project-name prefix; AWS-managed target-tracking alarms can have a different prefix, so collect them explicitly using the commands above. Check the metric's public ALB/frontend target-group dimensions, datapoints, target value and alarm history. Missing data/insufficient breach history differs from an ALARM followed by a failed launch. If launch fails, use its actual Activity error to check quota, permissions, available capacity or launch-template/bootstrap configuration. Preserve the diagnostic result.
+
+If scale-out occurs, save peak desired/running capacity and target health; after scale-in save the baseline. Maintain frontend maximum 4, which keeps the planned project EC2 peak at 9. Do not combine the load experiment with failure injection or updates.
+
 ### Safety
 
 The normal total is `7` EC2.
@@ -1760,7 +1777,7 @@ Precondition:
 
 ```text
 2 healthy frontend targets
-frontend is not already scaled to 4
+frontend ASG is at its two-instance baseline; no active update or scale-out
 ```
 
 In the EC2 console, identify one frontend instance that belongs to the frontend ASG.
@@ -1775,7 +1792,7 @@ terminated target becomes unhealthy/deregistered
 frontend ASG launches replacement
 replacement joins target group
 target group returns to 2 healthy targets
-website remains available
+record successful and failed requests; brief failures must be preserved
 ```
 
 Capture:
@@ -1821,7 +1838,7 @@ replacement instance
 /api/health response
 ```
 
-This is strong Reliability evidence.
+Use the functional probe and post-restoration capture in Section 4.27.3. Replacement history and restored target counts support a recovery claim; an expected sequence by itself is not evidence.
 
 ---
 
@@ -1893,6 +1910,158 @@ Capture evidence in this order so the final presentation is easy to follow:
 
 ---
 
+## 4.27 Four-Pillar Verification and Evidence Workflow
+
+This section is part of the main operating guide. Use Sections 2–3 to deploy, Sections 4.1–4.26 for individual component checks, this section for integrated experiments, and Section 5 for teardown. Preserve actual outcomes, including failures; do not replace them with expected values.
+
+### 4.27.1 Baseline capture and evidence boundaries
+
+Use a distinct folder per session so a later run does not overwrite the supplied evidence. The examples below use short default paths; substitute your session directory consistently.
+
+```bash
+./scripts/part12_test_catalogue.sh --wait --output evidence/baseline/smoke.json
+python3 scripts/part14_collect_evidence.py --output evidence/baseline/configuration
+```
+
+A smoke PASS asserts storefront metadata, legacy/dummy DB connectivity, dependency access, three products/images, missing-resource responses, unsigned image rejection, digest-pinned X86_64 tasks, two task AZs and healthy targets. `/catalogue/health` is liveness; `/catalogue/ready` checks access to DynamoDB/S3. A ready empty table/bucket does not prove data exist.
+
+The collector is read-only and saves configuration, ASG Activity, task/target state and scoped resource counts. `CAPTURED` is not a passed recovery/scaling test. Access errors produce partial evidence. Capture after each experiment as well as before it. Save manual trigger times, selected instance/task, metric graphs, delivered notifications and budget inputs separately. Do not include credentials or full signed URL query strings in evidence.
+
+### 4.27.2 Operational Excellence: update and reversal
+
+
+After a successful baseline, keep its image, digest and output evidence. **Edit `catalogue-service/app.py` before building the update**, for example by adding `logger.info("catalogue_release_marker=v2")` after the logger is created. A new tag by itself does not change image content: the reviewed run assigned v1 and v2 to the same digest. Then:
+
+```bash
+./scripts/part12_build_push.sh v2 catalogue-service
+./scripts/part13_deploy_all.sh feature v2
+./scripts/part12_test_catalogue.sh --wait --output evidence/update-v2/smoke.json
+python3 scripts/part14_collect_evidence.py --output evidence/update-v2/configuration
+./scripts/part13_deploy_all.sh feature v1
+./scripts/part12_test_catalogue.sh --wait --output evidence/reversal-v1/smoke.json
+python3 scripts/part14_collect_evidence.py --output evidence/reversal-v1/configuration
+```
+
+If your baseline was `v2`, use `v3` for the update and reverse to `v2`. Compare the baseline and updated digests; a code-release test needs a different image digest. If they match, inspect the build context/cache and source edit rather than claiming changed code. Capture stack Events, the running task-definition digest and the response version. This is a successful update/reversal test. It is **not** evidence that the ECS circuit breaker was triggered. An intentionally failing image test is optional, should happen only after a completed baseline, and must preserve a known-good image. Initial service creation has no earlier completed deployment to roll back to.
+
+Frontend/backend launch-template changes now replace EC2 in batches of one with success signals, preserving at least one in-service instance per tier during an update. This is a lab availability/capacity compromise. Wait for healthy targets after an update; a success signal checks local application startup, not all customer flows. Perform updates only at the seven-EC2 baseline. When first adding an update policy to an older stack, the previous policy governs a failed update's rollback; inspect Events and instance versions rather than assuming all existing EC2 rolled back automatically.
+
+Removing `/catalogue/*` does not restore a legacy catalogue implementation: the dummy legacy backend has no such endpoint. Reversal means redeploying a retained, working catalogue image.
+
+### 4.27.3 Reliability: controlled failures and scale-out
+
+Resolve the public endpoint:
+
+```bash
+ALB_DNS="$(aws cloudformation describe-stacks --stack-name anygroup-gp2-core --region us-east-1 --query "Stacks[0].Outputs[?OutputKey=='AlbDnsName'].OutputValue | [0]" --output text)"
+```
+
+In one terminal, probe a **functional** catalogue endpoint:
+
+```bash
+python3 scripts/part14_probe_availability.py "http://$ALB_DNS/catalogue/products/P1001" \
+  --duration 300 --interval 1 --timeout 5 \
+  --expect-json-key product.product_id --expect-json-value P1001 \
+  --output evidence/frontend-failure/requests.jsonl
+```
+
+After baseline samples, terminate **one frontend ASG instance in the AWS Console**. The probe never terminates anything. Record the termination time, target-health transitions, ASG Activity and when two healthy frontend targets return. After two healthy targets return, run the following capture; snapshots from before the failure do not establish replacement. Save the manual trigger time/selected instance and target-health screenshots alongside it.
+
+```bash
+./scripts/part12_test_catalogue.sh --wait --output evidence/frontend-failure/restored-smoke.json
+python3 scripts/part14_collect_evidence.py --output evidence/frontend-failure/restored-configuration
+```
+
+Repeat separately for one backend instance while probing `/api/health`; test one ECS task separately while probing the functional catalogue endpoint. Do not terminate the NAT or dummy DB as a claim of whole-platform automatic failover.
+
+The probe records timestamps, failed responses and latency. Its summary describes sampled behaviour, not an SLA or numerical production RTO. A successful last sample alone does not prove restored redundant capacity; confirm the ASG/ECS count and target health separately. An EC2 termination is an instance failure test, not an AZ outage simulation.
+
+For frontend scale-out, use a bounded sustained load rather than relying on a short burst:
+
+```bash
+python3 scripts/part09_load_test.py "http://$ALB_DNS/" \
+  --requests 2400 --workers 8 --duration 480 --output evidence/scaling/load-8min.json
+```
+
+In a second terminal during observed scale-out, save a configuration capture, metric graphs and ASG Activity; after observed scale-in to two, save another capture.
+
+```bash
+python3 scripts/part14_collect_evidence.py --output evidence/scaling/peak-configuration
+# After confirmed scale-in to two:
+python3 scripts/part14_collect_evidence.py --output evidence/scaling/restored-configuration
+```
+
+Watch request-count metrics, scaling policy, ASG Activity and target count. The workload may need adjustment based on observed metrics; do not claim scale-out solely because load was generated. Wait for scale-in to two before any failure test/update. Backend capacity is fixed at two in the lab; catalogue tasks maintain desired state and use rolling deployment, not a configured demand-scaling policy.
+
+CloudWatch includes unhealthy-target and capacity alarms. The catalogue healthy-capacity alarm also detects absent targets/missing metrics. A terminated/deregistered target may not cause the unhealthy-host alarm to fire. Capture the actual alarm/metric that changed. A manually forced alarm or direct SNS publish proves notification delivery only.
+
+### 4.27.4 Security: effective configuration and denied access
+
+Capture private EC2/Fargate addresses, effective SG rules, NACL associations, S3 public-access blocking/encryption and the HTTPS-only bucket policy. The generated security matrix describes the actual broad NACL rules: SGs enforce fine-grained tier isolation. Loopback egress rules suppress AWS default outbound access; they do not provide a route out of the database tier.
+
+For an active negative connectivity test, use Systems Manager on a frontend instance. Read the dummy primary IP from the core Outputs. Using Python's `socket.create_connection(("<DB-IP>",1521),timeout=3)`, verify the frontend-to-DB attempt fails. A timeout, together with the captured SG rules and a successful backend `/api/db` check, supports the blocked-flow claim. Do not open temporary SSH, RDP or DB rules. Record the actual result; the collector only checks configuration and does not perform this connectivity test.
+
+To preserve the network result, run this **inside a frontend EC2 Systems Manager session** after substituting the dummy DB private IP from the core Outputs. Do not run it from CloudShell as proof of frontend isolation:
+
+```bash
+python3 - <<'CHECK'
+import socket
+from datetime import datetime, timezone
+print(datetime.now(timezone.utc).isoformat())
+try:
+    with socket.create_connection(("<DB-IP>", 1521), timeout=3):
+        print("UNEXPECTED: frontend-to-DB connection succeeded")
+        raise SystemExit(1)
+except (TimeoutError, OSError) as exc:
+    print("Connection failed:", type(exc).__name__)
+CHECK
+```
+
+Save the command output and the selected frontend identity alongside the effective SG rules and successful backend `/api/db` check. A failed connection alone can also indicate an unavailable host or routing issue; use the allowed-flow result and configuration to support the isolation interpretation.
+
+The smoke test verifies that a signed image request works while its unsigned counterpart is denied. Presigned URLs are bearer access for up to five minutes, not proof of user authentication. Do not place full signing query strings in slides/evidence. The public catalogue uses synthetic public product data; it is not a payment system.
+
+Lab limitations: HTTP ALB/application traffic, shared `LabRole`, broad HTTPS egress for AWS endpoints, broad NACLs, no deployed WAF/CloudTrail/Config, and no PCI claim. Production design adds validated TLS at each relevant hop, separate least-privilege task/execution roles, CloudFront origin protection, WAF/rate controls, audit logging, incident response and data-recovery controls.
+
+Incident drill: the operations owner records the alert and affected endpoint, preserves logs/Events, checks version/target/dependency state, restores the last known-good image or corrects the faulty IaC rule, runs smoke checks and records a short incident review. For a suspected security incident, preserve evidence and isolate the affected component through reviewed IaC changes; identify an incident lead and escalate to the CISO. Do not delete evidence during investigation.
+
+### 4.27.5 Cost Optimisation and cleanup
+
+Assign a cost owner and copy `data/cost_model_inputs.json` into your evidence folder. Populate current regional AWS prices, actual time/usage and source/date. Keep unknown values null. Include both ALBs, NAT, public IPv4, EBS, Fargate deployment peaks, storage, requests, logs and data transfer. Distinguish a calculation from billed cost and from the delayed Academy balance.
+
+Compare a production alternative at equivalent resilience/security. Fargate reduces host-management work; savings require evidence. Proposed cost efficiency is attributable cost divided by successful functional requests during the same measurement window; leave it unknown until both numerator and denominator exist. A lab-scale result is not a production forecast.
+
+Preserve the baseline/update/recovery/scaling/security evidence, finish console recording, then explicitly run the authorised cleanup in your lab:
+
+```bash
+./scripts/part13_teardown_all.sh
+python3 scripts/part14_collect_evidence.py --after-teardown --output evidence/after-teardown
+```
+
+Teardown deletes microservice, observability, empties the unversioned S3 bucket, then deletes core and network. ECR `EmptyOnDelete` cleans the repository when CloudFormation deletes it; images are not removed while tasks may still need them. An access error aborts cleanup rather than being disguised as a missing stack. The read-only orphan checker fails on remaining matching resources or incomplete reads. Its scope is project tags, stack names and project resource prefixes; manually inspect the console for untagged/manual resources and record the final displayed budget.
+
+### 4.27.6 Results from the supplied 6 October 2026 lab run
+
+| Test / observation | Verified result | Limit / next evidence |
+|---|---|---|
+| Baseline | Smoke PASS; 7 EC2, 2 ASGs, 4 successful stacks; 2 healthy frontend/backend/catalogue targets | Current console recording requires an active deployment; this run was torn down |
+| Update/reversal | v1 → v2 → v1 smoke PASS; completed ECS update and replacement tasks | Both tags use the same digest; changed application code and triggered circuit-breaker rollback are untested |
+| Security | Private non-NAT compute/tasks, IMDSv2, effective SG/S3 controls; signed image works, unsigned returns 403 | Frontend-to-DB denied connection and incident drill not supplied |
+| Monitoring | SNS subscription confirmed in update snapshot; alarm states captured | Delivered alert not supplied; startup ALARM/OK is not a controlled-failure delivery test |
+| Functional probe | 273/280 successes (97.5%); 2 HTTP 502 and 5 connection/timeout errors; final sample succeeds | Request-success ratio, not time-based availability; no saved failure trigger/replacement/full-capacity snapshot |
+| Load | 1,200 HTTP 200 in 239.81 s; 5 requests/s; successful p95 7.92 ms | Group reports no scale-out; inspect target-tracking alarm/metric and ASG Activity before diagnosing |
+| Cleanup | Dependency-ordered deletion and zero matching project resources; no collection errors | Scoped tags/names/prefixes; budget, attributable spend and savings remain unknown |
+
+Raw files are under `evidence/`; machine-readable observations and original evidence hashes are in `data/lab_evidence_review.json`. The request JSONL summary was recomputed and matches the saved summary. The baseline and update configuration captures precede the failure/load experiments, so they do not establish later replacement or scaling behaviour.
+
+### 4.27.7 Evidence ownership and presentation handoff
+
+Assign real team members to operations, recovery tests, security tests, cost measurement and recording. The operations owner records alert/endpoint impact, version/target/dependency state, corrective action, smoke verification and a short incident review. The cost owner records regional source prices, measured usage and starting/final budget without inventing unknowns.
+
+Use `part13_iac_evidence_checklist.csv` to distinguish local/static passes, verified runtime observations and outstanding evidence. Use [Presentation_and_Slide_Content.md](Presentation_and_Slide_Content.md) for slide text, diagrams and the timed console sequence. Use [Rubric_and_Assessment_Checklist.md](Rubric_and_Assessment_Checklist.md) for the full four-pillar assessment and marking checks. Capture required console proof before cleanup. Record actual behaviour; a configured recovery/scaling mechanism is not a completed runtime demonstration.
+
+---
+
 # Section 5 — Tear Down
 
 ## 5.1 Why Tear Down Is Important
@@ -1938,12 +2107,12 @@ For a non-interactive teardown:
 The script performs:
 
 ```text
-1. ECR image cleanup
-2. Delete microservice stack
-3. Delete observability stack
-4. Empty S3 bucket
-5. Delete core stack
-6. Delete network stack
+1. Delete microservice stack; ECR EmptyOnDelete removes the repository images
+2. Delete observability stack
+3. Empty the unversioned S3 bucket
+4. Delete core stack
+5. Delete network stack
+6. Run the read-only orphan check
 ```
 
 Dependency order:
@@ -1964,19 +2133,7 @@ The S3 bucket must be empty before the core stack can delete it.
 Run:
 
 ```bash
-for stack in \
-  anygroup-gp2-network \
-  anygroup-gp2-core \
-  anygroup-gp2-observability \
-  anygroup-gp2-microservice
-do
-  echo -n "$stack: "
-  aws cloudformation describe-stacks \
-    --stack-name "$stack" \
-    --region us-east-1 \
-    --query "Stacks[0].StackStatus" \
-    --output text 2>/dev/null || echo "NOT_FOUND"
-done
+./scripts/part13_deploy_all.sh status
 ```
 
 Expected:
@@ -2051,7 +2208,7 @@ export AWS_PAGER=""
 # Check access
 aws sts get-caller-identity
 
-# Local/static validation
+# Local/static validation (PyYAML installed; full checks use requirements-validation.txt)
 python3 scripts/part13_validate_iac.py
 
 # AWS template validation
@@ -2060,7 +2217,7 @@ python3 scripts/part13_validate_iac.py
 # Foundation
 ./scripts/part13_deploy_all.sh \
   foundation \
-  nhte538@aucklanduni.ac.nz
+  your-email@example.com
 
 # Confirm SNS subscription in email
 
@@ -2086,7 +2243,7 @@ python3 scripts/part13_validate_iac.py
 ./scripts/part13_deploy_all.sh status
 
 # Test catalogue and route coexistence
-./scripts/part12_test_catalogue.sh
+./scripts/part12_test_catalogue.sh --wait --output evidence/baseline/smoke.json
 
 # Open storefront using the public ALB DNS
 

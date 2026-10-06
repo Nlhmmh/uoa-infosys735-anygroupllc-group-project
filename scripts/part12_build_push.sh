@@ -31,10 +31,16 @@ echo "Source:      $SERVICE_DIR"
 aws ecr get-login-password --region "$REGION" \
   | docker login --username AWS --password-stdin "$REGISTRY"
 
-docker build -t "anygroup-catalogue:$IMAGE_TAG" "$SERVICE_DIR"
+docker build --platform linux/amd64 -t "anygroup-catalogue:$IMAGE_TAG" "$SERVICE_DIR"
+ARCH="$(docker image inspect "anygroup-catalogue:$IMAGE_TAG" --format '{{.Architecture}}')"
+if [[ "$ARCH" != "amd64" ]]; then
+  echo "Expected amd64 for the X86_64 Fargate task; found $ARCH." >&2
+  exit 1
+fi
 docker tag "anygroup-catalogue:$IMAGE_TAG" "$REPOSITORY_URI:$IMAGE_TAG"
 docker push "$REPOSITORY_URI:$IMAGE_TAG"
 
 echo
 echo "Pushed: $REPOSITORY_URI:$IMAGE_TAG"
-echo "Now update 04-microservice-stack.yaml with DeployService=true and ContainerImageTag=$IMAGE_TAG."
+echo "Activate with: ./scripts/part13_deploy_all.sh feature $IMAGE_TAG"
+echo "Tags are immutable. For a changed build use a new tag, such as v2; keep the last working image for rollback."

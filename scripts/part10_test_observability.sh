@@ -14,6 +14,7 @@ set -euo pipefail
 
 MODE="${1:-}"
 TARGET="${2:-}"
+REGION="${AWS_REGION:-us-east-1}"
 
 if [[ -z "$MODE" || -z "$TARGET" ]]; then
   echo "Usage:"
@@ -25,6 +26,7 @@ fi
 case "$MODE" in
   sns)
     aws sns publish \
+      --region "$REGION" \
       --topic-arn "$TARGET" \
       --subject "INFOSYS735 GP2 SNS test" \
       --message "Test notification from the AnyGroupLLC Group Project 2 observability validation."
@@ -33,6 +35,7 @@ case "$MODE" in
 
   alarm)
     aws cloudwatch set-alarm-state \
+      --region "$REGION" \
       --alarm-name "$TARGET" \
       --state-value ALARM \
       --state-reason "INFOSYS735 GP2 controlled notification test"

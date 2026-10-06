@@ -1,5 +1,5 @@
-/bk
 __pycache__/
 *.py[cod]
 .venv/
-evidence/
+*.md
+.env*

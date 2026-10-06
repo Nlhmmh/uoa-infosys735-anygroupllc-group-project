@@ -7,9 +7,20 @@
 **Learner Lab Region:** `us-east-1`  
 **Selected Additional Feature:** Incremental Microservices Modernisation using the Strangler Fig Pattern  
 **Pilot Boundary:** Existing Product Catalogue function  
-**Primary Well-Architected Pillars:** Operational Excellence and Reliability  
-**Supporting / Bonus Pillars:** Security and Cost Optimisation  
-**Infrastructure Source of Truth:** AWS CloudFormation  
+**Selected Well-Architected Pillars:** Operational Excellence, Reliability, Security and Cost Optimisation
+
+**Assessment Target:** Four substantive pillar assessments and the highest rubric bands; bonus marks remain discretionary
+
+**Infrastructure Source of Truth:** Four Learner Lab CloudFormation stacks
+
+**Verification State:** Local checks and the 6 October lab baseline/configuration update/reversal/cleanup verified; recovery, scaling, notification delivery and cost evidence incomplete
+
+**Main instructions:** [IaC_Deployment_and_Usage_Instructions.md](IaC_Deployment_and_Usage_Instructions.md)
+
+**Slide authoring guide:** [Presentation_and_Slide_Content.md](Presentation_and_Slide_Content.md)
+
+**Rubric checklist:** [Rubric_and_Assessment_Checklist.md](Rubric_and_Assessment_Checklist.md)
+
 **Presentation Limit:** 15 minutes  
 **Team Presentation:** All four speakers participate
 
@@ -36,8 +47,7 @@ It combines:
 - the Strangler Fig catalogue service;
 - CloudFormation Infrastructure as Code;
 - cost and cleanup controls;
-- the final presentation plan;
-- the final rubric audit.
+- links to slide authoring in `Presentation_and_Slide_Content.md` and assessment checks in `Rubric_and_Assessment_Checklist.md`.
 
 The project follows one traceability chain throughout:
 
@@ -87,7 +97,7 @@ The project must:
 
 1. continue from the AnyGroupLLC Group Project 1 solution;
 2. select **one** additional feature from the case-study additional question;
-3. assess the architecture against at least **two AWS Well-Architected pillars**;
+3. assess the architecture against **four AWS Well-Architected pillars**, meeting the two-pillar minimum and targeting the bonus;
 4. identify what was already strong in Group Project 1;
 5. identify gaps;
 6. improve the design where appropriate;
@@ -378,21 +388,21 @@ controlled failure testing
 | Requirement | Architecture / Implementation Response | Evidence to Capture | Final Status |
 |---|---|---|---|
 | Continue GP1 | Production architecture retained and extended | Old-vs-new architecture explanation | Design complete |
-| One additional feature | Strangler Fig microservices modernisation | Feature rationale + `/catalogue/*` route | Design complete; runtime pending |
-| At least two WAF pillars | Operational Excellence + Reliability | Pillar matrix + implementation evidence | Assessment complete |
-| VPC / AZs / subnets | Two-AZ VPC with six subnets | VPC console / CloudFormation | Network live |
-| NAT | NAT EC2 in lab; HA NAT Gateways in production | EC2/routes | Network live |
-| SGs / NACLs | Tier-based controls | SG/NACL console | IaC prepared |
-| ELB | Public + internal ALB | listeners/target groups | IaC prepared |
-| Auto Scaling | frontend ASG + backend ASG | ASG activity / replacement | IaC prepared |
-| SNS | operations topic | confirmed subscription + test | pending live |
-| CloudWatch | alarms + catalogue logs | alarms/logs | pending live |
-| EC2 | frontend/backend/dummy DB | instance/AZ evidence | pending updated core deployment |
-| Web server | Apache frontend | storefront | pending updated core deployment |
-| S3 | private image bucket | security + objects | IaC prepared |
-| Web/app/DB tiers | frontend → backend → dummy DB | live platform status + AWS console | pending live |
-| Additional components | ECS/Fargate, DynamoDB, CloudFormation | console + routes + data | pending live |
-| Live demonstration | storefront + APIs + console | presentation evidence | pending |
+| One additional feature | Strangler Fig microservices modernisation | Feature rationale + `/catalogue/*` route | Catalogue route and functional smoke verified; final pitch pending |
+| Four Well-Architected pillars | Operational Excellence, Reliability, Security, Cost Optimisation | Principle assessment + live evidence per pillar | Design documented; partial lab evidence reviewed 6 October |
+| VPC / AZs / subnets | Two-AZ VPC with six subnets | VPC console / CloudFormation | Saved lab configuration verified; console recording pending |
+| NAT | NAT EC2 in lab; HA NAT Gateways in production | EC2/routes | Instance/routes captured and bootstrap-dependent stacks completed; failure resilience not tested |
+| SGs / NACLs | Tier-based controls | SG/NACL console | Saved effective configuration verified; DB forbidden-flow test pending |
+| ELB | Public + internal ALB | listeners/target groups | Rules and healthy target groups verified; console recording pending |
+| Auto Scaling | frontend ASG + backend ASG | ASG activity / replacement | Two AZ-distributed ASGs captured; recovery/scale-out evidence incomplete |
+| SNS | operations topic | confirmed subscription + test | Subscription confirmed at update; delivery evidence missing |
+| CloudWatch | alarms + catalogue logs | alarms/logs | Alarm states captured; failure delivery/log demonstration pending |
+| EC2 | frontend/backend/dummy DB | instance/AZ evidence | Seven-instance lab baseline verified |
+| Web server | Apache frontend | storefront | Storefront smoke verified |
+| S3 | private image bucket | security + objects | Private/encrypted bucket and product-image access verified |
+| Web/app/DB tiers | frontend → backend → dummy DB | live platform status + AWS console | Functional smoke verified; dummy DBs do not replicate |
+| Additional components | ECS/Fargate, DynamoDB, CloudFormation | console + routes + data | Working integrated baseline verified; console recording pending |
+| Live demonstration | storefront + APIs + console | presentation evidence | Saved functional checks verified; presentation recording pending |
 | 4 presenters | 4-speaker allocation | presentation plan | planned |
 | ≤15 minutes | timed 12-slide plan | rehearsal timing | planned |
 
@@ -785,11 +795,7 @@ Assignment budget:
 $50 per student
 ```
 
-Budget information can lag approximately:
-
-```text
-8–12 hours
-```
+Budget display updates may lag; check the active lab documentation for its current update behaviour.
 
 Therefore the displayed remaining budget is not a real-time meter.
 
@@ -915,288 +921,115 @@ cleanup
 
 # 4. Well-Architected Pillar Assessment
 
-## 4.1 Pillar Selection
+## 4.1 Four Selected Pillars
 
-Primary pillars:
+The project assesses **Operational Excellence, Reliability, Security and Cost Optimisation** as four selected pillars. Each assessment identifies the GP1 baseline, a gap, a GP2 response, evidence, stakeholder value and remaining limitations. Four-pillar coverage targets the assignment's potential bonus; a service list or pillar label alone does not establish alignment.
 
-```text
-Operational Excellence
-Reliability
-```
+The original GP1 submission is not included in this repository. Its baseline below is the retained architecture summarised in this README, and should be checked against the submitted GP1 artefact before the final old-versus-new slide. Current AWS runtime verification is pending; earlier narrative references to a live network are historical statements, not current evidence.
 
-Supporting / bonus candidates:
+## 4.2 Assessment and Evidence Method
 
 ```text
-Security
-Cost Optimisation
+AWS principle → GP1 alignment → gap → GP2 design/implementation → evidence → business value → limitation
 ```
 
-The project should prioritise depth in the two primary pillars before claiming bonus breadth.
+The tables paraphrase AWS's principles and map them to this project. They distinguish implemented source configuration, proposed production controls and unexecuted tests. Use Section 4.27 of `IaC_Deployment_and_Usage_Instructions.md` for the test sequence and evidence interpretation. Use `data/part13_static_validation_report.json` for current local checks; it does not establish runtime success.
 
----
+| Responsibility | Proposed owner role | Required action before recording |
+|---|---|---|
+| Pilot business outcome | CTO / catalogue product owner | Confirm success criteria and further-extraction decision |
+| Deployment and operations | Team operations owner | Assign a real name; run update/reversal and keep runbook current |
+| Incident response and security | Team security owner; CISO for production | Assign a real name; review denied flows and incident drill |
+| Cost and resource lifecycle | Team cost owner; CFO for production | Assign a real name; record assumptions, usage and cleanup |
+| Evidence and presentation | All four presenters | Reconcile claims with dated captures; rehearse together |
 
-## 4.2 Review Method
-
-Every improvement follows:
-
-```text
-AWS Principle
-        ↓
-GP1 Alignment
-        ↓
-Gap
-        ↓
-GP2 Improvement
-        ↓
-Implementation
-        ↓
-Evidence
-        ↓
-Business Value
-        ↓
-Trade-Off
-```
-
----
+These are proposed responsibilities, not a claim that the client has accepted an operating model.
 
 ## 4.3 Operational Excellence
 
-### Existing Strengths
+GP1 provided a managed-service/multi-tier operations concept. GP2 addresses manual provisioning, ambiguous release identity and limited operational evidence.
 
-Group Project 1 already included:
+| Principle area | GP1 alignment / gap | GP2 response | Evidence and remaining limitation |
+|---|---|---|---|
+| Business ownership | Stakeholder needs identified; workload accountability unspecified | Bounded catalogue pilot, business acceptance criteria and named owner roles | OE-03; actual team names/client approval pending |
+| Useful monitoring | CloudWatch/SSM proposed; signals not demonstrated | Application logs, target/capacity/error alarms, SNS, versioned responses and dependency readiness | OE-01/REL-03; delivery and operational response pending; production tracing/audit requires expansion |
+| Safe operational automation | Infrastructure largely conceptual | Four stacks, dependency ordering, bootstrap signals, explicit SG defaults, preflight quota checks and repeatable scripts | OE-01; local validation passes; AWS Events and recreate test pending |
+| Reversible release increments | Microservices direction proposed; rollback unproven | Catalogue-only routing, immutable image tags, digest pinning, ECS circuit breaker and controlled EC2 updates | OE-02; configuration update/reversal verified with the same digest; distinct application-code update and triggered rollback untested; route removal does not restore a legacy catalogue |
+| Runbook maintenance | Small IT team needs repeatable processes | Deployment/test/incident/cleanup runbook; review procedure after each test | OE-03; reviews and process effectiveness unmeasured |
+| Failure preparation | Multi-AZ design alone did not establish recovery | Separate EC2/task failure scenarios and continuous functional endpoint sampling | REL-02/REL-03; no AZ-outage or production DR validation |
+| Lessons from incidents | No documented experimental feedback | Record trigger, failed samples, restoration, root cause and runbook change | OE-03; findings remain blank until tests run |
+| Managed platforms | AWS services proposed to reduce operational burden | Fargate, DynamoDB and S3 for the bounded service | ADD-01; application/image maintenance remains the team's responsibility; time savings unmeasured |
 
-- monitoring concepts;
-- Systems Manager;
-- CloudWatch;
-- managed AWS services;
-- multi-tier architecture.
+Business value: the IT team can reproduce the pilot and identify/reverse a release without rebuilding the full backend. This is a proposed operational benefit until measured in the lab/client environment.
 
-### Main Gap
-
-Much of the original architecture remained conceptual and operationally manual.
-
-The team needed stronger evidence of:
-
-- repeatable deployment;
-- reversible change;
-- infrastructure consistency;
-- documented operational procedures;
-- observable workloads.
-
-### Group Project 2 Improvements
-
-```text
-CloudFormation for all infrastructure
-+
-deployment scripts
-+
-stack outputs/imports
-+
-CloudWatch alarms/logs
-+
-SNS
-+
-documented deployment/testing/teardown
-+
-small Strangler Fig change
-```
-
-### Why This Matters to AnyGroupLLC
-
-The IT team is relatively small.
-
-Infrastructure as Code can reduce:
-
-- manual configuration;
-- inconsistent environments;
-- forgotten resources;
-- recovery time for environment recreation;
-- repeated troubleshooting caused by drift.
-
-### Evidence
-
-Show:
-
-- CloudFormation stacks;
-- template files;
-- stack resource relationships;
-- successful deployment;
-- update/redeployment;
-- teardown/recreation;
-- runbook;
-- CloudWatch/SNS.
-
----
+AWS basis: [Operational Excellence principles](https://docs.aws.amazon.com/wellarchitected/latest/framework/oe-design-principles.html).
 
 ## 4.4 Reliability
 
-### Existing Strengths
+GP1 retained two AZs, load balancing, Auto Scaling and proposed RDS Multi-AZ. GP2 turns selected recovery behaviours into testable mechanisms.
 
-Group Project 1 already designed:
-
-- two AZs;
-- ALBs;
-- Auto Scaling;
-- RDS Multi-AZ;
-- resilient S3;
-- multiple web/backend instances.
-
-### Main Gap
-
-Reliability was mostly architectural rather than demonstrated.
-
-The project needed evidence of:
-
-- health-based routing;
-- automatic replacement;
-- workload continuity;
-- service desired-state recovery;
-- observability during failure.
-
-### Group Project 2 Improvements
-
-Production:
-
-```text
-2-AZ frontend ASG
-+
-2-AZ backend ASG
-+
-RDS Multi-AZ
-+
-2+ Fargate tasks
-+
-health-aware ALBs
-```
-
-Learner Lab:
-
-```text
-2 frontend EC2
-+
-2 backend EC2
-+
-dummy DB primary/standby placement
-+
-2 Fargate tasks
-+
-public and internal ALB
-+
-failure/replacement tests
-```
-
-### Reliability Test Story
-
-Frontend:
-
-```text
-2 healthy frontend targets
-        ↓
-terminate 1 frontend
-        ↓
-ALB stops routing to failed target
-        ↓
-surviving frontend continues
-        ↓
-ASG creates replacement
-        ↓
-2 healthy targets restored
-```
-
-Backend:
-
-```text
-2 healthy backend targets
-        ↓
-terminate 1 backend
-        ↓
-internal ALB routes to survivor
-        ↓
-/api/* remains available
-        ↓
-backend ASG restores capacity
-```
-
-Fargate:
-
-```text
-Desired tasks = 2
-        ↓
-task failure
-        ↓
-ECS service restores desired state
-```
-
-### Business Value
-
-- reduces website downtime risk;
-- supports promotions/events;
-- improves recovery behaviour;
-- provides confidence before wider modernisation;
-- reduces single-instance dependence.
-
----
-
-## 4.5 Security — Supporting / Bonus Pillar
-
-Existing production strengths:
-
-- WAF;
-- Shield Standard;
-- private tiers;
-- SGs;
-- NACLs;
-- SSM;
-- private S3;
-- Secrets Manager;
-- KMS;
-- CloudTrail;
-- Config.
-
-Group Project 2 evidence:
-
-```text
-only public ALB exposed
-private frontend/backend/DB/Fargate
-SG-to-SG relationships
-no inbound SSH/RDP
-private S3
-no hard-coded credentials
-CloudFormation-managed controls
-```
-
-Security should only be claimed as a strong bonus pillar if the implementation evidence is actually captured.
-
----
-
-## 4.6 Cost Optimisation — Supporting / Bonus Pillar
-
-Relevant improvements:
-
-- small lab instance sizes;
-- Fargate instead of dedicated ECS hosts;
-- dummy DB instead of real Oracle/RDS in the lab;
-- one NAT EC2 instead of production NAT Gateways;
-- DynamoDB on-demand prototype model;
-- S3 object storage;
-- CloudFormation teardown;
-- explicit budget checks;
-- removal of idle resources.
-
-Again, claim Cost Optimisation strongly only when cleanup/budget evidence is available.
-
----
-
-## 4.7 Pillar Summary
-
-| Pillar | GP1 Strength | GP2 Gap | GP2 Response |
+| Principle area | GP1 alignment / gap | GP2 response | Evidence and remaining limitation |
 |---|---|---|---|
-| Operational Excellence | Good conceptual operations architecture | Limited IaC/repeatability evidence | CloudFormation, scripts, runbooks, observability |
-| Reliability | Strong multi-AZ design | Failure behaviour not proven | real health/replacement tests |
-| Security | Strong layered design | lab evidence incomplete | SG isolation, private tiers, private S3 |
-| Cost Optimisation | cloud elasticity discussed | cleanup/budget evidence weak | small resources, teardown, lab discipline |
+| Automatic restoration | Redundancy designed; behaviour unverified | ELB health-based EC2 replacement, ECS desired-state recovery, unhealthy/capacity alarms | REL-01/REL-02/REL-03; actual recovery and notifications pending |
+| Recovery exercises | No captured failure timeline | Manual single-instance/task failure plus request probes and capacity checks | REL-02/REL-03; observed recovery is not a contractual RTO; data restore is not tested |
+| Distributed capacity | Multi-AZ layout retained | Two frontend/backend instances and two Fargate tasks; assert actual task AZ placement | REL-01 verified by saved AZ/target snapshots; dummy DB nodes do not replicate/fail over; the lab NAT is a single failure point |
+| Measured demand | Production visit estimate does not determine sizing | Frontend request-count scaling with bounded sustained load and latency/status recording | REL-04; lab thresholds are deliberately small; backend/task demand scaling and production capacity are not validated |
+| Automated changes | Proposed design lacked consistent update behaviour | Stack dependencies, startup signals, one-instance batches, pinned application images | OE-01/OE-02; updates temporarily permit one EC2 per tier; healthy customer flows require separate verification |
 
----
+Production improvements retain AZ-local NAT paths, real database backup/restore/failover, appropriately sized compute and agreed recovery objectives. These are production design requirements, not resources deployed by the lab templates. `/catalogue/health` is process liveness; `/catalogue/ready` tests dependency access and product/image endpoints test the actual feature. Dependency failure should be diagnosed rather than restarting every healthy container.
+
+Business value: reduce dependence on one web/app instance and gain evidence of how the pilot behaves during a failure. Do not claim zero downtime or support for 500,000 visits/day from small lab tests.
+
+AWS basis: [Reliability principles](https://docs.aws.amazon.com/wellarchitected/latest/framework/rel-dp.html).
+
+## 4.5 Security
+
+GP1 proposed edge protection, private tiers, role-based administration, encryption and audit services. GP2 makes selected controls inspectable and adds negative tests, while identifying constraints explicitly.
+
+| Principle area | GP1 alignment / gap | GP2 response | Evidence and remaining limitation |
+|---|---|---|---|
+| Roles and permissions | Least-privilege production IAM proposed | LabRole/LabInstanceProfile credentials, no static application keys, IMDSv2 on NAT/web/app/DB EC2 | SEC-01; the shared lab role is not least privilege; production task/execution/admin roles must be separated and scoped |
+| Auditable changes | CloudTrail/Config proposed, not deployed here | Stack Events, immutable tags/digests, application logs and dated evidence captures | OE-01/SEC-03; app logs do not replace API/security audit; production audit configuration remains required |
+| Layered controls | Edge/VPC/tier separation proposed | Private compute, internal ALB, tier ingress, NACLs, explicit default-egress suppression, non-root container and private S3 | SEC-01/SEC-02; NACLs remain broad and SGs enforce fine-grained isolation; no lab WAF claim |
+| Controls as code | Security plan and implementation could drift | Authoritative templates, generated security matrix/fragments and static checks | SEC-01 effective rules verified; SEC-02 image denial verified; frontend-to-DB denied path still needs a test |
+| Data protection | Private/encrypted storage and TLS proposed | S3/DynamoDB/ECR encryption, S3 HTTPS-only policy and short-lived signed image access | SEC-01/SEC-02; lab ALB/application HTTP is restricted to synthetic public products; production needs validated TLS on client/service hops and appropriate key/data controls |
+| Controlled data access | Direct staff access/security scope undefined | Public read-only catalogue API; task credentials read metadata/images; no public DB/SSH/RDP | SEC-02; signed URLs are bearer access, not user authentication; production staff access and sensitive data scope need discovery |
+| Incident response | CISO's previous attacks require a response process | Identify alert/affected endpoint, preserve evidence, isolate through IaC, reverse a bad release, verify and review | SEC-03; drill pending; production WAF/rate controls, origin restrictions and security auditing remain design work |
+
+Production retains CloudFront/OAC, AWS WAF, Shield Standard, Secrets Manager/KMS and proposed audit services. Restrict the production ALB origin so clients cannot bypass edge filtering. Specify validated TLS endpoints/certificates for each relevant hop rather than presenting private HTTP as encryption. The prototype is not a payment service and does not establish PCI compliance.
+
+Business value: give the CISO evidence that private tiers and image access behave as intended and make the production security gaps visible before launch.
+
+AWS basis: [Security principles](https://docs.aws.amazon.com/wellarchitected/latest/framework/sec-design.html).
+
+## 4.6 Cost Optimisation
+
+GP1 proposed cloud elasticity and operating expenditure. GP2 adds resource lifecycle controls and a measurement protocol, rather than unsupported savings claims.
+
+| Principle area | GP1 alignment / gap | GP2 response | Evidence and remaining limitation |
+|---|---|---|---|
+| Financial ownership | CFO concerns known; owner and attribution absent | Named cost role, budget checkpoints and blank cost/usage input model | COST-01; actual owner, rates and budget captures pending |
+| Usage-based capacity | Elasticity proposed without working evidence | Frontend scaling, on-demand DynamoDB and short-lived lab resources | REL-04/COST-02; two ALBs and two tasks remain baseline charges; scale-in/cleanup need proof |
+| Workload efficiency | No cost/output denominator | Proposed attributable cost per successful functional request; latency/error observations | COST-01; both quantities and the same measurement window are required; a lab result is not a production forecast |
+| Managed operational work | Small team spends time on maintenance | Bounded service uses Fargate/DynamoDB/S3; retain legacy system during pilot | ADD-01/COST-01; managed platforms do not automatically lower every workload's bill; staff-time savings remain unmeasured |
+| Expenditure attribution | Resource inventory/cleanup were not proven | Project/component tags, three-day logs, ECR image retention, inventory and dependency-aware teardown | COST-01/COST-02; tags require billing/usage evidence to show cost; orphan checks have a defined scope |
+
+The gateway endpoints route S3/DynamoDB calls without the NAT path and have no additional endpoint charge; service/storage/request charges still apply. The single NAT is a documented lab cost/reliability trade-off, not the recommended production design. Include both ALBs, public IPv4, EBS, Fargate deployment peaks, transfer and observability when costing the solution.
+
+Business value: the CFO receives an accountable pilot investment and evidence to compare the next step. Compare production options at equivalent resilience/security; do not quote invented percentages or imply that a smaller lab proves production savings.
+
+AWS basis: [Cost Optimisation principles](https://docs.aws.amazon.com/wellarchitected/latest/framework/cost-dp.html), [gateway endpoints](https://docs.aws.amazon.com/vpc/latest/privatelink/gateway-endpoints.html).
+
+## 4.7 Assessment Summary
+
+| Pillar | Main improvement | Evidence status | Stakeholder |
+|---|---|---|---|
+| Operational Excellence | Repeatable, identifiable and reversible deployment | Stacks and configuration update/reversal verified; same image content; ownership/Events review pending | IT manager / CTO |
+| Reliability | Health-based restoration and measured recovery/scaling | Baseline/probe/load verified; replacement/scaling/delivery evidence incomplete | CTO |
+| Security | Inspectable layered controls and denied-access tests | Effective configuration and image rejection verified; DB forbidden-flow test pending | CISO |
+| Cost Optimisation | Ownership, usage measurement and complete resource lifecycle | Inventory/cleanup verified; owner/prices/usage/budget pending | CFO |
+
+The bonus claim depends on the depth of this assessment, production improvements and captured implementation evidence. It is not a guarantee of marks.
 
 # 5. Group Project 2 Full Production Architecture
 
@@ -1882,6 +1715,7 @@ internal ALB /catalogue/* listener rule
 catalogue SG
 CloudWatch log group
 catalogue health alarm
+catalogue healthy-capacity alarm
 ```
 
 ### Two-Phase Microservice Deployment
@@ -1906,6 +1740,7 @@ Phase 2:
 
 ```text
 DeployService=true
+ContainerImageDigest=sha256:<verified ECR digest>
 → create ECS service
 → create /catalogue/* route
 → run 2 tasks
@@ -1932,10 +1767,13 @@ Latest updated artefacts were locally validated with:
 
 ```text
 4 / 4 templates parsed
-35 cross-stack imports matched
+38 cross-stack imports matched
 0 unmatched imports
-94 declared CloudFormation resources
+95 declared CloudFormation resources
 updated deployment-script syntax PASS
+CloudFormation schema lint PASS
+30 mocked regression tests PASS
+rendered storefront JavaScript syntax PASS
 ```
 
 Important:
@@ -1945,7 +1783,7 @@ AWS runtime validation
 → still required
 ```
 
-A local/static pass is not a claim that every Learner Lab resource has successfully deployed.
+A local/static pass is distinct from runtime proof. The supplied 6 October lab files now verify the baseline, deployment version-label update/reversal and scoped cleanup; see [the main guide, Section 4.27](IaC_Deployment_and_Usage_Instructions.md#4276-results-from-the-supplied-6-october-2026-lab-run) for the remaining gaps.
 
 ---
 
@@ -2091,7 +1929,7 @@ Fargate tasks are not EC2 instances, but they still consume budget.
 | `ap-southeast-6` | use `us-east-1` | Learner Lab Region restriction |
 | Route 53 custom domain | omitted | domain registration unavailable; ALB DNS is enough for demo |
 | CloudFront | omitted from working dependency | lab documentation did not explicitly guarantee it; not needed to prove core feature |
-| AWS WAF | production-only / optional lab extension | available, but primary marks focus on Operational Excellence and Reliability |
+| AWS WAF | production recommendation / optional lab extension | Security is assessed through existing controls and production improvements; adding the WAF service is not required to assess the pillar |
 | Shield Standard | production architecture only | not required for the sandbox demonstration |
 | HTTPS / ACM | lab uses HTTP | no custom domain required; simpler demo; production remains HTTPS |
 | Two NAT Gateways | one NAT EC2 | lab cost reduction; known single point of failure accepted in prototype |
@@ -2239,7 +2077,7 @@ Production should use CloudFront/OAC instead.
 The complete operational deployment, testing and teardown procedure is maintained separately in:
 
 ```text
-INFOSYS735_GP2_IaC_Deployment_and_Usage_Instructions.md
+IaC_Deployment_and_Usage_Instructions.md
 ```
 
 That document should be used during the actual Learner Lab deployment.
@@ -2269,1485 +2107,49 @@ teardown
 
 # 7. Cost and Cleanup Validation
 
-## 7.1 Budget Rule
+## 7.1 Budget and Ownership
 
-Assignment budget:
+The assignment gives $50 per student. Check the active lab balance before a session and assign a cost owner. The Academy display may lag, so preserve the displayed balance separately from measured usage and any attributable cost.
 
-```text
-$50 per student
-```
+## 7.2 Complete Cost Model
 
-Treat it as a hard ceiling.
+`data/cost_model_inputs.json` is a blank input model, not a cost result. It covers EC2 by tier, both ALBs/LCUs, NAT, public IPv4, EBS, Fargate CPU/memory, S3, DynamoDB, ECR, monitoring/notification and transfer. Fill current regional rates, source/date, actual runtime/usage and ownership. Leave unknowns null.
 
-Do not rely on the displayed balance as real-time data because it may lag by 8–12 hours.
+Use observed instance/task hours when scaling or updating. Two Fargate tasks can temporarily become four during a rolling deployment. Fixed baseline costs remain even when the catalogue is quiet. Gateway endpoints have no additional endpoint charge; storage/requests still incur service charges.
 
----
+The proposed efficiency measure is attributable workload cost divided by successful functional requests over the same measurement window. Do not divide an Academy balance change by load-generator HTML requests and call it catalogue cost efficiency.
 
-## 7.2 Cost-Conscious Design Decisions
+## 7.3 Design Trade-Offs
 
-Lab choices intentionally reduce cost:
-
-```text
-t3.micro-class EC2
-+
-7-instance steady-state baseline
-+
-Fargate instead of ECS host fleet
-+
-dummy DB instead of RDS Oracle
-+
-single NAT EC2 instead of two NAT Gateways
-+
-DynamoDB PAY_PER_REQUEST
-+
-short-lived infrastructure
-+
-CloudFormation teardown
-```
-
-Production decisions are not downgraded because of the student-lab budget.
-
----
-
-## 7.3 Main Cost Risks
-
-Highest-risk resources:
-
-- EC2 left running;
-- public/internal ALBs;
-- Fargate tasks;
-- NAT resources;
-- accidental RDS;
-- resources forgotten outside CloudFormation.
-
-Budget controls:
-
-```text
-Before session
-→ inspect stacks/resources/budget
-
-During session
-→ build only required resources
-→ test immediately
-→ capture evidence immediately
-
-End session
-→ remove temporary resources
-→ tear down if work is complete
-→ check for orphans
-```
-
----
-
-## 7.4 Cleanup Strategy
-
-The teardown script follows dependency-aware cleanup.
-
-Actual script sequence:
-
-```text
-1. Best-effort ECR image cleanup
-2. Delete microservice stack
-3. Delete observability stack
-4. Empty core S3 bucket
-5. Delete core stack
-6. Delete network stack
-7. Inspect for orphaned resources
-```
-
-Why S3 is emptied manually:
-
-```text
-CloudFormation cannot delete a non-empty bucket
-```
-
----
-
-## 7.5 Cleanup Verification
-
-After teardown verify:
-
-```text
-CloudFormation
-→ no project stacks
-
-EC2
-→ no project instances
-
-Auto Scaling
-→ no project ASGs
-
-ELB
-→ no project load balancers / target groups
-
-ECS
-→ no project service/tasks
-
-ECR
-→ no leftover repository/images if stack deletion succeeded
-
-DynamoDB
-→ no project table
-
-S3
-→ no project bucket
-
-SNS
-→ no project topic
-
-VPC
-→ no project VPC/network resources
-```
-
-Use tags where possible:
-
-```text
-Project = INFOSYS735-GP2
-Environment = LearnerLab
-ManagedBy = CloudFormation
-```
-
----
-
-## 7.6 Cost Validation Evidence
-
-Do not invent an actual cost number.
-
-Capture the following from the live lab:
-
-| Evidence | Status |
-|---|---|
-| Starting displayed budget | Pending live capture |
-| Resource count before deployment | Pending |
-| Resource count after deployment | Pending |
-| Displayed budget after testing | Pending |
-| Stack teardown complete | Pending |
-| Orphan-resource check | Pending |
-| Final displayed budget | Pending |
-
-The cost story should focus on:
-
-```text
-design discipline
-+
-controlled lifecycle
-+
-evidence
-```
-
-not unsupported savings percentages.
-
----
-
-# 8. Presentation
-
-## 8.1 Presentation Objective
-
-The final presentation is not a classroom-style explanation of AWS services.
-
-It should be delivered as a **solutions-architect pitch to the stakeholders at AnyGroupLLC**.
-
-The presentation should answer the questions that the CTO, CFO, CISO and IT leadership would care about:
-
-```text
-What business problem are we solving?
-        ↓
-What did we change from the previous design?
-        ↓
-Why is this change safer and better for AnyGroupLLC?
-        ↓
-How does the proposed production architecture work?
-        ↓
-What did we actually build in AWS?
-        ↓
-Can we prove that it works?
-        ↓
-What business value does AnyGroupLLC receive?
-        ↓
-What trade-offs and next steps remain?
-```
-
-The presentation should sound like a professional recommendation:
-
-> **“Here is the architecture we recommend for AnyGroupLLC, here is why we recommend it, and here is the live AWS evidence that proves the prototype works.”**
-
-Avoid presenting the deck as:
-
-```text
-“Here is VPC.”
-“Here is EC2.”
-“Here is S3.”
-```
-
-Instead connect every AWS component to:
-
-```text
-business problem
-→ architecture decision
-→ live evidence
-→ stakeholder value
-```
-
----
-
-## 8.2 Presentation Timing and Format
-
-Maximum presentation time:
-
-```text
-15 minutes
-```
-
-Recommended target:
-
-```text
-13:30–14:15
-```
-
-Recommended buffer:
-
-```text
-45–90 seconds
-```
-
-The presentation should combine:
-
-```text
-Pitch Slides
-+
-Live AWS Management Console Demo
-```
-
-The live demo is a core part of the pitch, not an optional appendix.
-
-The team should show configured AWS components directly in the AWS Management Console, including:
-
-```text
-CloudFormation
-VPC
-EC2
-Auto Scaling
-Load Balancers
-Target Groups
-ECS / Fargate
-DynamoDB
-S3
-CloudWatch
-SNS
-```
-
-CloudFormation must be shown explicitly because Infrastructure as Code is one of the project's strongest Operational Excellence improvements.
-
----
-
-## 8.3 Four-Speaker Allocation
-
-| Speaker | Approx. Time | Responsibility | Main Stakeholder Perspective |
-|---|---:|---|---|
-| **Speaker 1** | 0:00–3:00 | Business problem, stakeholder needs, GP1 baseline, Well-Architected gaps | CTO / CFO / CISO |
-| **Speaker 2** | 3:00–6:00 | Recommended feature, production architecture, lab simplifications | CTO / IT leadership |
-| **Speaker 3** | 6:00–10:15 | Live AWS Management Console demo: CloudFormation, network, compute, ALB/ASG, legacy path | CTO / IT Operations |
-| **Speaker 4** | 10:15–14:15 | Live catalogue demo, monitoring/reliability evidence, cost/trade-offs, recommendation | CFO / CISO / CTO |
-| **Buffer** | 14:15–15:00 | Demo delay, transitions, closing | — |
-
-Replace `Speaker 1–4` with the real team member names in the final slide deck.
-
----
-
-## 8.4 Pitch Narrative
-
-The recommended narrative is:
-
-```text
-AnyGroupLLC is expanding
-        ↓
-Existing architecture is already strong
-        ↓
-Main GP2 gaps are operational repeatability and proven reliability
-        ↓
-We retain the strong production foundation
-        ↓
-We introduce one controlled Strangler Fig microservice pilot
-        ↓
-We manage infrastructure through CloudFormation
-        ↓
-We prove the design live in AWS
-        ↓
-We show old and new application paths working together
-        ↓
-We show health, scaling, monitoring and failure evidence
-        ↓
-We recommend staged modernisation rather than a full rewrite
-```
-
-The pitch should continuously distinguish:
-
-```text
-PRODUCTION RECOMMENDATION
-vs
-LEARNER LAB PROTOTYPE
-```
-
----
-
-## 8.5 Slide 1 — Executive Recommendation
-
-### Slide Title
-
-**Modernising AnyGroupLLC Without a Risky Full Rewrite**
-
-### Slide Content
-
-```text
-Our recommendation:
-
-Retain the reliable GP1 production foundation
-        +
-Improve operational control with CloudFormation
-        +
-Prove reliability with live AWS evidence
-        +
-Pilot catalogue modernisation using Strangler Fig
-```
-
-Stakeholder outcome:
-
-- safer New Zealand expansion;
-- reduced infrastructure-management burden;
-- improved resilience;
-- staged investment;
-- controlled modernisation.
-
-### Speaker Notes — Speaker 1
-
-“AnyGroupLLC does not need to replace a working platform to modernise successfully. Our recommendation is to retain the strong two-Availability-Zone architecture from Group Project 1, improve how the environment is operated through Infrastructure as Code and observability, and test microservices through one controlled catalogue pilot. This gives the CTO a modernisation path, the CFO staged investment rather than a large rewrite, the CISO controlled exposure, and the IT team a more repeatable operating model.”
-
----
-
-## 8.6 Slide 2 — Why Change Is Needed
-
-### Slide Title
-
-**Growth Increases Both Traffic Risk and Operational Pressure**
-
-### Slide Content
-
-```text
-≈500,000 visits/day
-+
-higher promotion/event traffic
-+
-New Zealand expansion
-+
-small IT team
-+
-previous availability/security concerns
-```
-
-Stakeholder concerns:
-
-```text
-CTO
-→ availability, scalability, productivity
-
-CFO
-→ cost, investment control, operational efficiency
-
-CISO
-→ downtime, security, reputation
-
-IT Team
-→ less manual setup and firefighting
-```
-
-### Speaker Notes — Speaker 1
-
-“The technical design must support more than traffic. AnyGroupLLC also has a relatively small IT team and a history of availability and security concerns. A design that scales but is difficult to operate would not solve the full business problem. Our Group Project 2 improvement therefore focuses on both Reliability and Operational Excellence.”
-
----
-
-## 8.7 Slide 3 — What We Improved from Group Project 1
-
-### Slide Title
-
-**Keep the Strong Foundation, Fix the Gaps**
-
-### Slide Content
-
-**Retain:**
-
-```text
-2 AZs
-CloudFront / WAF / Shield
-Public ALB
-Frontend ASG
-Internal ALB
-Backend ASG
-RDS Oracle Multi-AZ
-Private S3
-```
-
-**Improve:**
-
-```text
-Manual / conceptual deployment
-→ CloudFormation
-
-Reliability designed on paper
-→ live failure and health evidence
-
-Server-oriented application
-→ one controlled microservice extraction
-```
-
-### Speaker Notes — Speaker 1
-
-“Our Group Project 1 architecture was already a strong production design. We did not redesign it unnecessarily. We focused on the gaps: repeatable deployment, stronger operational evidence, and a controlled way to evaluate microservices. This is why our primary Well-Architected pillars are Operational Excellence and Reliability.”
-
----
-
-## 8.8 Slide 4 — Additional Feature Decision
-
-### Slide Title
-
-**A Strangler Fig Pilot Instead of a Full Rewrite**
-
-### Slide Content
-
-```text
-Existing Backend
-      │
-      ├── existing functions stay in place
-      │
-      └── Product Catalogue extracted
-                 ↓
-          ECS / Fargate
-                 ↓
-             DynamoDB
-                 ↓
-          S3 image reference
-```
-
-Why this approach:
-
-- incremental;
-- reversible;
-- independently deployable;
-- independently observable;
-- lower migration risk;
-- measurable before wider adoption.
-
-### Speaker Notes — Speaker 2
-
-“The catalogue already exists, so we are not claiming the catalogue itself as a new feature. The new capability is incremental service extraction. We route only catalogue traffic to a new independently deployed service while the rest of the backend continues operating. This lets AnyGroupLLC test whether the operational and scaling benefits of microservices justify the additional complexity before committing to more migration.”
-
----
-
-## 8.9 Slide 5 — Recommended Production Architecture
-
-### Slide Title
-
-**Production Recommendation for AnyGroupLLC New Zealand**
-
-### Slide Content
-
-```text
-Customers
-→ Route 53
-→ CloudFront
-→ AWS WAF / Shield Standard
-→ Public ALB
-→ Frontend ASG
-→ Internal ALB
-   ├── /catalogue/* → ECS/Fargate
-   │                   → catalogue data boundary
-   │                   → private S3 image references
-   │
-   └── existing API → .NET Backend ASG
-                       → RDS for Oracle Multi-AZ
-```
-
-Management:
-
-```text
-CloudFormation
-CloudWatch / SNS
-Systems Manager
-CloudTrail / Config
-Secrets Manager / KMS
-```
-
-### Speaker Notes — Speaker 2
-
-“This remains our production recommendation. It uses the New Zealand Region, two Availability Zones, edge delivery and protection, separate public and internal load balancing, a multi-AZ frontend and backend, and RDS for Oracle Multi-AZ. The Group Project 2 change is deliberately narrow: catalogue traffic can be routed to the new service without replacing the existing .NET backend.”
-
----
-
-## 8.10 Slide 6 — Why the Learner Lab Looks Different
-
-### Slide Title
-
-**The Prototype Proves Behaviour, Not Production Capacity**
-
-### Slide Content
-
-```text
-Production                     Learner Lab
-──────────────────────────────────────────────────
-ap-southeast-6                 us-east-1
-CloudFront / WAF / Shield      simplified
-2 NAT Gateways                 1 NAT EC2
-Production EC2 sizing          t3.micro-class
-4 backend baseline             2 backend EC2
-RDS Oracle Multi-AZ            dummy DB primary/standby
-HTTPS/custom DNS               ALB DNS + HTTP demo
-```
-
-Lab baseline:
-
-```text
-1 NAT
-2 Frontend
-2 Backend
-2 Dummy DB
-= 7 EC2
-```
-
-### Speaker Notes — Speaker 2
-
-“The lab is intentionally smaller. It is constrained by the educational environment, including a maximum of nine running EC2 instances and a $50-per-student budget. We therefore preserve architecture relationships rather than production capacity. The two dummy database EC2 instances demonstrate private DB-tier placement and connectivity, not Oracle or RDS replication.”
-
----
-
-# 8.11 Live Demonstration Strategy
-
-The live demonstration should be integrated into the pitch.
-
-Do not wait until the final minute and rapidly click through the console.
-
-The demo should prove the architecture in a deliberate order.
-
-Recommended sequence:
-
-```text
-CloudFormation
-        ↓
-Network
-        ↓
-Compute / Auto Scaling
-        ↓
-Load Balancing
-        ↓
-Storefront + Legacy Path
-        ↓
-Catalogue Microservice
-        ↓
-DynamoDB + S3
-        ↓
-CloudWatch + SNS
-        ↓
-Reliability evidence
-```
-
-Keep the required AWS Console tabs open before the presentation starts.
-
----
-
-## 8.12 Slide 7 + Live Demo — Infrastructure as Code
-
-### Slide Title
-
-**Operational Excellence: The Environment Is Defined, Not Hand-Built**
-
-### Slide Content
-
-```text
-01-network
-→ 02-core
-→ 03-observability
-→ 04-microservice
-```
-
-Key message:
-
-> CloudFormation is the infrastructure source of truth.
-
-### Live AWS Management Console Demo — Speaker 3
-
-Open:
-
-```text
-AWS Management Console
-→ CloudFormation
-→ Stacks
-```
-
-Show the four stacks:
-
-```text
-anygroup-gp2-network
-anygroup-gp2-core
-anygroup-gp2-observability
-anygroup-gp2-microservice
-```
-
-For one or two stacks, show:
-
-```text
-Status
-Resources
-Outputs
-```
-
-Recommended proof points:
-
-```text
-Network stack
-→ VPC/subnet exports
-
-Core stack
-→ public ALB
-→ internal ALB
-→ frontend ASG
-→ backend ASG
-→ dummy DB nodes
-→ S3
-
-Observability stack
-→ SNS / alarms
-
-Microservice stack
-→ ECS / ECR / DynamoDB / catalogue route
-```
-
-### Speaker Notes — Speaker 3
-
-“One of our strongest Operational Excellence improvements is that the environment is defined through CloudFormation rather than maintained as a collection of manual console configurations. These four stacks separate network, core infrastructure, observability and the new microservice. The AWS Console is being used here to verify the deployed resources, not as a second source of configuration.”
-
----
-
-## 8.13 Slide 8 + Live Demo — Core Infrastructure and Legacy Path
-
-### Slide Title
-
-**The Existing Application Path Remains Highly Available**
-
-### Slide Content
-
-```text
-Internet
-→ Public ALB
-→ Frontend ASG ×2
-→ Internal ALB
-→ Backend ASG ×2
-→ Dummy DB Primary + Standby
-```
-
-### Live AWS Management Console Demo — Speaker 3
-
-Show:
-
-```text
-VPC
-→ VPC + 6 subnets across 2 AZs
-
-EC2
-→ NAT
-→ 2 frontend instances
-→ 2 backend instances
-→ DB primary
-→ DB standby
-
-Auto Scaling Groups
-→ frontend ASG
-→ backend ASG
-
-EC2 → Load Balancers
-→ public ALB
-→ internal ALB
-
-EC2 → Target Groups
-→ 2 healthy frontend targets
-→ 2 healthy backend targets
-```
-
-Then open the website:
-
-```text
-http://<PUBLIC-ALB-DNS>/
-```
-
-Show the `Live Platform Status` section:
-
-```text
-Web Tier
-→ frontend instance / AZ
-
-Legacy API
-→ backend instance / AZ
-
-Database Tier
-→ primary reachable
-→ standby reachable
-```
-
-### Speaker Notes — Speaker 3
-
-“This is our retained legacy path. The public load balancer sends the customer request to one of two frontend instances. Apache then forwards application requests to the private internal load balancer, which distributes them across two backend instances. The backend can reach both private dummy database nodes on the database port. The small status panel on the website gives us visible proof that the complete frontend-to-backend-to-database path is functioning.”
-
----
-
-## 8.14 Slide 9 + Live Demo — Strangler Fig Catalogue
-
-### Slide Title
-
-**The New Catalogue Service Runs Beside the Existing Backend**
-
-### Slide Content
-
-```text
-/catalogue/*
-      ↓
-Internal ALB
-      ↓
-Catalogue Target Group
-      ↓
-ECS / Fargate ×2
-      ↓
-DynamoDB
-      ↓
-S3 image references
-```
-
-### Live AWS Management Console Demo — Speaker 4
-
-Show:
-
-```text
-EC2 → Load Balancers → Internal ALB
-→ listener rules
-→ priority 50 /catalogue/*
-→ priority 100 /api/*
-```
-
-Show:
-
-```text
-ECS
-→ cluster
-→ catalogue service
-→ Desired = 2
-→ Running = 2
-```
-
-Show:
-
-```text
-Target Groups
-→ catalogue target group
-→ 2 healthy Fargate IP targets
-```
-
-Show:
-
-```text
-DynamoDB
-→ catalogue table
-→ P1001 / P1002 / P1003
-```
-
-Show:
-
-```text
-S3
-→ private image bucket
-→ products/P1001.jpg
-→ products/P1002.jpg
-→ products/P1003.jpg
-```
-
-Return to storefront and show:
-
-```text
-product cards
-images
-price
-availability
-search
-```
-
-### Speaker Notes — Speaker 4
-
-“This is the new feature operating beside the legacy backend. The internal ALB uses path-based routing: `/api/*` stays on the old backend while `/catalogue/*` goes to Fargate. The catalogue service runs two tasks, reads product metadata from DynamoDB, and uses image keys for objects stored privately in S3. The storefront then renders the live product cards. This coexistence is the Strangler Fig behaviour we wanted to prove.”
-
----
-
-## 8.15 Slide 10 + Live Demo — Reliability and Observability
-
-### Slide Title
-
-**We Can See Failures and Recover from Them**
-
-### Slide Content
-
-```text
-CloudWatch
-├── frontend unhealthy
-├── frontend capacity
-├── ALB 5XX
-├── backend unhealthy
-├── backend capacity
-└── catalogue unhealthy
-        ↓
-       SNS
-        ↓
-operations notification
-```
-
-Reliability evidence:
-
-```text
-terminate one frontend
-→ site continues
-→ ASG replaces
-
-terminate one backend
-→ /api/* continues
-→ ASG replaces
-```
-
-### Live AWS Management Console Demo — Speaker 4
-
-Show:
-
-```text
-CloudWatch
-→ Alarms
-```
-
-Show relevant alarms.
-
-Show:
-
-```text
-CloudWatch
-→ Log groups
-→ catalogue log group
-```
-
-Show:
-
-```text
-SNS
-→ Topic
-→ Subscription = Confirmed
-```
-
-If a live failure test has already been performed, show:
-
-```text
-Auto Scaling
-→ Activity history
-→ replacement event
-```
-
-and/or:
-
-```text
-Target Group
-→ health transition evidence
-```
-
-If performing the failure live would consume too much time or risk the environment, use previously captured evidence while explaining the test.
-
-### Speaker Notes — Speaker 4
-
-“Reliability is not only a diagram. CloudWatch gives us health and capacity signals, SNS provides notification, and Auto Scaling restores lost EC2 capacity. We can show the replacement event directly in the console. This is the improvement over Group Project 1: the recovery behaviour is now observable and demonstrable.”
-
----
-
-## 8.16 Slide 11 — Cost, Trade-Offs and Stakeholder Value
-
-### Slide Title
-
-**A Controlled Investment, Not a Big-Bang Rewrite**
-
-### Slide Content
-
-**Prototype cost controls:**
-
-```text
-$50/student
-7 EC2 steady state
-small EC2 sizes
-dummy DB
-single NAT EC2
-Fargate
-CloudFormation teardown
-```
-
-**Trade-offs:**
-
-- more components;
-- distributed-service monitoring;
-- service/data ownership;
-- networking complexity;
-- team skills;
-- additional cost.
-
-**Stakeholder value:**
-
-```text
-CTO
-→ safe modernisation + scalability
-
-CFO
-→ staged investment + cost discipline
-
-CISO
-→ controlled exposure + observable health
-
-IT Team
-→ repeatable infrastructure + less manual configuration
-```
-
-### Speaker Notes — Speaker 4
-
-“Microservices introduce complexity, so we are not recommending migration for its own sake. The catalogue pilot gives AnyGroupLLC evidence before further investment. The Learner Lab also demonstrates cost discipline through small resources, a dummy database and repeatable teardown. In production, AnyGroupLLC can retain the stronger edge, database and multi-AZ architecture while making future extraction decisions based on measured value.”
-
----
-
-## 8.17 Slide 12 — Closing Recommendation
-
-### Slide Title
-
-**Modernise Incrementally, Measure, Then Decide the Next Boundary**
-
-### Slide Content
-
-```text
-KEEP
-→ reliable GP1 foundation
-
-IMPROVE
-→ CloudFormation + observability
-
-PROVE
-→ health, scaling and recovery
-
-PILOT
-→ catalogue microservice
-
-MEASURE
-→ value and operational cost
-
-DECIDE
-→ next extraction only if justified
-```
-
-Final recommendation:
-
-> **Retain the stable platform, modernise one bounded function at a time, and use operational evidence to decide whether further microservice adoption is worthwhile.**
-
-### Speaker Notes — Speaker 4
-
-“Our recommendation to AnyGroupLLC is staged modernisation. Keep the reliable production foundation, improve operational repeatability through Infrastructure as Code, and use the catalogue service as a controlled first pilot. If that pilot shows meaningful deployment, scaling and ownership benefits without creating excessive operational cost, then the organisation can select the next bounded service. This approach gives AnyGroupLLC a modernisation path without placing the New Zealand launch at unnecessary risk.”
-
----
-
-## 8.18 Live Demo Checklist
-
-Before the presentation, verify the following in the AWS Management Console.
-
-### CloudFormation
-
-```text
-[ ] all four stacks visible
-[ ] stack statuses successful
-[ ] resources tab opens
-[ ] outputs visible
-```
-
-### VPC
-
-```text
-[ ] VPC visible
-[ ] six subnets visible
-[ ] two AZs visible
-[ ] route tables visible
-[ ] NACLs visible
-[ ] gateway endpoints visible
-```
-
-### EC2 / Auto Scaling
-
-```text
-[ ] NAT instance visible
-[ ] 2 frontend instances visible
-[ ] 2 backend instances visible
-[ ] dummy DB primary visible
-[ ] dummy DB standby visible
-[ ] frontend ASG visible
-[ ] backend ASG visible
-```
-
-### Load Balancing
-
-```text
-[ ] public ALB active
-[ ] internal ALB active
-[ ] frontend target group healthy
-[ ] backend target group healthy
-[ ] catalogue target group healthy
-[ ] internal listener rules visible
-```
-
-### Website
-
-```text
-[ ] storefront loads
-[ ] product cards load
-[ ] images load
-[ ] platform status loads
-[ ] /api/health works
-[ ] /api/db works
-```
-
-### ECS / Fargate
-
-```text
-[ ] ECS cluster active
-[ ] catalogue service active
-[ ] desired tasks = 2
-[ ] running tasks = 2
-```
-
-### DynamoDB / S3
-
-```text
-[ ] product records visible
-[ ] image keys correct
-[ ] S3 images visible
-[ ] bucket remains private
-```
-
-### Monitoring
-
-```text
-[ ] CloudWatch alarms visible
-[ ] catalogue log group visible
-[ ] SNS subscription confirmed
-```
-
-### Reliability Evidence
-
-```text
-[ ] frontend replacement evidence captured
-[ ] backend replacement evidence captured
-[ ] screenshots prepared as backup
-```
-
----
-
-## 8.19 Demo Risk Management
-
-A live AWS demo can fail because of:
-
-- lab-session expiry;
-- browser delay;
-- slow resource state changes;
-- AWS console navigation;
-- Fargate task restart;
-- email notification timing;
-- Auto Scaling replacement delay.
-
-Therefore prepare:
-
-```text
-Live demo
-+
-backup screenshots
-+
-backup command outputs
-```
-
-The team should never spend several minutes waiting for a resource to change state.
-
-If a live failure/replacement event is too slow, show:
-
-```text
-Auto Scaling Activity History
-+
-target health
-+
-captured evidence
-```
-
-and continue the pitch.
-
----
-
-## 8.20 Presentation Quality Rules
-
-### Do
-
-- speak to AnyGroupLLC as the client;
-- use “we recommend” and “this gives AnyGroupLLC…”;
-- show live configuration evidence;
-- show CloudFormation early in the demo;
-- connect technical choices to business outcomes;
-- state production vs lab differences explicitly;
-- explain trade-offs;
-- keep transitions rehearsed.
-
-### Do Not
-
-- read AWS service definitions;
-- spend most of the presentation on diagrams;
-- claim the dummy DB is RDS;
-- claim the dummy DB is replicated;
-- claim DynamoDB is definitely the production catalogue datastore;
-- claim unsupported SLA/RTO/RPO numbers;
-- call the catalogue itself the new feature;
-- present the Learner Lab architecture as the production architecture;
-- hide trade-offs.
-
----
-
-## 8.21 Presentation Rehearsal Timing
-
-Suggested rehearsal target:
-
-```text
-Slide 1   0:40
-Slide 2   0:55
-Slide 3   0:55
-Slide 4   0:55
-Slide 5   1:00
-Slide 6   0:50
-Slide 7   1:15 + CloudFormation demo
-Slide 8   1:30 + core/legacy demo
-Slide 9   1:45 + catalogue demo
-Slide 10  1:20 + monitoring demo
-Slide 11  0:50
-Slide 12  0:35
---------------------------------
-Target    ≈13:30–14:15
-```
-
-The team should rehearse with the AWS Console open, not only with slides.
-
-# 9. Final Rubric Audit
-
-## 9.1 Solution Improvement — 10 Marks
-
-| Audit Item | Evidence | Status |
+| Choice | Prototype rationale | Production boundary |
 |---|---|---|
-| Continues GP1 | Production architecture retained | Complete |
-| One additional feature | Strangler Fig microservices modernisation | Complete |
-| Product catalogue correctly described as pilot | Feature documentation | Complete |
-| Architecture improved rather than replaced | Production diagram | Complete |
-| Two primary WAF pillars | Operational Excellence + Reliability | Complete |
-| Existing strengths identified | GP1/WAF analysis | Complete |
-| Gaps identified | operational repeatability + reliability evidence | Complete |
-| Improvements mapped to business value | stakeholder sections | Complete |
-| Trade-offs acknowledged | microservices/cost sections | Complete |
-| Live evidence | deployment/demo | Pending final live validation |
+| Seven small EC2 at baseline, frontend maximum four | Demonstrates tiering/recovery within the planned nine-instance ceiling | Size from measured business workload, not lab thresholds |
+| Single NAT EC2 | Lower scope/cost; endpoints avoid that path for S3/DynamoDB | Single failure point and possible cross-AZ transfer; use resilient production egress |
+| Two Fargate tasks | Managed catalogue runtime with redundant desired capacity | Still incurs task/network/ALB costs; compare alternatives at equivalent resilience |
+| On-demand DynamoDB | Fits the tiny unpredictable metadata pilot | Validate query patterns, data ownership and actual request/storage cost |
+| Dummy DB EC2 | Assignment permits a representative DB tier | Not Oracle/RDS, replication, backups or real failover |
+| Short logs and five retained images | Limits short-lived prototype retention | Keep required audit evidence and active/rollback images; production retention differs |
+| CloudFormation cleanup | Removes the environment in dependency order | Evidence/data must be preserved first; production data require retention/recovery policies |
 
-### Audit Judgment
+## 7.4 Cleanup and Evidence
 
-Design quality is strong.
+The script deletes microservice, observability, empties the unversioned S3 bucket, deletes core, then network. ECR `EmptyOnDelete` removes images when its repository is deleted; the script does not pre-delete images while tasks still run. Access/deletion failures abort and remain visible.
 
-Full marks depend on successfully demonstrating the improvement rather than only explaining it.
-
----
-
-## 9.2 Basic Infrastructure — 30 Marks
-
-| Required Component | Final Design | Evidence Needed | Status |
-|---|---|---|---|
-| VPC | `10.0.0.0/16` | VPC console | Network deployed |
-| 2 AZs | A + B | subnet/AZ view | Network deployed |
-| Subnets | 2 public + 2 app + 2 DB | subnet view | Network deployed |
-| NAT | NAT EC2 | routes/instance | Network deployed |
-| SGs | tier-based SGs | SG rules | updated core pending live |
-| NACLs | public/app/DB | NACL associations | network evidence needed |
-| ELB | public + internal ALB | listener/health | pending live |
-| Auto Scaling | frontend + backend ASG | ASG console | pending live |
-| SNS | operations topic | confirmed email | pending live |
-| CloudWatch | alarms/logs | alarm/log console | pending live |
-| EC2 | 2 frontend + 2 backend + 2 DB + NAT | EC2 view | pending updated core |
-| Web server | Apache | storefront | pending live |
-| S3 | private product images | bucket security/objects | pending live |
-| Web tier | frontend ASG | target health | pending live |
-| App tier | backend ASG / Fargate | target health | pending live |
-| DB tier | dummy primary/standby | `/api/db` + EC2 | pending live |
-
-### Audit Judgment
-
-All required components are represented in the final design/IaC.
-
-The remaining risk is implementation evidence.
-
----
-
-## 9.3 Additional Infrastructure — 20 Marks
-
-| Additional Service | Integration | Business/Technical Value | Status |
-|---|---|---|---|
-| ECS/Fargate | `/catalogue/*` | independent service runtime | IaC ready |
-| DynamoDB | catalogue metadata | service-owned prototype store | IaC ready |
-| CloudFormation | all infrastructure | repeatability / reversible changes | in use |
-| ECR | Fargate image source | container delivery | IaC ready |
-| S3 relationship | image objects | scalable private media storage | IaC ready |
-| CloudWatch/SNS | service health | operational visibility | IaC ready |
-
-### Audit Judgment
-
-The service set is coherent and should satisfy the “more than one well-integrated component” expectation if successfully demonstrated.
-
----
-
-## 9.4 Presentation — 40 Marks
-
-| Requirement | Plan | Status |
-|---|---|---|
-| ≤15 minutes | approximately 13:30–14:15 plus buffer | Planned |
-| All members present | 4-speaker allocation | Planned |
-| Stakeholder pitch | presentation framed as recommendation to AnyGroupLLC CTO/CFO/CISO/IT leadership | Planned |
-| Client-focused story | problem → recommendation → proof → value → trade-offs → next step | Planned |
-| Updated architecture | production + lab text diagrams | Complete |
-| CloudFormation live demo | show four stacks, status, resources and outputs in Management Console | Pending live |
-| Core AWS live demo | VPC, EC2, ASGs, public/internal ALBs and target groups | Pending live |
-| Application live demo | storefront + legacy `/api/*` path + DB connectivity | Pending live |
-| Additional-feature live demo | ECS/Fargate, ALB catalogue rule, DynamoDB, S3 product images | Pending live |
-| Observability live demo | CloudWatch alarms/logs + SNS subscription | Pending live |
-| Reliability evidence | frontend/backend replacement activity and target health | Pending live |
-| Technical rationale | feature/WAF/architecture | Complete |
-| Business value | stakeholder mapping | Complete |
-| Trade-offs | explicit | Complete |
-| Strong ending | staged modernisation recommendation | Planned |
-
----
-
-## 9.5 Bonus-Pillar Audit
-
-### Security
-
-Claim strongly only if evidence shows:
-
-```text
-private workloads
-SG isolation
-NACLs
-private S3
-no public SSH/RDP
-no hard-coded credentials
+```bash
+./scripts/part13_teardown_all.sh
+python3 scripts/part14_collect_evidence.py --after-teardown --output evidence/after-teardown
 ```
 
-### Cost Optimisation
+The orphan check covers project tags, the four stack names and matching resource prefixes. Also inspect the console for untagged/manual resources. Record starting/final budget, session times, inventories, price/usage assumptions, stack deletion and the orphan report. Scoped cleanup has been captured and verified for the 6 October run; budget/price/usage results remain pending. See Section 4.27 of `IaC_Deployment_and_Usage_Instructions.md` for the full sequence.
 
-Claim strongly only if evidence shows:
+# 8. Presentation and Slide Content
 
-```text
-resource sizing
-budget awareness
-cleanup
-stack deletion
-orphan check
-```
+Use [Presentation_and_Slide_Content.md](Presentation_and_Slide_Content.md) for copy-ready content for 12 main slides, speaker notes, four-member timing, diagram specifications, console steps and the submission table. Use [Rubric_and_Assessment_Checklist.md](Rubric_and_Assessment_Checklist.md) for the full four-pillar assessment, rubric audit, evidence checklist, risks and references. Build the deck outside this repository using the presentation guide.
 
-Do not claim bonus depth only because the architecture mentions security/cost services.
-
----
-
-## 9.6 Final Evidence Checklist
-
-### Architecture
-
-```text
-[ ] production architecture matches final feature
-[ ] lab architecture matches actual deployment
-[ ] production vs lab differences are clearly labelled
-```
-
-### CloudFormation
-
-```text
-[ ] all 4 stacks successful
-[ ] all 4 stacks shown live in AWS Management Console
-[ ] Resources tab evidence captured
-[ ] Outputs tab evidence captured
-[ ] stack outputs/imports visible
-[ ] latest templates used
-[ ] no manually maintained duplicate infrastructure
-```
-
-### Network
-
-```text
-[ ] VPC
-[ ] 6 subnets
-[ ] routes
-[ ] NAT
-[ ] NACLs
-[ ] S3/DynamoDB endpoints
-```
-
-### Core
-
-```text
-[ ] public ALB
-[ ] internal ALB
-[ ] 2 frontend targets
-[ ] 2 backend targets
-[ ] dummy DB primary
-[ ] dummy DB standby
-```
-
-### Website
-
-```text
-[ ] improved AnyGroup Market UI
-[ ] product cards
-[ ] product images
-[ ] search
-[ ] platform status
-[ ] frontend ID/AZ
-[ ] backend ID/AZ
-[ ] both DB statuses
-```
-
-### Catalogue
-
-```text
-[ ] ECR image
-[ ] ECS service
-[ ] 2 running Fargate tasks
-[ ] 2 healthy catalogue targets
-[ ] DynamoDB items
-[ ] S3 images
-[ ] /catalogue/products
-[ ] /catalogue/products/P1001/image-url
-```
-
-### Monitoring
-
-```text
-[ ] SNS confirmed
-[ ] frontend alarms
-[ ] backend alarms
-[ ] catalogue alarm
-[ ] catalogue logs
-```
-
-### Reliability
-
-```text
-[ ] frontend failure/replacement
-[ ] backend failure/replacement
-[ ] site remains available during controlled test
-[ ] Auto Scaling Activity History evidence captured
-[ ] target-health evidence captured
-[ ] backup screenshots ready for presentation
-```
-
-### Cost / Cleanup
-
-```text
-[ ] budget captured
-[ ] cleanup script tested
-[ ] all stacks deleted when finished
-[ ] S3 emptied
-[ ] ECR cleaned
-[ ] no orphaned EC2/ALB/ECS/S3/DynamoDB resources
-```
-
----
-
-## 9.7 Final Risks Before Submission
-
-The main remaining project risks are:
-
-| Risk | Effect | Control |
-|---|---|---|
-| Updated core stack fails in lab | no final demo | inspect CREATE_FAILED event; fix evidence-based |
-| Backend targets unhealthy | legacy demo fails | inspect user data/service/SG/internal ALB |
-| Fargate role/service issue | catalogue unavailable | validate LabRole + ECS service events |
-| Product images missing | storefront incomplete | verify S3 keys and image-url endpoint |
-| SNS unconfirmed | notification demo fails | confirm email before test |
-| Auto Scaling reaches 9 EC2 limit | replacement/scale conflict | do not combine peak scale and replacement tests |
-| Budget exhausted | lab disabled | deploy/test/capture/teardown quickly |
-| Slides diverge from deployment | credibility loss | update slides from final live architecture only |
-| Demo is too long | presentation over 15 min | rehearse; keep console navigation pre-positioned |
-
----
-
-## 9.8 Final Recommendation
-
-The final project recommendation is:
-
-```text
-KEEP
-→ the strong GP1 two-AZ production foundation
-
-IMPROVE
-→ operations through CloudFormation, monitoring and repeatable procedures
-
-PROVE
-→ reliability with health-based routing and controlled replacement tests
-
-PILOT
-→ Product Catalogue as one Strangler Fig microservice
-
-MEASURE
-→ deployment independence, reliability, team effort and business value
-
-DECIDE
-→ whether another function should be extracted
-```
-
-The most important project message is:
-
-> **AnyGroupLLC does not need a risky full rewrite to begin modernising. It can retain the reliable existing platform, extract one bounded service, operate old and new paths together, and use real evidence to decide the next step.**
-
----
+For all preparation, deployment, testing, evidence capture and teardown, use [IaC_Deployment_and_Usage_Instructions.md](IaC_Deployment_and_Usage_Instructions.md), the main operational guide. The architecture, case-study rationale, implementation and design assessment remain in this README.
 
 # Source Basis
 
-This consolidated document is based on the project artefacts produced for Group Project 2, including:
+Current authoritative project files: `instructions.md`, `AnyGroupLLC_case_study.md`, the four full templates in `cloudformation/`, `catalogue-service/`, deployment/testing scripts, `IaC_Deployment_and_Usage_Instructions.md`, `Presentation_and_Slide_Content.md`, `Rubric_and_Assessment_Checklist.md`, generated security references and the static report. Earlier planning documents and the original GP1 submission are not included in this repository; the retained GP1 architecture must be checked against that submission before final claims.
 
-```text
-INFOSYS735_GP2_Part01_Final_Requirements_and_Rubric_Matrix.md
-INFOSYS735_GP2_Part02_Additional_Feature_Decision.md
-INFOSYS735_GP2_Part03_Learner_Lab_Capability_and_Budget_Validation_Completed.md
-INFOSYS735_GP2_Part04_Well_Architected_Pillar_Assessment.md
-INFOSYS735_GP2_Part05_Group_Project_2_Logical_Architecture.md
-INFOSYS735_GP2_Part07_Security_Implementation_Plan.md
-INFOSYS735_GP2_Part08_Core_AWS_Infrastructure.md
-INFOSYS735_GP2_Part11_S3_Implementation.md
-INFOSYS735_GP2_Part12_Strangler_Fig_Catalogue_Microservice.md
-INFOSYS735_GP2_Complete_Architecture_Diagram.md
-INFOSYS735_GP2_Complete_Project_Plan_Compact.md
-INFOSYS735_GP2_IaC_Deployment_and_Usage_Instructions.md
-01-network-stack.yaml
-02-core-infrastructure-stack.yaml
-03-observability-stack.yaml
-04-microservice-stack.yaml
-```
-
-Where older artefacts describe the previous one-ALB / one-backend / one-dummy-DB prototype, this document uses the **latest final lab architecture**:
-
-```text
-Public ALB
-→ Frontend ASG ×2
-→ Internal ALB
-   ├── Backend ASG ×2
-   │    → Dummy DB Primary + Standby
-   │
-   └── Fargate Catalogue ×2
-        → DynamoDB
-        → private S3
-```
-
-That updated architecture is the source of truth for final deployment, testing and presentation.
+The implemented lab templates describe public ALB → private frontend → internal ALB → backend/dummy DB or Fargate catalogue → DynamoDB/private S3. The reference fragments are generated snapshots and must not be deployed/merged as duplicate resources. The complete production recommendation includes components beyond the lab templates and is not claimed as an implemented production environment.

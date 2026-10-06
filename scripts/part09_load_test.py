@@ -12,12 +12,16 @@ The script uses the Python standard library only.
 import argparse
 import concurrent.futures
 import collections
+import json
+import math
+from pathlib import Path
 import time
 import urllib.request
 import urllib.error
 
 
-def hit(url: str, timeout: float) -> int:
+def hit(url: str, timeout: float) -> tuple[int, float]:
+    started = time.perf_counter()
     req = urllib.request.Request(
         url,
         headers={
@@ -28,11 +32,12 @@ def hit(url: str, timeout: float) -> int:
     try:
         with urllib.request.urlopen(req, timeout=timeout) as response:
             response.read(256)
-            return response.getcode()
+            status = response.getcode()
     except urllib.error.HTTPError as exc:
-        return exc.code
+        status = exc.code
     except Exception:
-        return 0
+        status = 0
+    return status, (time.perf_counter() - started) * 1000
 
 
 def main():
@@ -43,10 +48,14 @@ def main():
     parser.add_argument("--requests", type=int, default=400, help="Total requests (default: 400)")
     parser.add_argument("--workers", type=int, default=20, help="Concurrent workers (default: 20)")
     parser.add_argument("--timeout", type=float, default=5.0, help="Per-request timeout seconds (default: 5)")
+    parser.add_argument("--duration", type=float, default=0, help="Spread the fixed request count across this many seconds; zero sends a burst")
+    parser.add_argument("--output", type=Path, help="Save measured request counts and latency")
     args = parser.parse_args()
 
     if args.requests < 1 or args.workers < 1:
         raise SystemExit("--requests and --workers must be positive")
+    if args.timeout <= 0 or args.duration < 0:
+        raise SystemExit("timeout must be positive; duration cannot be negative")
 
     print(f"Target:   {args.url}")
     print(f"Requests: {args.requests}")
@@ -55,11 +64,19 @@ def main():
 
     started = time.perf_counter()
     counts = collections.Counter()
+    latencies = []
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as pool:
-        futures = [pool.submit(hit, args.url, args.timeout) for _ in range(args.requests)]
+        futures = []
+        for index in range(args.requests):
+            scheduled = started + index * args.duration / args.requests
+            time.sleep(max(0, scheduled - time.perf_counter()))
+            futures.append(pool.submit(hit, args.url, args.timeout))
         for future in concurrent.futures.as_completed(futures):
-            counts[future.result()] += 1
+            status, latency = future.result()
+            counts[status] += 1
+            if status == 200:
+                latencies.append(latency)
 
     elapsed = time.perf_counter() - started
     rps = args.requests / elapsed if elapsed else 0.0
@@ -71,6 +88,15 @@ def main():
         print(f"{label:18} {count}")
     print(f"\nElapsed: {elapsed:.2f}s")
     print(f"Rate:    {rps:.2f} requests/s")
+    latencies.sort()
+    percentile = lambda p: round(latencies[max(0, math.ceil(len(latencies)*p)-1)], 2) if latencies else None
+    result = {"requests": args.requests, "status_counts": dict(counts), "elapsed_seconds": round(elapsed, 2),
+              "requests_per_second": round(rps, 2), "successful_latency_p50_ms": percentile(.5),
+              "successful_latency_p95_ms": percentile(.95), "scope": "Learner Lab HTTP response test; not production capacity validation"}
+    print(json.dumps(result, indent=2))
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(result, indent=2) + "\n")
     print("\nAuto Scaling is not instantaneous.")
     print("Watch EC2 Auto Scaling Activity and the frontend target group for several minutes.")
 

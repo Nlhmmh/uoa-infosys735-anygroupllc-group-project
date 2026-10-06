@@ -32,12 +32,18 @@ Parameters:
     Default: v1
     Description: ECR image tag to deploy. Push this tag before enabling the service.
 
+  ContainerImageDigest:
+    Type: String
+    Default: ''
+    AllowedPattern: '^$|sha256:[0-9a-f]{64}'
+    Description: Pin the verified image digest on activation/update; empty only for phase 1.
+
   CatalogueDesiredCount:
     Type: Number
     Default: 2
-    MinValue: 1
+    MinValue: 2
     MaxValue: 2
-    Description: Fargate task count. Use 2 for the Reliability demonstration.
+    Description: Two Fargate tasks for the lab Reliability baseline.
 
   DeployService:
     Type: String
@@ -58,7 +64,27 @@ Parameters:
     - 'false'
     Description: Create an unhealthy-catalogue-target alarm after the service is enabled.
 
+Rules:
+  ServiceRequiresPinnedImage:
+    Assertions:
+    - Assert:
+        Fn::Or:
+        - Fn::Equals:
+          - Ref: DeployService
+          - 'false'
+        - Fn::Not:
+          - Fn::Equals:
+            - Ref: ContainerImageDigest
+            - ''
+      AssertDescription: DeployService=true requires the verified ContainerImageDigest.
+
 Conditions:
+  HasImageDigest:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: ContainerImageDigest
+      - ''
+
   DeployServiceCondition:
     Fn::Equals:
     - Ref: DeployService
@@ -77,7 +103,7 @@ Resources:
     Properties:
       RepositoryName:
         Fn::Sub: ${EnvironmentName}-catalogue
-      ImageTagMutability: MUTABLE
+      ImageTagMutability: IMMUTABLE
       ImageScanningConfiguration:
         ScanOnPush: true
       EncryptionConfiguration:
@@ -268,14 +294,10 @@ Resources:
       - Name: catalogue
         Essential: true
         Image:
-          Fn::Sub:
-          - ${RepositoryUri}:${ImageTag}
-          - RepositoryUri:
-              Fn::GetAtt:
-              - CatalogueRepository
-              - RepositoryUri
-            ImageTag:
-              Ref: ContainerImageTag
+          Fn::If:
+          - HasImageDigest
+          - Fn::Sub: ${CatalogueRepository.RepositoryUri}@${ContainerImageDigest}
+          - Fn::Sub: ${CatalogueRepository.RepositoryUri}:${ContainerImageTag}
         PortMappings:
         - ContainerPort: 8080
           Protocol: tcp
@@ -290,6 +312,9 @@ Resources:
         - Name: AWS_REGION_NAME
           Value:
             Ref: AWS::Region
+        - Name: APP_VERSION
+          Value:
+            Ref: ContainerImageTag
         LogConfiguration:
           LogDriver: awslogs
           Options:
@@ -332,6 +357,7 @@ Resources:
     Condition: DeployServiceCondition
     DependsOn:
     - CatalogueListenerRule
+    - InternalAlbToCatalogueEgress
     Properties:
       ServiceName:
         Fn::Sub: ${EnvironmentName}-catalogue-service
@@ -347,7 +373,10 @@ Resources:
       EnableECSManagedTags: true
       PropagateTags: SERVICE
       DeploymentConfiguration:
-        MinimumHealthyPercent: 50
+        DeploymentCircuitBreaker:
+          Enable: true
+          Rollback: true
+        MinimumHealthyPercent: 100
         MaximumPercent: 200
       NetworkConfiguration:
         AwsvpcConfiguration:
@@ -413,6 +442,44 @@ Resources:
         Value: CloudFormation
       - Key: Component
         Value: Microservice
+
+  CatalogueHealthyTargetAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: CreateCatalogueAlarmCondition
+    Properties:
+      AlarmName:
+        Fn::Sub: ${EnvironmentName}-catalogue-healthy-capacity-below-two
+      AlarmDescription: Detect lost catalogue targets including missing metrics when all tasks are absent.
+      Namespace: AWS/ApplicationELB
+      MetricName: HealthyHostCount
+      Dimensions:
+      - Name: LoadBalancer
+        Value:
+          Fn::ImportValue:
+            Fn::Sub: ${CoreStackName}-InternalAlbFullName
+      - Name: TargetGroup
+        Value:
+          Fn::GetAtt:
+          - CatalogueTargetGroup
+          - TargetGroupFullName
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 2
+      DatapointsToAlarm: 2
+      Threshold: 2
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: breaching
+      AlarmActions:
+      - Fn::ImportValue:
+          Fn::Sub: ${ObservabilityStackName}-OperationsTopicArn
+      OKActions:
+      - Fn::ImportValue:
+          Fn::Sub: ${ObservabilityStackName}-OperationsTopicArn
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
 
   InternalAlbToCatalogueEgress:
     Type: AWS::EC2::SecurityGroupEgress

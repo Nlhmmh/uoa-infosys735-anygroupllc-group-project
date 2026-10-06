@@ -17,5 +17,26 @@
     "primary": "dummy EC2 in private DB subnet A",
     "standby": "dummy EC2 in private DB subnet B",
     "replication": "not implemented; simulation only"
-  }
+  },
+  "verification": "LAB_BASELINE_CONFIG_UPDATE_REVERSAL_AND_TEARDOWN_VERIFIED_RECOVERY_SCALING_COST_INCOMPLETE",
+  "pillars": [
+    "Operational Excellence",
+    "Reliability",
+    "Security",
+    "Cost Optimisation"
+  ],
+  "deployment": {
+    "ec2_bootstrap_signals": true,
+    "ec2_rolling_updates": "one instance per batch; at least one in service per tier",
+    "image_architecture": "linux/amd64",
+    "image_identity": "immutable tag plus pinned ECR digest",
+    "ecs_automatic_rollback": "configured; triggered rollback test pending",
+    "fargate_baseline": 2,
+    "fargate_deployment_peak": 4
+  },
+  "evidence_plan": "IaC_Deployment_and_Usage_Instructions.md",
+  "lab_evidence_date": "2026-10-06",
+  "evidence_results": "data/lab_evidence_review.json",
+  "presentation_guide": "Presentation_and_Slide_Content.md",
+  "rubric_checklist": "Rubric_and_Assessment_Checklist.md"
 }

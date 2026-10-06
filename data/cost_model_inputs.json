@@ -1,0 +1,34 @@
+{
+  "status": "INPUT_TEMPLATE_NOT_A_COST_RESULT",
+  "currency": "USD",
+  "region": "us-east-1",
+  "pricing_checked_at": null,
+  "cost_owner": null,
+  "runtime_hours": null,
+  "starting_lab_balance": null,
+  "ending_lab_balance": null,
+  "actual_attributable_cost": null,
+  "successful_functional_requests": null,
+  "cost_per_successful_request": null,
+  "resources": [
+    {"resource": "Frontend t3.micro EC2", "baseline_quantity": 2, "peak_quantity": 4, "hourly_unit_rate": null},
+    {"resource": "Backend t3.micro EC2", "baseline_quantity": 2, "hourly_unit_rate": null},
+    {"resource": "Dummy DB t3.micro EC2", "baseline_quantity": 2, "hourly_unit_rate": null},
+    {"resource": "NAT t3.micro EC2", "baseline_quantity": 1, "hourly_unit_rate": null},
+    {"resource": "Application Load Balancers", "baseline_quantity": 2, "hourly_unit_rate": null, "lcu_hours": null, "lcu_unit_rate": null},
+    {"resource": "Fargate 0.25 vCPU / 0.5 GiB tasks", "baseline_quantity": 2, "deployment_peak_quantity": 4, "vcpu_hour_unit_rate": null, "gib_hour_unit_rate": null},
+    {"resource": "Public IPv4 addresses including NAT and ALB addresses", "quantity": null, "hourly_unit_rate": null},
+    {"resource": "EBS storage", "gib_months": null, "unit_rate": null},
+    {"resource": "S3 storage and requests", "usage": null, "unit_rates": null},
+    {"resource": "DynamoDB on-demand requests and storage", "usage": null, "unit_rates": null},
+    {"resource": "ECR storage", "gib_months": null, "unit_rate": null},
+    {"resource": "CloudWatch alarms, logs and SNS", "usage": null, "unit_rates": null},
+    {"resource": "Data transfer including cross-AZ NAT traffic", "usage": null, "unit_rates": null}
+  ],
+  "notes": [
+    "Populate current regional AWS rates and measured usage; preserve nulls until evidence exists.",
+    "S3 and DynamoDB gateway endpoints have no additional endpoint charge; their service requests/storage still cost money.",
+    "Do not treat a delayed Academy balance change as precise workload cost.",
+    "Compare production alternatives at equivalent resilience and security; do not infer Fargate is always cheaper."
+  ]
+}

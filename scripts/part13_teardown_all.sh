@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
+cd "$(dirname "$0")/.."
+export AWS_PAGER=""
 
 # INFOSYS 735 GP2 Part 13 - dependency-aware teardown.
 #
@@ -29,9 +31,16 @@ if [[ "${1:-}" != "--yes" ]]; then
 fi
 
 stack_exists() {
-  aws cloudformation describe-stacks \
+  local result
+  if result="$(aws cloudformation describe-stacks \
     --stack-name "$1" \
-    --region "$REGION" >/dev/null 2>&1
+    --region "$REGION" 2>&1)"; then
+    return 0
+  elif [[ "$result" == *ValidationError* && "$result" == *"does not exist"* ]]; then
+    return 1
+  fi
+  echo "$result" >&2
+  exit 1
 }
 
 delete_and_wait() {
@@ -46,33 +55,8 @@ delete_and_wait() {
   echo "$stack: deleted."
 }
 
-# Best-effort ECR image cleanup before the microservice repository is deleted.
-if stack_exists "$MICRO_STACK"; then
-  ECR_REPO="$(
-    aws cloudformation describe-stacks \
-      --stack-name "$MICRO_STACK" \
-      --region "$REGION" \
-      --query "Stacks[0].Outputs[?OutputKey=='EcrRepositoryName'].OutputValue | [0]" \
-      --output text 2>/dev/null || true
-  )"
-  if [[ -n "$ECR_REPO" && "$ECR_REPO" != "None" ]]; then
-    TMP_IDS="$(mktemp)"
-    aws ecr list-images \
-      --repository-name "$ECR_REPO" \
-      --region "$REGION" \
-      --query 'imageIds[*]' \
-      --output json > "$TMP_IDS" || true
-    if [[ "$(cat "$TMP_IDS")" != "[]" ]]; then
-      echo "Removing ECR images from $ECR_REPO ..."
-      aws ecr batch-delete-image \
-        --repository-name "$ECR_REPO" \
-        --image-ids "file://$TMP_IDS" \
-        --region "$REGION" >/dev/null || true
-    fi
-    rm -f "$TMP_IDS"
-  fi
-fi
-
+# ECR EmptyOnDelete removes images only when CloudFormation deletes the repository.
+# Do not delete images while ECS tasks may still need them.
 delete_and_wait "$MICRO_STACK"
 delete_and_wait "$OBS_STACK"
 
@@ -83,11 +67,11 @@ if stack_exists "$CORE_STACK"; then
       --stack-name "$CORE_STACK" \
       --region "$REGION" \
       --query "Stacks[0].Outputs[?OutputKey=='CatalogueImageBucketName'].OutputValue | [0]" \
-      --output text 2>/dev/null || true
+      --output text
   )"
   if [[ -n "$BUCKET" && "$BUCKET" != "None" ]]; then
     echo "Emptying S3 bucket $BUCKET ..."
-    aws s3 rm "s3://$BUCKET/" --recursive --region "$REGION" || true
+    aws s3 rm "s3://$BUCKET/" --recursive --region "$REGION"
   fi
 fi
 
@@ -97,3 +81,4 @@ delete_and_wait "$NETWORK_STACK"
 echo
 echo "Teardown sequence completed."
 echo "Check CloudFormation, EC2, ELB, ECS, ECR, DynamoDB, S3, SNS and Tag Editor for orphaned resources."
+echo "Read-only verification: python3 scripts/part14_collect_evidence.py --after-teardown --output evidence/after-teardown"

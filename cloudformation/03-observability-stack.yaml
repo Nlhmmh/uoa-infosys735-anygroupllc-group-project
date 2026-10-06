@@ -129,7 +129,7 @@ Resources:
       Threshold:
         Ref: MinimumHealthyFrontendTargets
       ComparisonOperator: LessThanThreshold
-      TreatMissingData: notBreaching
+      TreatMissingData: breaching
       AlarmActions:
       - Ref: OperationsTopic
       OKActions:

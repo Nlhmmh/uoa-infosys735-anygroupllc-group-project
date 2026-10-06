@@ -1,32 +1,34 @@
 ControlType,Name,Direction,Protocol,PortRange,Source/Destination,Purpose,StackOwner
-SG,SG-Public-ALB,Inbound,TCP,80,0.0.0.0/0,Public HTTP demo entry point,02-core-infrastructure-stack.yaml
-SG,SG-Public-ALB,Outbound,TCP,80,SG-Frontend,Forward website traffic,02-core-infrastructure-stack.yaml
-SG,SG-Public-ALB,Outbound,TCP,8080,SG-Backend,Forward /api/* traffic,02-core-infrastructure-stack.yaml
-SG,SG-Public-ALB,Outbound,TCP,8080,SG-Catalogue,Forward /catalogue/* traffic,04-microservice-stack.yaml
-SG,SG-Frontend,Inbound,TCP,80,SG-Public-ALB,Only ALB reaches frontend,02-core-infrastructure-stack.yaml
-SG,SG-Frontend,Outbound,TCP,80,0.0.0.0/0,Package/update HTTP via NAT,02-core-infrastructure-stack.yaml
-SG,SG-Frontend,Outbound,TCP,443,0.0.0.0/0,SSM/package HTTPS via NAT,02-core-infrastructure-stack.yaml
-SG,SG-Backend,Inbound,TCP,8080,SG-Public-ALB,Only ALB reaches legacy backend,02-core-infrastructure-stack.yaml
-SG,SG-Backend,Outbound,TCP,1521,SG-DB,DB-tier demonstration path,02-core-infrastructure-stack.yaml
-SG,SG-Backend,Outbound,TCP,80,0.0.0.0/0,Package/update HTTP via NAT,02-core-infrastructure-stack.yaml
-SG,SG-Backend,Outbound,TCP,443,0.0.0.0/0,SSM/AWS service HTTPS via NAT,02-core-infrastructure-stack.yaml
-SG,SG-Catalogue,Inbound,TCP,8080,SG-Public-ALB,Only ALB reaches catalogue task,04-microservice-stack.yaml
-SG,SG-Catalogue,Outbound,TCP,443,0.0.0.0/0,ECR/CloudWatch/DynamoDB/S3 HTTPS,04-microservice-stack.yaml
-SG,SG-DB,Inbound,TCP,1521,SG-Backend,Only backend reaches DB tier,02-core-infrastructure-stack.yaml
-SG,SG-DB,Outbound,None,None,None,No initiated outbound connection required,02-core-infrastructure-stack.yaml
-NACL,Public,Inbound,TCP,80,0.0.0.0/0,Public ALB HTTP,01-network-stack.yaml
-NACL,Public,Inbound,TCP,443,0.0.0.0/0,Future HTTPS / supported public TLS,01-network-stack.yaml
-NACL,Public,Inbound,TCP,1024-65535,0.0.0.0/0,Return traffic for NAT/public clients,01-network-stack.yaml
-NACL,Public,Outbound,TCP,80,0.0.0.0/0,NAT HTTP and ALB/frontend flow,01-network-stack.yaml
-NACL,Public,Outbound,TCP,443,0.0.0.0/0,NAT HTTPS,01-network-stack.yaml
-NACL,Public,Outbound,TCP,8080,10.0.10.0/23,ALB to app services,01-network-stack.yaml
-NACL,Public,Outbound,TCP,1024-65535,0.0.0.0/0,Return traffic,01-network-stack.yaml
-NACL,Private-App,Inbound,TCP,80,10.0.0.0/23,ALB to frontend,01-network-stack.yaml
-NACL,Private-App,Inbound,TCP,8080,10.0.0.0/23,ALB to backend/catalogue,01-network-stack.yaml
-NACL,Private-App,Inbound,TCP,1024-65535,0.0.0.0/0,Return traffic from outbound connections,01-network-stack.yaml
-NACL,Private-App,Outbound,TCP,80,0.0.0.0/0,HTTP via NAT,01-network-stack.yaml
-NACL,Private-App,Outbound,TCP,443,0.0.0.0/0,HTTPS/AWS services,01-network-stack.yaml
-NACL,Private-App,Outbound,TCP,1521,10.0.20.0/23,Backend to DB tier,01-network-stack.yaml
-NACL,Private-App,Outbound,TCP,1024-65535,10.0.0.0/23,Responses to ALB,01-network-stack.yaml
-NACL,Private-DB,Inbound,TCP,1521,10.0.10.0/23,App tier to DB tier,01-network-stack.yaml
-NACL,Private-DB,Outbound,TCP,1024-65535,10.0.10.0/23,DB response traffic,01-network-stack.yaml
+SG,NatSecurityGroup,Inbound,tcp,80-80,VpcCidr,HTTP from private VPC resources,01-network-stack.yaml
+SG,NatSecurityGroup,Inbound,tcp,443-443,VpcCidr,HTTPS from private VPC resources,01-network-stack.yaml
+SG,NatSecurityGroup,Outbound,tcp,80-80,0.0.0.0/0,HTTP to internet,01-network-stack.yaml
+SG,NatSecurityGroup,Outbound,tcp,443-443,0.0.0.0/0,HTTPS to internet,01-network-stack.yaml
+NACL,PublicNetworkAcl,Inbound,6,80-80,0.0.0.0/0,ALLOW rule 100; PublicNaclIngressHttp,01-network-stack.yaml
+NACL,PublicNetworkAcl,Inbound,6,443-443,0.0.0.0/0,ALLOW rule 110; PublicNaclIngressHttps,01-network-stack.yaml
+NACL,PublicNetworkAcl,Inbound,6,1024-65535,0.0.0.0/0,ALLOW rule 120; PublicNaclIngressEphemeral,01-network-stack.yaml
+NACL,PublicNetworkAcl,Outbound,-1,ALL,0.0.0.0/0,ALLOW rule 100; PublicNaclEgressAll,01-network-stack.yaml
+NACL,PrivateAppNetworkAcl,Inbound,-1,ALL,VpcCidr,ALLOW rule 100; PrivateAppNaclIngressVpc,01-network-stack.yaml
+NACL,PrivateAppNetworkAcl,Inbound,6,1024-65535,0.0.0.0/0,ALLOW rule 110; PrivateAppNaclIngressEphemeral,01-network-stack.yaml
+NACL,PrivateAppNetworkAcl,Outbound,-1,ALL,0.0.0.0/0,ALLOW rule 100; PrivateAppNaclEgressAll,01-network-stack.yaml
+NACL,PrivateDbNetworkAcl,Inbound,-1,ALL,VpcCidr,ALLOW rule 100; PrivateDbNaclIngressVpc,01-network-stack.yaml
+NACL,PrivateDbNetworkAcl,Outbound,-1,ALL,VpcCidr,ALLOW rule 100; PrivateDbNaclEgressVpc,01-network-stack.yaml
+SG,PublicAlbSecurityGroup,Inbound,tcp,80-80,0.0.0.0/0,Public HTTP for Learner Lab demo,02-core-infrastructure-stack.yaml
+SG,PublicAlbSecurityGroup,Outbound,ALL,ALL,127.0.0.1/32,Disable default egress; explicit rules below,02-core-infrastructure-stack.yaml
+SG,InternalAlbSecurityGroup,Outbound,ALL,ALL,127.0.0.1/32,Disable default egress; explicit rules below,02-core-infrastructure-stack.yaml
+SG,FrontendSecurityGroup,Outbound,ALL,ALL,127.0.0.1/32,Disable default egress; explicit rules below,02-core-infrastructure-stack.yaml
+SG,BackendSecurityGroup,Outbound,ALL,ALL,127.0.0.1/32,Disable default egress; explicit rules below,02-core-infrastructure-stack.yaml
+SG,DbSecurityGroup,Outbound,ALL,ALL,127.0.0.1/32,Disable default egress; no routable DB egress,02-core-infrastructure-stack.yaml
+SG,PublicAlbSecurityGroup,Outbound,tcp,80-80,FrontendSecurityGroup,ALB to frontend HTTP,02-core-infrastructure-stack.yaml
+SG,FrontendSecurityGroup,Inbound,tcp,80-80,PublicAlbSecurityGroup,Frontend HTTP only from ALB,02-core-infrastructure-stack.yaml
+SG,InternalAlbSecurityGroup,Inbound,tcp,80-80,FrontendSecurityGroup,Frontend EC2 to internal ALB HTTP,02-core-infrastructure-stack.yaml
+SG,InternalAlbSecurityGroup,Outbound,tcp,8080-8080,BackendSecurityGroup,Internal ALB to legacy backend API,02-core-infrastructure-stack.yaml
+SG,BackendSecurityGroup,Inbound,tcp,8080-8080,InternalAlbSecurityGroup,Backend API only from internal ALB,02-core-infrastructure-stack.yaml
+SG,BackendSecurityGroup,Outbound,tcp,1521-1521,DbSecurityGroup,Backend to dummy Oracle-like DB tier,02-core-infrastructure-stack.yaml
+SG,DbSecurityGroup,Inbound,tcp,1521-1521,BackendSecurityGroup,DB listener only from backend,02-core-infrastructure-stack.yaml
+SG,FrontendSecurityGroup,Outbound,tcp,80-80,0.0.0.0/0,Package installation through NAT,02-core-infrastructure-stack.yaml
+SG,FrontendSecurityGroup,Outbound,tcp,443-443,0.0.0.0/0,SSM and HTTPS through NAT,02-core-infrastructure-stack.yaml
+SG,BackendSecurityGroup,Outbound,tcp,80-80,0.0.0.0/0,Package installation through NAT,02-core-infrastructure-stack.yaml
+SG,BackendSecurityGroup,Outbound,tcp,443-443,0.0.0.0/0,SSM and AWS service HTTPS through NAT,02-core-infrastructure-stack.yaml
+SG,CatalogueSecurityGroup,Inbound,tcp,8080-8080,${CoreStackName}-InternalAlbSecurityGroupId,Catalogue API traffic from internal ALB only,04-microservice-stack.yaml
+SG,CatalogueSecurityGroup,Outbound,tcp,443-443,0.0.0.0/0,HTTPS to ECR CloudWatch DynamoDB S3 and required AWS endpoints,04-microservice-stack.yaml
+SG,${CoreStackName}-InternalAlbSecurityGroupId,Outbound,tcp,8080-8080,CatalogueSecurityGroup,Internal ALB to catalogue Fargate service,04-microservice-stack.yaml
