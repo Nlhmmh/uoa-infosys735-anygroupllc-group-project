@@ -1,6 +1,6 @@
 # INFOSYS 735 Group Project 2 — Presentation and Slide Content
 
-This is the group's authoring guide for creating the slides in PowerPoint, Canva or another presentation tool. It extracts and expands the presentation material from README.md. The operational instructions are in [IaC_Deployment_and_Usage_Instructions.md](IaC_Deployment_and_Usage_Instructions.md).
+This is the group's authoring guide for creating a stakeholder pitch in PowerPoint, Canva or another presentation tool. The business context comes from [AnyGroupLLC_case_study.md](AnyGroupLLC_case_study.md), and the presentation requirements come from [instructions.md](instructions.md). The operational instructions are in [IaC_Deployment_and_Usage_Instructions.md](IaC_Deployment_and_Usage_Instructions.md).
 
 The slides target the highest marking bands in [instructions.md](instructions.md): an integrated additional feature, substantive assessment of **four Well-Architected pillars**, functioning basic and additional infrastructure, and a clear client pitch. The potential five bonus marks are discretionary. A polished deck cannot replace working infrastructure and an accurate AWS Console demonstration.
 
@@ -10,13 +10,25 @@ Use the **copy-ready content** on the slides. Put the **speaker notes** in prese
 
 ### Client recommendation
 
-Recommend a bounded **Product Catalogue microservice pilot** using the Strangler Fig pattern. Retain the existing application path, route the catalogue path to an independently deployed service, and assess the result before extracting another function. This answers the CTO's additional microservices question. CloudFormation and managed services also address the IT manager's operational burden; they support the selected feature. Demand forecasting and personalisation are future opportunities, not implemented additional features.
+Recommend an **AWS website platform for AnyGroupLLC's New Zealand expansion**, with availability across AZs, demand-based capacity, private application/data tiers, global product-image delivery and repeatable operations. Include a **Product Catalogue microservice** as the selected additional feature: use the Strangler Fig pattern to give catalogue requests an independent service while retaining the Apache/.NET/Oracle application path. Introduce this through a staged rollout, with production readiness checked before customer launch.
 
-The client story is: **business need → architecture change → four-pillar improvements → configuration proof → working feature → measured observations → investment decision**.
+Pitch the whole website solution and explain why the catalogue feature belongs in it. The CTO receives a practical microservices adoption approach, the IT manager receives repeatable operations, the CISO receives layered protection, and the CFO receives a production expenditure model. ERP, inventory forecasting, store security systems and personalisation are outside the demonstrated website scope. Do not imply that the catalogue prototype solves the CFO's stock-expiry forecasting request.
+
+The client story is: **business goals → complete cloud proposal and integrated catalogue feature → architecture and rationale → AWS Console configuration → working customer journey → reliability and cost decisions → recommended rollout**.
+
+### Audience and evidence framing
+
+Address the CTO, CFO, CISO and IT manager as decision-makers trying to improve their business. Lead with availability during promotions, protection of customer data, global image access, manageable operations and accountable spending. Explain each service through the problem it addresses; avoid a catalogue of AWS product names without a reason for choosing them.
+
+Keep the main narration about AnyGroupLLC's needs and the proposed solution. The assessment still requires existing-design alignment, areas for improvement and design updates: explain these as business/design decisions, such as replacing image-server capacity dependence with object storage or making releases reproducible. Include the verified GP1 comparison and complete principle assessment in submitted appendix slides prepared from [Rubric_and_Assessment_Checklist.md](Rubric_and_Assessment_Checklist.md). The spoken story does not need a “GP1 to GP2” frame.
+
+Distinguish **production recommendation**, **implemented prototype** and **measured observation**. The prototype supports selected design decisions; it does not demonstrate the forecast production capacity, a real Oracle migration or payment compliance. Give material limitations beside the relevant claim without turning the presentation into a test-report walkthrough.
+
+Use four pillars: **Operational Excellence, Reliability, Security and Cost Optimisation**. Cost Optimisation directly addresses the CFO's production concerns. Performance Efficiency is a credible alternative or fifth pillar if the group adds a full assessment and meaningful service-selection/performance evidence. Sustainability is a lower priority for this pitch because the case provides less direct support for sustainability goals or impact measures. Extra pillar labels alone do not strengthen the assessment.
 
 For assessment requirements and the complete four-pillar check, use [Rubric_and_Assessment_Checklist.md](Rubric_and_Assessment_Checklist.md).
 
-**Required order:** Show the basic infrastructure and additional-service configuration in the AWS Management Console **before** demonstrating the additional feature. Slides 5–8 are configuration; Slide 9 is the working feature. CloudShell results and screenshots support the console demonstration. They do not replace it.
+**Required order:** Show basic and additional component configuration in the AWS Management Console **before** demonstrating the additional services. Slides 5–8 show configuration: CloudFormation, CloudWatch/SNS, VPC/network/compute/load balancing/scaling, SGs/NACLs/S3 and ECR/ECS/DynamoDB. Slide 9 demonstrates the working catalogue feature. Slide 10 revisits monitoring and scaling to explain reliability behaviour. CloudShell results and screenshots support the console demonstration. They do not replace it.
 
 ### Main deck timing and speaking allocation
 
@@ -24,95 +36,95 @@ These are allocated times, not verified rehearsal timings. Target **14 minutes 1
 
 | Slide | Title | Total time including console | Speaker | Rubric / pillar focus |
 |---|---|---:|---|---|
-| 1 | Modernise the catalogue in a controlled pilot | 0:30 | Member 1 | Client recommendation |
-| 2 | Four improvements address four stakeholder needs | 1:00 | Member 1 | Business value, four pillars |
-| 3 | Extract one service while retaining the core platform | 1:10 | Member 1 | Updated production architecture |
-| 4 | The lab proves a bounded implementation | 0:40 | Member 2 | Actual lab architecture and limits |
-| 5 | Infrastructure and releases are defined as code | 1:20 | Member 2 | Operational Excellence, CloudFormation |
+| 1 | AWS website proposal for New Zealand growth | 0:30 | Member 1 | Whole solution and client recommendation |
+| 2 | Business priorities and the proposed response | 1:00 | Member 1 | Case study, value proposition, four pillars |
+| 3 | Website architecture with an independent catalogue | 1:10 | Member 1 | Complete production proposal and additional feature |
+| 4 | Implemented website prototype | 0:40 | Member 2 | Actual architecture and scope |
+| 5 | Repeatable operations for the IT team | 1:20 | Member 2 | Operational Excellence, CloudFormation |
 | 6 | Two AZs separate public entry from private tiers | 2:00 | Member 2 | Basic infrastructure configuration |
-| 7 | Private tiers and image controls enforce selected boundaries | 1:20 | Member 3 | Security, SGs/NACLs/S3 |
-| 8 | The catalogue components form one integrated service | 1:00 | Member 3 | Additional-service configuration |
-| 9 | Catalogue and legacy routes work together | 1:30 | Member 3 | Feature and functional demonstration |
-| 10 | Recovery and scaling claims depend on observed behaviour | 1:40 | Member 4 | Reliability, monitoring, scaling |
-| 11 | Resource lifecycle controls bound pilot expenditure | 1:10 | Member 4 | Cost Optimisation |
-| 12 | Approve the pilot and validate the next decision | 0:55 | Member 4 | Stakeholder close, production gaps |
+| 7 | Layered protection for the website and its data | 1:20 | Member 3 | Security, SGs/NACLs/S3 |
+| 8 | Catalogue service configuration and integration | 1:00 | Member 3 | Additional services and technical rationale |
+| 9 | Customer browsing through the integrated catalogue | 1:30 | Member 3 | Additional-feature demonstration |
+| 10 | Availability and capacity for launch and promotions | 1:40 | Member 4 | Reliability, monitoring, scaling evidence |
+| 11 | Control production expenditure as demand changes | 1:10 | Member 4 | Cost Optimisation and investment comparison |
+| 12 | Approve the cloud direction and staged rollout | 0:55 | Member 4 | Stakeholder decision and production readiness |
 | **Total** | **Slides and demonstrations** | **14:15** | **All four** | |
 
 Member 1: 0:00–2:40. Member 2: 2:40–6:40. Member 3: 6:40–10:30. Member 4: 10:30–14:15. Slides 5–10 allocate 8:50 to configuration, function and operational evidence. Narrate while showing the relevant console; do not give a full lecture and then repeat it during navigation.
 
 ## 2. Slide-by-slide authoring content
 
-### Slide 1 — Modernise the catalogue in a controlled pilot
+### Slide 1 — AWS website proposal for New Zealand growth
 
 **Speaker / duration:** Member 1, 0:30. **Purpose:** State the recommendation and client outcome immediately.
 
 **Copy-ready content**
 
-> **Modernise the catalogue in a controlled pilot**
+> **AWS website proposal for New Zealand growth**
 >
 > AnyGroupLLC New Zealand cloud proposal
 >
-> Retain the existing application path. Extract the Product Catalogue as one independently deployed service.
+> A scalable website platform with layered protection, global image delivery and repeatable operations.
 >
-> Evaluate operations, reliability, security and cost before expanding the migration.
+> An independent Product Catalogue service introduces microservices through a staged rollout.
 >
 > INFOSYS 735 Group Project 2 · [GROUP NAME] · [MEMBER NAMES]
 
-**Visual:** A simple three-step line: Existing platform → Catalogue pilot → Evidence-based expansion. Use the same distinct colour for the catalogue service throughout the deck.
+**Visual:** A simple website/customer image with a short solution line: Website platform + Independent catalogue. Keep the title slide minimal and use the same distinct colour for the catalogue throughout the deck.
 
 **Speaker notes**
 
-> We recommend starting AnyGroupLLC's modernisation with the Product Catalogue. The pilot keeps the existing application path available while introducing an independently deployed service for product metadata and images. We will show the architecture, its AWS implementation and the evidence supporting four Well-Architected pillars, then explain what remains before production expansion.
+> For your New Zealand expansion, we recommend an AWS website platform designed for availability, changing demand, protected data and manageable operations. An independent Product Catalogue service introduces microservices while retaining your existing application path. We will show how the architecture addresses your business priorities, demonstrate its prototype and explain the investment and rollout decisions.
 
 **Transition:** “The proposal responds to four stakeholder needs.”
 
-### Slide 2 — Four improvements address four stakeholder needs
+### Slide 2 — Business priorities and the proposed response
 
-**Speaker / duration:** Member 1, 1:00. **Purpose:** Connect the feature and the four pillars to the client's priorities, including the GP1 improvement argument.
+**Speaker / duration:** Member 1, 1:00. **Purpose:** Establish the business problem and link the whole proposal to the four stakeholders.
 
 **Copy-ready content**
 
-| Stakeholder need | Design improvement | Pillar |
+| Stakeholder need | Proposed response | Pillar |
 |---|---|---|
-| IT manager: reduce manual operations and firefighting | Repeatable infrastructure, identifiable releases and a shared runbook | Operational Excellence |
-| CTO: maintain availability and accommodate demand | AZ-distributed services, health-based replacement and measured scaling | Reliability |
-| CISO: protect the platform and high-value data | Private tiers, controlled image access and explicit production security improvements | Security |
-| CFO: manage operating expenditure | Bounded capacity, attribution inputs and verified teardown | Cost Optimisation |
+| IT manager: reduce firefighting for a 15-person team | Automated provisioning, observable services and reversible releases | Operational Excellence |
+| CTO: support launch and promotional demand | AZ-distributed services, health-based recovery and demand-based capacity | Reliability |
+| CISO: withstand attacks and protect valuable data | Edge protection, private tiers, controlled access and security response | Security |
+| CFO: manage uncertain demand and OPEX versus CAPEX | Usage-based capacity, cost ownership and comparable production cost scenarios | Cost Optimisation |
 
-Footer: **Selected additional feature: CTO's microservices request — Product Catalogue pilot.**
+Footer: **Additional feature: independent Product Catalogue service. Image storage: replace dependence on a nearly full 5 TB server with S3 and proposed global delivery.**
 
-**Visual:** Four equally weighted rows/cards. Use short labels and one concrete improvement per pillar. Include a small “GP1 design → GP2 implementation and assessment” arrow; confirm the GP1 claims against the original submission.
+**Visual:** A flat four-row stakeholder table with readable text. Highlight the catalogue feature and image-capacity problem in the footer; avoid a coursework timeline.
 
 **Speaker notes**
 
-> The CTO wants availability and scalability for the New Zealand launch. The CISO needs protection after the company's experience of DDoS attacks. The CFO needs visibility into operating expenditure, and the 15-person IT team needs repeatable operations. Our four-pillar assessment addresses these together. We retain the earlier platform's intended tier separation and improve release control, verification of service behaviour, inspectable security boundaries and resource lifecycle management. The one selected additional feature is catalogue extraction. We are not presenting demand forecasting or personalisation as implemented features.
+> You expect about 500,000 visits per day, with higher demand during promotions. Your website needs to remain accessible, your data needs protection after previous attacks, and your 15-person team needs less routine infrastructure work. Your image server is also approaching its 5 TB capacity. Our proposal addresses these needs together: a resilient website platform, object storage with global delivery, controlled operations and accountable expenditure. The catalogue service gives the CTO a concrete way to adopt microservices.
 
 **Business facts:** The case forecasts around 500,000 visits/day with higher demand during promotions. Treat that as a sizing requirement for later production testing, not throughput demonstrated by the lab. Source: [case study](AnyGroupLLC_case_study.md).
 
-### Slide 3 — Extract one service while retaining the core platform
+### Slide 3 — Website architecture with an independent catalogue
 
-**Speaker / duration:** Member 1, 1:10. **Purpose:** Show a readable updated production architecture and explain integration and design improvement.
+**Speaker / duration:** Member 1, 1:10. **Purpose:** Pitch the complete production website architecture, its rationale and the integrated additional feature.
 
 **Copy-ready content**
 
-- Preserve the Apache/.NET/Oracle platform boundary from the proposed baseline.
-- Route `/catalogue/*` to an independent catalogue service; retain the legacy application path.
-- Give the service its own release identity and agreed data ownership.
-- Use private S3 images with controlled delivery; plan production edge, identity and recovery controls.
+- CloudFront and proposed edge protection provide global delivery and a protected entry point.
+- Load balancers and private Apache/.NET tiers distribute traffic across two AZs; propose managed Oracle availability.
+- `/catalogue/*` routes to an independently deployed Fargate service; other application requests retain their existing path.
+- Private S3 stores images; CloudFormation, monitoring and role-based administration support operations.
 
 Footer: **Production recommendation. Components beyond the lab are proposed, not deployed by the lab templates.**
 
-**Visual specification:** Build the production diagram described in Section 3 below. Draw the catalogue extraction in the highlight colour. Label the path-selection point, retained backend, catalogue data boundary and S3 image delivery. Show AZ separation and the operational plane. A smaller “GP1 retained / GP2 added” legend makes the improvement visible.
+**Visual specification:** Build the production diagram in Section 3.1. Trace the customer request through edge delivery, public entry, private website/app tiers and the database. Then highlight the catalogue branch and private S3 image delivery. Label production recommendations separately from demonstrated components. Explain the whole architecture before zooming into the additional feature.
 
 **Speaker notes**
 
-> The change is a bounded extraction, rather than a migration of every application function at once. Requests for the catalogue enter a service that can be deployed separately, while other application requests retain their existing path. S3 removes the image-capacity dependence on the central server. The production recommendation adds validated HTTPS, edge protection, private service tiers, managed database availability and audited administration. The final production catalogue datastore and migration consistency model still require discovery. Our lab uses synthetic DynamoDB records to prove the service integration; it does not migrate the Oracle database.
+> Customers enter through CloudFront and the protected website entry point. Load balancers distribute requests to private web and application tiers across two AZs, with managed Oracle availability proposed for the retained application. S3 removes the fixed image-server capacity dependence and CloudFront provides global image delivery. The highlighted catalogue branch runs separately, so catalogue releases can be managed without coupling every release to the retained backend. CloudFormation and monitoring support the operating model. Our prototype demonstrates the routing and catalogue integration; production data ownership, migration, licensing and security readiness still need validation.
 
-**GP1 preparation:** Insert the actual original GP1 architecture as a comparison thumbnail or appendix. Verify which components were already proposed. Do not invent a missing baseline document or describe a proposed component as a previously deployed system.
+**Design decisions to explain if asked:** AZ distribution addresses launch continuity; S3 addresses image capacity; an independent catalogue addresses release coupling; automation addresses manual operating effort. Validate the original GP1 alignment in the submitted appendix, without making it the main client narrative. Do not describe a previous proposal as a deployed system.
 
-**Transition:** “The lab implements the request and service boundaries we need to test.”
+**Transition:** “We have implemented a prototype of the website tiers and catalogue integration; we will now show its configuration.”
 
-### Slide 4 — The lab proves a bounded implementation
+### Slide 4 — Implemented website prototype
 
 **Speaker / duration:** Member 2, 0:40. **Purpose:** Make the actual implemented scope clear before opening the console.
 
@@ -129,11 +141,11 @@ Footer: **Dummy DB connectivity is simulated. Lab HTTP, shared LabRole and one N
 
 **Speaker notes**
 
-> The lab implements the routing and tier boundaries using seven EC2 instances, two load balancers and two catalogue tasks across two AZs. It uses a demo backend and dummy database listeners, which the assignment allows. The lab proves selected infrastructure and feature behaviour. It does not establish production Oracle failover, PCI compliance or the forecast customer capacity.
+> The prototype implements the website routing and tier boundaries using seven EC2 instances, two load balancers and two catalogue tasks across two AZs. The catalogue reads synthetic metadata and private images. A demo backend and dummy database listeners represent the retained application. This lets us demonstrate integration and selected controls before production migration; Oracle failover, payment compliance and forecast customer capacity remain separate validation work.
 
 **Transition:** “We first show how that infrastructure is provisioned and operated.”
 
-### Slide 5 — Infrastructure and releases are defined as code
+### Slide 5 — Repeatable operations for the IT team
 
 **Speaker / duration:** Member 2, 1:20 including console. **Purpose:** Give Operational Excellence substantive coverage and demonstrate CloudFormation as additional infrastructure.
 
@@ -141,10 +153,11 @@ Footer: **Dummy DB connectivity is simulated. Lab HTTP, shared LabRole and one N
 
 > **Operational Excellence**
 >
-> - GP1 gap to address: manual provisioning and limited release/recovery evidence.
-> - GP2: four dependent stacks, bootstrap signals and repeatable deployment procedures.
-> - Release control: immutable image tags, pinned digests, versioned responses and explicit reversal.
-> - Ownership: [OPERATIONS OWNER]; review the runbook after each experiment.
+> - Reduce manual configuration with four connected CloudFormation stacks and startup checks.
+> - Identify releases with immutable image tags, pinned digests and versioned responses.
+> - Monitor service health; assign alert owners and use a shared response runbook.
+> - Make small, reversible changes; test procedures and review incidents to improve them.
+> - Managed catalogue services reduce host administration; staff retain application and security responsibilities.
 
 Evidence strip: **Four successful stack snapshots; v1 → v2 → v1 smoke PASS. Both tags used the same image content in this run.**
 
@@ -152,16 +165,19 @@ Evidence strip: **Four successful stack snapshots; v1 → v2 → v1 smoke PASS. 
 
 1. CloudFormation: show the four stack names and successful statuses in the current deployment.
 2. Show Resources/Outputs on core and the dependent microservice stack. Identify one imported value, such as the internal listener or image bucket.
-3. Show completed catalogue update evidence and the running task-definition digest/version. If a later run has distinct application image content, show both digests and the actual change.
-4. If available, show bootstrap success Events. Otherwise state that the signal policies are configured and do not claim a captured Event that is absent.
+3. Briefly show completed configuration-update evidence. Reserve ECS image/task details for Slide 8 and the working feature for Slide 9.
+4. CloudWatch: show the configured health/capacity alarms, catalogue log group and alarm action linked to SNS. Explain which owner responds.
+5. SNS: show the topic and confirmed subscription. Configuration is shown here before the catalogue demonstration; delivered-alert and scaling observations are revisited on Slide 10.
+
+**Preparation:** Capture bootstrap success Events if available. Otherwise state that signal policies are configured without claiming an Event capture. Keep console tabs ready so configuration navigation fits the allocated time.
 
 **Speaker notes, about 0:30 alongside the console**
 
-> CloudFormation defines the network, core platform, monitoring and catalogue service. Stack outputs connect those components without manual duplicate infrastructure. Startup signals make bootstrap failure visible, and image digests identify the application delivered to ECS. The saved run passed baseline, deployment-version update and explicit reversal checks. Both image tags resolved to the same content, so our completed demonstration is a configuration release. A changed-code release and triggered automatic rollback require separate tests.
+> For your IT team, the aim is a platform that can be provisioned consistently and changed with a clear recovery path. These four CloudFormation stacks connect the website, network, monitoring and catalogue. Startup checks expose bootstrap failures, while image digests identify what ECS runs. Our saved run verified a deployment-version update and explicit reversal using the same image content. CloudWatch and a maintained response runbook support day-to-day operations; changed-code releases and automatic rollback still need separate tests.
 
 **Design improvements beyond the shown console:** Assign an owner for alerts and deployment, maintain the main guide, test failures, record lessons and use managed services to reduce host administration. Use the eight principle areas in [the rubric checklist](Rubric_and_Assessment_Checklist.md#appendix-a--full-four-pillar-assessment-for-submitted-slides) to build any submitted appendix slides.
 
-**Value:** Reproducible provisioning and a controlled release/reversal process for the small IT team. Time or productivity savings remain unmeasured.
+**Value:** Reproducible provisioning and a controlled release/reversal process for the small IT team. Assign [OPERATIONS OWNER] and [ALERT OWNER], review procedures and operational metrics, and include training effort in the rollout. Time or productivity savings remain unmeasured.
 
 ### Slide 6 — Two AZs separate public entry from private tiers
 
@@ -176,7 +192,7 @@ Evidence strip: **Four successful stack snapshots; v1 → v2 → v1 smoke PASS. 
 | Compute | Frontend ASG 2–4; backend ASG fixed at 2; two dummy DB nodes |
 | Outbound support | One NAT EC2; S3/DynamoDB gateway endpoints |
 
-Footer: **Baseline 7 EC2; frontend scale-out peak 9. No simultaneous scaling, update and failure injection.**
+Footer: **Prototype baseline: 7 EC2. Configured frontend maximum allows 9 total; the saved load run did not demonstrate scale-out.**
 
 **Console sequence, about 1:35**
 
@@ -188,25 +204,25 @@ Footer: **Baseline 7 EC2; frontend scale-out peak 9. No simultaneous scaling, up
 
 **Speaker notes, about 0:25 alongside the console**
 
-> Public traffic enters the public load balancer, while application compute stays private. Apache forwards API and catalogue requests to the internal load balancer. Separate database subnets and source-based security groups limit tier access. The two ASGs distribute web and app instances across AZs. The single NAT keeps the lab bounded but is a failure point; production uses the resilience design shown earlier.
+> Customer traffic enters through the public load balancer, reaches private Apache instances and follows the internal load balancer to application services. Web and app instances span two AZs. The frontend scaling policy is configured, but scale-out remains unverified. Production needs resilient outbound paths because this prototype has one NAT instance.
 
-**Required continuation:** SG/NACL configuration is shown on Slide 7; S3, CloudWatch and SNS are shown on Slides 7–10. Do not silently omit these basic components.
+**Required continuation:** SG/NACL and S3 configuration is shown on Slide 7. CloudWatch/SNS configuration was shown on Slide 5; Slide 10 returns to their operational behaviour. All basic and additional configuration must be shown before the feature on Slide 9.
 
-### Slide 7 — Private tiers and image controls enforce selected boundaries
+### Slide 7 — Layered protection for the website and its data
 
-**Speaker / duration:** Member 3, 1:20 including console. **Purpose:** Demonstrate Security improvements, their evidence and the production gap.
+**Speaker / duration:** Member 3, 1:20 including console. **Purpose:** Address the CISO's attack and data-protection concerns through production design and demonstrated controls.
 
 **Copy-ready content**
 
 > **Security**
 >
-> - GP1 gap to address: conceptual protection needs effective configuration and denied-access proof.
-> - Private web/app/tasks; source-based tier rules; no public SSH/RDP or DB access.
-> - Private S3, AES256 encryption and HTTPS-only object access.
-> - Signed image request succeeds; unsigned image request returns **403**.
-> - Production improvements: least-privilege roles, validated TLS, edge-origin protection, audit and incident response.
+> - Protect the entry point: proposed CloudFront, AWS WAF and Shield Standard with restricted origin access.
+> - Isolate tiers: private compute and source-based rules; no public SSH/RDP or database access.
+> - Protect data: private encrypted storage, controlled image delivery and production TLS.
+> - Control and trace access: separate least-privilege roles, audited administration and security controls as code.
+> - Prepare for attacks: owned alerts, investigation procedures and incident-response exercises.
 
-Footer: **Shared LabRole and HTTP application traffic remain lab limits. No PCI or deployed WAF claim.**
+Evidence footer: **Prototype signed image GET succeeds; unsigned GET returns 403. Shared LabRole and HTTP app path remain limitations; production edge/audit controls are proposed. PCI compliance is not established.**
 
 **Visual:** A short allowed-flow diagram: Public ALB → frontend → internal ALB → backend → dummy DB, plus internal ALB → catalogue → DynamoDB/S3. Mark frontend → DB as a forbidden path requiring the negative test. Distinguish verified image denial from the outstanding network test.
 
@@ -219,22 +235,22 @@ Footer: **Shared LabRole and HTTP application traffic remain lab limits. No PCI 
 
 **Speaker notes, about 0:30**
 
-> We made selected security controls inspectable. Private compute, tier-based security groups and private image storage reduce exposure. The smoke test verified that a signed image request works and unsigned access is denied. Signed URLs grant temporary bearer access; they are not user authentication. The lab uses a shared role and HTTP app path. Production therefore requires stronger role separation, TLS, edge-origin restrictions, audit logging and an exercised incident response process.
+> Your previous attacks call for layered protection: edge filtering, restricted origins, private tiers, controlled identities and audited administration. Here, we show security groups and private encrypted storage. Tests verified signed image access and rejected unsigned access; these links are not user authentication. Production TLS, role separation, audit and incident exercises remain required before sensitive customer or payment use.
 
-**Value:** Give the CISO concrete control evidence and an explicit path to the remaining production security requirements. Encryption and private networking alone do not establish compliance.
+**Value:** Reduce exposure and give the CISO a defined protection and response plan. Keep staff access through controlled administration rather than routine direct data access. Encryption and private networking alone do not establish compliance.
 
-### Slide 8 — The catalogue components form one integrated service
+### Slide 8 — Catalogue service configuration and integration
 
 **Speaker / duration:** Member 3, 1:00 including console. **Purpose:** Show more than one additional component, integration and rationale before the feature demonstration.
 
 **Copy-ready content**
 
-| Component | Role in the pilot | Rationale |
+| Component | Role in the prototype | Business / technical rationale |
 |---|---|---|
-| CloudFormation | Provision service/network dependencies | Repeatable configuration |
-| ECR + ECS/Fargate | Identify and run catalogue image | Separate service releases; no worker-node management |
-| DynamoDB | Service-owned synthetic product metadata | Independent prototype data access |
-| Private S3 | Product image objects referenced by metadata | Separate images from compute |
+| CloudFormation | Provision service/network dependencies | Consistent configuration for the IT team |
+| ECR + ECS/Fargate | Identify and run catalogue image | Independent releases; no worker-node management |
+| DynamoDB | Service-owned synthetic product metadata | Prototype a separate data boundary; validate production access patterns |
+| Private S3 | Product image objects referenced by metadata | Remove image-server capacity dependence; separate storage from compute |
 
 **Visual:** CloudFormation provisioning line above ECR digest → Fargate service → DynamoDB + S3 references. Label the ALB listener route that sends catalogue traffic to the tasks.
 
@@ -247,11 +263,11 @@ Footer: **Shared LabRole and HTTP application traffic remain lab limits. No PCI 
 
 **Speaker notes, about 0:20**
 
-> These components implement one feature rather than a list of unrelated services. ECS runs the catalogue separately from the retained backend, DynamoDB supplies prototype metadata, and private S3 supplies the images. ECR and CloudFormation make its delivery and configuration identifiable. Production data ownership and Oracle migration still need a dedicated design decision.
+> This catalogue service answers the CTO's microservices request. Fargate runs it independently, DynamoDB supplies synthetic metadata and S3 stores images. CloudFormation connects the components and ECR identifies the image. Independent releases are the benefit; production data ownership, Oracle synchronisation and datastore suitability still need validation.
 
-**Value:** A bounded release boundary for the CTO and fewer host-management tasks for IT. Additional-service marks depend on demonstrating integration and explaining the benefit.
+**Value:** A separate release boundary for the CTO, scalable image storage and fewer host-management tasks for IT. Explain the trade-off: another service introduces monitoring, data-consistency and operating responsibilities, so start with one catalogue boundary and expand only when justified.
 
-### Slide 9 — Catalogue and legacy routes work together
+### Slide 9 — Customer browsing through the integrated catalogue
 
 **Speaker / duration:** Member 3, 1:30 including demonstration. **Purpose:** Demonstrate the additional feature after its configuration has been shown.
 
@@ -274,27 +290,27 @@ Footer: **Synthetic catalogue; browser cart counter only; no checkout or Oracle 
 
 **Speaker notes, about 0:25**
 
-> The customer-facing catalogue reads product metadata and private images through the new service boundary. The retained API path continues to respond and reaches both dummy database nodes. That demonstrates coexistence for our bounded pilot. The three smoke runs also check products, images, missing resources, private-image rejection, task AZs and target health. The page's cart is a browser counter; checkout and production data migration are outside this implementation.
+> Customers browse one website while the catalogue supplies metadata and images independently. The retained API still responds and reaches the dummy database tier, demonstrating coexistence. Saved smoke runs verified integration and selected access controls. This browsing prototype uses synthetic products and a browser cart counter; checkout and production data migration are outside it.
 
 **Evidence source:** `evidence/baseline/smoke.json`, `evidence/update-v2/smoke.json`, `evidence/reversal-v1/smoke.json`. Use actual current URLs; deleted-stack DNS names are historical.
 
-### Slide 10 — Recovery and scaling claims depend on observed behaviour
+### Slide 10 — Availability and capacity for launch and promotions
 
-**Speaker / duration:** Member 4, 1:40 including console/evidence. **Purpose:** Give Reliability substantive coverage and demonstrate CloudWatch/SNS/Auto Scaling without overstating results.
+**Speaker / duration:** Member 4, 1:40 including console/evidence. **Purpose:** Explain continuity and capacity for the CTO, then demonstrate CloudWatch/SNS/Auto Scaling configuration and actual observations.
 
-**Copy-ready content for the supplied run**
+**Copy-ready content**
 
 > **Reliability**
 >
-> - GP1 gap to address: multi-AZ design needs recovery and capacity evidence.
-> - Baseline: two healthy frontend/backend/catalogue targets across two AZs.
-> - Functional probe: **273/280 successes (97.5%)**; two HTTP 502 and five connection/timeout errors.
-> - Load: **1,200/1,200 HTTP 200**, about 5 requests/s; p95 successful latency **7.92 ms**.
-> - Replacement, full restored capacity, demand-driven scale-out and alert receipt still need supporting captures.
+> - Distribute website and catalogue capacity across AZs to reduce single-node dependence.
+> - Use health checks, managed replacement and owned alerts to detect and respond to failures.
+> - Adjust capacity with demand; validate promotional peaks and service quotas before launch.
+> - Agree availability and recovery objectives; test database restore and service recovery.
+> - Use automated, reviewed changes to keep the intended recovery configuration reproducible.
 
-Footer: **Request-success percentage, not a production SLA. User reports no new instances during the saved load test.**
+Evidence footer: **Two-AZ healthy baseline. Probe: 273/280 successes (97.5%). Load: 1,200 HTTP 200 at ~5 requests/s; p95 7.92 ms. Recovery completion, scale-out and alert receipt remain unverified. Prototype measurements are not a production SLA or capacity forecast.**
 
-**Visual:** Two clearly labelled panels. Panel 1 is the five-minute functional probe timeline with successes/failures, derived from actual JSONL samples. Panel 2 is the load summary. Add the replacement/scaling timeline only after capturing it. Do not use a smooth invented availability or scaling chart.
+**Visual:** Highlight the AZ distribution on the prototype diagram, then show a compact dated probe/load evidence strip during console narration. If using a probe timeline, derive it from the actual JSONL samples. Add replacement/scaling events only after capturing them. Keep detailed test statistics in presenter notes or an evidence appendix rather than filling the slide with test output.
 
 **Console/evidence sequence, about 1:10**
 
@@ -305,79 +321,102 @@ Footer: **Request-success percentage, not a production SLA. User reports no new 
 
 **Speaker notes, about 0:30**
 
-> Reliability means verifying behaviour as well as drawing redundancy. We captured the two-AZ baseline and measured functional responses. The probe recorded seven failures, so this is not a zero-downtime claim. The load run returned 1,200 successful responses, but did not establish demand-driven scale-out. We still need the replacement timeline, restored healthy capacity and a delivered alert. Those observations determine the next improvements and keep a small lab experiment separate from a production SLA.
+> For launch and promotions, we propose AZ-distributed capacity, health-based recovery and demand-based scaling with agreed service objectives. The console shows the policy, health checks, alarms and subscription. Our saved probe recorded seven failures; the small load run returned 1,200 successful responses but did not demonstrate new instance creation. Recovery completion, scale-out and delivered alerts still need verification. Production acceptance also requires real database restore tests and capacity tests based on customer behaviour.
 
 **If later evidence is captured:** Replace the pending line with specific observations: trigger time/instance, failed sample count, replacement Activity, restored two-target timestamp, peak ASG count and later scale-in count, matching alarm/email timestamp. Keep the original run labelled if comparing results.
 
 **Production improvement:** Real database recovery/restore tests, AZ-local outbound paths, capacity testing, task/backend demand scaling and agreed recovery objectives. The single lab NAT and dummy DBs do not provide full-platform failover.
 
-### Slide 11 — Resource lifecycle controls bound pilot expenditure
+**Value:** Protect customer access during failures and promotions through an explicit continuity plan and measurable acceptance criteria. The case's 500,000 visits/day does not equal 500,000 HTTP requests/day: size for requests per visit, images, peak concentration and data-access patterns.
 
-**Speaker / duration:** Member 4, 1:10 including evidence. **Purpose:** Make Cost Optimisation a substantive pillar with ownership, attribution, trade-offs and measured lifecycle evidence.
+### Slide 11 — Control production expenditure as demand changes
+
+**Speaker / duration:** Member 4, 1:10 including the production cost comparison or method. **Purpose:** Address the CFO's OPEX/CAPEX and uncertain-demand concerns through a defensible production expenditure model.
 
 **Copy-ready content**
 
 > **Cost Optimisation**
 >
-> - GP1 gap to address: elasticity/OPEX claims need ownership and attribution.
-> - Cost owner: [MEMBER NAME]; current prices and measured usage: [SOURCE/DATE].
-> - Baseline: 7 EC2, 2 ALBs, 2 Fargate tasks; frontend scaling peak 9 EC2, deployment peak 4 tasks.
-> - Short log retention, bounded image retention, capped capacity and explicit teardown.
-> - Teardown verified: zero matching project resources. Actual spend and savings remain unmeasured.
+> - Financial ownership: agree a workload owner, budget, alerts and monthly review with Finance.
+> - Consumption model: scale for promotions and scale in afterwards, preserving the availability baseline.
+> - Business efficiency: track cost per successful catalogue request alongside latency and errors.
+> - Operational effort: compare managed services with self-managed options, including maintenance and training.
+> - Attribution: allocate costs by service/environment, including shared networking, storage and monitoring.
 
-**Visual:** A compact resource breakdown and evidence stamp for cleanup. If the team completes the model, add a labelled estimate table with region/date/rates/hours. Do not make a cost chart from unknown inputs.
+Footer: **Compare normal and promotional demand with co-location at equivalent availability and security. Production estimates are assumptions, not measured savings.**
 
-**Evidence sequence, about 0:35**
+**Visual:** A readable production comparison: Co-location / Cloud normal demand / Cloud promotional demand. Show dated estimates only after inputs are populated. Otherwise show the cost categories and decision method, labelled “estimate pending”. Keep the full assumptions table in notes or a submitted appendix. Avoid making the Learners Lab balance or teardown the main visual.
 
-1. Show the cost model with dated sources and measured hours/usage, or explicitly identify the fields still unknown.
-2. Show the final teardown/orphan-check result, its timestamp and scope.
-3. Show genuine starting/final budget captures if available. Explain that the Academy balance is delayed and not precise workload attribution.
+**Presentation sequence, about 0:25**
 
-**Speaker notes, about 0:35**
+1. Show the production scenarios or comparison method, with the proposed region, demand assumptions and price-source date.
+2. Explain what varies with demand and what remains a baseline cost. Link scaling, service ownership and tagging to CFO visibility.
+3. State the financial decision criterion: meeting customer service/security requirements at a justified total cost. Use prototype configuration as supporting evidence; production budgets and billing controls remain proposals unless actually configured and captured.
 
-> We bound the pilot with capped capacity and an explicit lifecycle. Cleanup is evidenced: the matching project resources were removed. We have not yet established attributable spend or a savings percentage. A complete estimate includes both load balancers, NAT, public IPv4, EC2/EBS, Fargate, storage, requests, logs and transfer. Fargate reduces host management, but savings depend on usage and operational effort. Production alternatives must be compared at equivalent resilience and security.
+**Speaker notes, about 0:45**
 
-**Cost method to put in notes/appendix:** Sum resource quantity × applicable rate × measured usage/time, including variable charges. Calculate cost per successful functional request only when attributable cost and the request count cover the same measurement window. Populate `data/cost_model_inputs.json`; retain unknowns as null.
+> You need to support normal demand and promotions without purchasing permanent capacity for every peak. We propose demand-based scaling, a production cost owner and regular reviews of cost per successful catalogue request. Managed services can reduce routine infrastructure work, but we include maintenance, migration and training in the comparison. Finance should compare normal and peak cloud scenarios with co-location at the same availability and security level. Our prototype supports the service integration; attributable spending and production savings have not yet been established.
 
-### Slide 12 — Approve the pilot and validate the next decision
+**Production cost model for presenter notes or a submitted appendix**
+
+| Input / decision | What the group should specify |
+|---|---|
+| Workload | 500,000 visits/day from the case; explicit assumptions for requests per visit, images/bytes, cache hit rate, promotion peaks and growth |
+| Location and rates | Proposed production region/currency, service availability, dated official rates and applicable licensing assumptions; the lab's `us-east-1` location is not a production decision |
+| Baseline and elasticity | Capacity needed for AZ resilience; normal/peak instance/task hours; database baseline and backup requirements; scaling limits based on tested demand |
+| Cloud charges | Both load balancers, resilient outbound networking, public IPv4, EC2/EBS, Fargate, database, S3, CloudFront, request/transfer charges, security, logs, backups and support |
+| Co-location comparison | Comparable server/storage/network capacity, redundancy, facilities, hardware renewal, licences, staffing, backup and security responsibilities |
+| Transition and operations | Migration and parallel-running costs, Oracle licensing/version constraints, staff training and ongoing maintenance effort |
+| Governance | Proposed workload owner [CLIENT ROLE], budget [AGREED LIMIT], alerts and regular review; service/environment tags and allocation of shared costs |
+| Business output | Attributable catalogue cost per successful request for the same reporting window, with latency/error measures to prevent false efficiency through worse service |
+
+**Method:** Estimate recurring charges from applicable units × rates × usage/time, add operational and transition costs, and compare options over the same stated period. Label forecast inputs as assumptions; distinguish capital cash outlay from depreciation/operating costs in the co-location comparison. Include uncertainty ranges rather than a precise total unsupported by inputs. Populate numbers only from an explicit model; leave missing values unknown.
+
+**Trade-offs to explain:** Keep the availability/security baseline even when it costs more than a single-node setup. Evaluate image caching and storage lifecycle rules against real access and retention needs; neither automatically lowers total cost. Consider usage commitments only after stable demand is measured. Budget alerts notify owners; they do not automatically cap charges or guarantee sufficient capacity. OPEX changes the spending model but does not by itself prove lower total cost.
+
+**Supporting prototype evidence:** Configured frontend scaling, on-demand DynamoDB, gateway endpoint routing, managed catalogue services and resource inventory illustrate parts of the approach. Demand-driven scale-out and cost efficiency are not yet demonstrated. Verified teardown shows control of temporary experiment resources; production customer-serving resources remain available. The Academy balance is not a production cost model. `data/cost_model_inputs.json` is a prototype-cost input record, not a completed production forecast.
+
+**Source for presenter notes:** [AWS Cost Optimisation design principles](https://docs.aws.amazon.com/wellarchitected/latest/framework/cost-dp.html). The five bullets above address all five principle areas; use the separate rubric checklist for the full assessment.
+
+### Slide 12 — Approve the cloud direction and staged rollout
 
 **Speaker / duration:** Member 4, 0:55. **Purpose:** End with a client decision, acceptance criteria and a credible path to production.
 
 **Copy-ready content**
 
-> **Approve the catalogue pilot and its validation gates**
+> **Approve the AWS website direction and a staged catalogue rollout**
 >
-> - CTO: separate catalogue releases while retaining the existing application path.
-> - IT manager: reproduce the platform, identify releases and use one operations guide.
-> - CISO: retain verified controls; complete production identity, TLS, audit and incident work.
-> - CFO: attribute expenditure and compare alternatives before wider migration.
+> - CTO: design for launch continuity and promotions; introduce independent catalogue releases.
+> - IT manager: use reproducible infrastructure, managed services and owned response procedures.
+> - CISO: complete layered protection, controlled identities, audit and security response before sensitive production use.
+> - CFO: approve an investment envelope based on comparable production costs and accountable ownership.
 >
-> **Next gate:** complete recovery/scaling/security/cost evidence, then decide whether another function should be extracted.
+> **Next decision:** agree service objectives, validate capacity/recovery and security, then approve production migration and customer rollout.
 
-**Visual:** A decision line with three gates: Working pilot → Verified operations/security/cost → Production readiness and further extraction. Below it, show completed versus outstanding observations in two concise rows.
+**Visual:** A three-stage rollout: Prototype integration → Production design and acceptance → Customer launch and ongoing review. Put the requested stakeholder decision beside the timeline; avoid a list of coursework deliverables.
 
 **Speaker notes**
 
-> Our recommendation is a staged catalogue pilot with measurable acceptance criteria. We have demonstrated the integrated baseline, configuration release reversal, selected access controls and cleanup. The next decision requires stronger recovery and scaling evidence, a completed cost model and the production security and data design. This gives the CTO a controlled modernisation boundary, IT a repeatable workflow, the CISO explicit control gaps and the CFO an attributable investment decision. Expand the migration when those gates are met.
+> We recommend AWS as the direction for your New Zealand website, with an independent catalogue introduced through a staged rollout. The prototype demonstrates website and catalogue integration, repeatable configuration and selected access controls. We ask you to endorse that direction and agree owners and a budget for production design and validation. Before customer launch, we will need agreed service objectives, capacity and recovery evidence, production security and data migration plans, and a cost comparison acceptable to Finance. Wider service extraction follows only when the business benefit justifies it.
 
-**Closing rule:** Ask the client to approve the bounded pilot and validation work. Do not ask them to approve production readiness that the lab has not established.
+**Closing rule:** Ask stakeholders to endorse the whole website direction and the next funded rollout stage. Make production launch conditional on acceptance criteria; the prototype has not established production readiness.
 
 ## 3. Architecture diagram construction specifications
 
-Create editable diagrams with readable service labels, arrows and subnet/AZ boundaries. Export at sufficient resolution if using a separate diagram tool. The diagram must explain routing and trust boundaries; AWS icons are optional. Use a small legend: **retained baseline**, **new catalogue feature**, **production proposal**, **lab simulation**.
+Create editable diagrams with readable service labels, arrows and subnet/AZ boundaries. Export at sufficient resolution if using a separate diagram tool. The diagram must explain routing and trust boundaries; AWS icons are optional. Use a small legend: **retained application path**, **independent catalogue**, **production recommendation**, **prototype simulation**. Keep coursework version labels off the main client diagram.
 
 ### 3.1 Production diagram for Slide 3
 
 - Start with customers and Route 53 DNS leading to CloudFront. Put WAF and Shield Standard at the edge and label them as production recommendations.
 - Dynamic path: CloudFront → HTTPS public ALB → Apache frontend ASG across AZ A/B → private internal ALB.
-- Split the internal route into retained .NET backend ASG → RDS for Oracle Multi-AZ, and highlighted catalogue ECS/Fargate → agreed catalogue data boundary plus S3 image references.
+- Split the internal route into retained .NET backend ASG → proposed RDS for Oracle Multi-AZ, and highlighted catalogue ECS/Fargate → agreed catalogue data boundary plus S3 image references. Show DynamoDB as the prototype datastore and a production candidate subject to access-pattern and consistency validation.
 - Image delivery: private S3 → CloudFront using Origin Access Control → customer. OAC belongs to the S3 origin; it does not establish protection of the ALB origin. Specify origin restrictions separately.
 - Draw two AZ columns, public subnets for ALB/AZ-local NAT support, private app subnets and private database subnets. RDS standby is an availability mechanism, not a demonstrated read-scaling solution.
 - Add an operational plane: CloudFormation, CloudWatch/SNS, Systems Manager, proposed CloudTrail/Config, Secrets Manager and KMS.
 - Label production TLS/certificates, role separation, audit, data recovery, service availability in the intended region, Oracle licensing/version and final catalogue datastore as design/validation work. Do not draw all production arrows as tested connections.
-- Compare retained components against the actual GP1 submission before applying “already proposed” labels.
+- Annotate the decisions that address client problems: AZ distribution for continuity, elastic capacity for promotions, S3 for image capacity, the catalogue boundary for independent releases and IaC for consistent operations. Use the original GP1 comparison in the submitted assessment appendix after verifying it.
 
-### 3.2 Lab diagram for Slide 4
+### 3.2 Prototype diagram for Slide 4
 
 | Position | Actual component to draw | Boundary / arrow |
 |---|---|---|
@@ -424,7 +463,7 @@ The following observations are from the supplied 6 October 2026 run. Label later
 | Load | 1,200 HTTP 200; 239.81 seconds; 5 requests/s; p95 7.92 ms | scaling/load.json | Scale-out not observed/reliably demonstrated |
 | Cleanup | All matching project resource counts zero; no collection errors | after-teardown/summary.json | Defined tags/names/prefixes; not an account-wide billing result |
 
-**Still needed for the strongest presentation:** distinct-code image release if claimed; manual failure trigger and replacement/restored-target evidence; successful demand-driven scale-out/scale-in or an accurate unresolved diagnosis; delivered SNS alert; frontend-to-DB denied connection; owners and incident review; dated cost model/budget captures; final console recording and graphical slides.
+**Preparation still needed:** distinct-code image release if claimed; manual failure trigger and replacement/restored-target evidence; successful demand-driven scale-out/scale-in or an accurate unresolved diagnosis; delivered SNS alert; frontend-to-DB denied connection; owners and incident review; a dated production cost scenario comparison with explicit assumptions; final console recording and graphical slides. Prototype cost/budget captures support temporary-resource management but do not replace the production comparison.
 
 Do not hide these gaps in footnotes while claiming they passed in the narration. Use the main guide to capture them before the final recording. If unresolved, describe the design, actual outcome and next validation step explicitly.
 
@@ -435,7 +474,7 @@ Do not hide these gaps in footnotes while claiming they passed in the narration.
 1. Fill member names and assign one console operator per segment; rehearse speaker handoffs.
 2. Follow the main IaC guide to deploy the current architecture and run the intended tests. The supplied run was torn down; its screenshots/JSON are historical evidence, not current live resources.
 3. Complete long recovery, scaling and cleanup experiments beforehand. Save dated evidence and clear screenshots. Do not wait for replacement or deploy stacks while the 15-minute recording runs.
-4. Open console tabs in presentation order: CloudFormation; VPC/subnets/routes; EC2/ASGs; ALBs/target groups; SGs/NACLs; S3; ECR; ECS; DynamoDB; CloudWatch; SNS; storefront/API.
+4. Open console tabs in presentation order: CloudFormation; CloudWatch/SNS configuration; VPC/subnets/routes; EC2/ASGs; ALBs/target groups; SGs/NACLs; S3; ECR; ECS; DynamoDB; storefront/API; CloudWatch/SNS/ASG behaviour. Keep the production cost slide ready after the operational evidence.
 5. Place each screenshot/graph beside the claim it proves and label run/date. Show genuine saved evidence if a live navigation issue occurs; explain that it is captured evidence.
 6. Confirm URLs and local files are accessible. Avoid displaying AWS credentials, complete signed URL query strings or personal subscription addresses.
 7. Run a timed rehearsal including switching applications and loading console pages. Cut repeated narration first. Keep architecture diagrams and required component configuration visible and readable.
@@ -444,13 +483,23 @@ Do not hide these gaps in footnotes while claiming they passed in the narration.
 
 Use 16:9 slides, one main point per title and a consistent service/colour legend. Use readable body text and limit on-slide prose to the copy-ready content. Speaker notes contain the explanation, caveats and transitions. Large architecture diagrams can use incremental highlighting; do not force a full diagram plus a long table onto one slide. Use native/editable text and tables where possible so the group can revise details.
 
-Show four dedicated pillar headings, with the **baseline alignment/gap → design change → observed/configured evidence → business value → limitation** chain visible across their slides. Use the separate rubric checklist for the full principle assessment and to prepare submitted appendix slides. Four labels alone are not substantive coverage.
+Show four dedicated pillar headings, with the **client need → design alignment or improvement → technical rationale → configuration/observed evidence → business value and material limitation** chain visible across their slides. Explain the whole website solution, with the catalogue highlighted as its additional feature. The Cost Optimisation slide addresses production workload economics; lab cleanup is supporting material.
+
+Prepare readable submitted appendix slides from the full principle assessment in the separate rubric checklist, including the verified original-design comparison. Apply the production decisions in this guide, especially Slide 11's five Cost Optimisation areas, when expanding that assessment; retain prototype observations as implementation evidence. Keep the main pitch about stakeholder decisions and the proposed solution. Four labels alone are not substantive coverage. Place case-study and AWS principle references in the relevant presenter notes and include a references appendix.
+
+### Recording requirements to preserve
+
+- Finish within 15 minutes, including console navigation and speaker handoffs; every member presents a meaningful portion.
+- Show the whole solution architecture and the integrated additional feature. Explain WAF alignment, areas for improvement and design updates as decisions that address business needs.
+- Demonstrate functioning infrastructure through the AWS Management Console. Show basic and additional configuration first, then demonstrate the catalogue service and its website integration.
+- Explain why each selected service fits the workload and how it contributes to stakeholder outcomes. Keep recommendations, implementation and measured results distinguishable.
+- Close with a clear value proposition and a stakeholder decision about rollout, responsibilities and investment.
 
 ### What must be submitted
 
 | Requirement | What to submit | Key check |
 |---|---|---|
-| Presentation slides | Slideshow or PDF | Updated architecture with the additional feature and explanations of the selected four pillars |
+| Presentation slides | Slideshow or PDF | Whole solution architecture, integrated additional feature, four-pillar alignment and design improvements; include the assessment appendix |
 | Presentation recording link | Text file containing an accessible recording URL | Within 15 minutes; every member speaks; AWS Console configuration is shown before the feature demonstration |
 | TeamMates assessment | Each member completes the separate TeamMates assessment | Provide feedback on all other group members; omission incurs the brief's 10% penalty |
 
