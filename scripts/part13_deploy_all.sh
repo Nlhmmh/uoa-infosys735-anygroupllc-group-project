@@ -13,13 +13,8 @@ export AWS_PAGER=""
 #   feature [image-tag]
 #   status
 #
-# Recommended sequence:
-#   ./scripts/part13_deploy_all.sh validate
-#   ./scripts/part13_deploy_all.sh foundation your-email@example.com
-#   ./scripts/part12_build_push.sh v1 catalogue-service
-#   ./scripts/part12_seed_catalogue.sh
-#   ./scripts/part13_deploy_all.sh feature v1
-#   ./scripts/part12_test_catalogue.sh
+# For routine setup use ./scripts/lab.sh setup your-email@example.com.
+# These phase commands remain available for diagnostics and targeted updates.
 
 REGION="${AWS_REGION:-us-east-1}"
 MODE="${1:-}"
@@ -38,11 +33,25 @@ preflight() {
   other="$(aws ec2 describe-instances --region "$REGION" \
     --filters 'Name=instance-state-name,Values=pending,running' \
     --query 'length(Reservations[].Instances[] | [?Tags == null || !contains(Tags[?Key==`Project`].Value, `INFOSYS735-GP2`)])' --output text)"
-  if (( total > 7 || other > 0 )); then
-    echo "Deployment requires the seven-instance project baseline with no unrelated running EC2." >&2
+  if (( total > 4 || other > 0 )); then
+    echo "Deployment requires the four-instance project baseline with no unrelated running EC2." >&2
     echo "Found $total running/pending EC2, including $other unrelated instances. Wait for scale-in or clear your unrelated lab resources first." >&2
     exit 1
   fi
+}
+
+rds_preflight() {
+  local options
+  options="$(aws rds describe-orderable-db-instance-options --engine oracle-se2 \
+    --db-instance-class "${DB_INSTANCE_CLASS:-db.t3.small}" --license-model license-included \
+    --region "$REGION" --output json)"
+  DB_ENGINE_VERSION="$(printf '%s' "$options" | python3 -c '
+import json,sys
+rows=[r for r in json.load(sys.stdin).get("OrderableDBInstanceOptions",[]) if r.get("MultiAZCapable") and r.get("Vpc") and r.get("StorageType")=="gp2" and r.get("EngineVersion","").startswith("19.") and r.get("MinStorageSize",999)<=20]
+if not rows: raise SystemExit("No orderable Oracle 19 SE2 License Included Multi-AZ/gp2 option for this class. Check lab permissions or set DB_INSTANCE_CLASS=db.t3.medium; no resources created by this check.")
+print(sorted({r["EngineVersion"] for r in rows})[-1])')"
+  export DB_ENGINE_VERSION
+  echo "Oracle preflight: ${DB_INSTANCE_CLASS:-db.t3.small}, $DB_ENGINE_VERSION, License Included, Multi-AZ, 20 GiB gp2."
 }
 
 cf_validate() {
@@ -65,11 +74,13 @@ deploy_network() {
 deploy_core() {
   aws cloudformation deploy \
     --no-fail-on-empty-changeset \
-    --template-file cloudformation/02-core-infrastructure-stack.yaml \
+    --template-file cloudformation/02-core-infrastructure-stack.template.json \
     --stack-name "$CORE_STACK" \
     --parameter-overrides \
       NetworkStackName="$NETWORK_STACK" \
       EnvironmentName=anygroup-gp2 \
+      DbInstanceClass="${DB_INSTANCE_CLASS:-db.t3.small}" \
+      DbEngineVersion="$DB_ENGINE_VERSION" \
       FrontendMinSize=2 \
       FrontendDesiredCapacity=2 \
       FrontendMaxSize=4 \
@@ -216,7 +227,7 @@ status() {
 case "$MODE" in
   validate)
     cf_validate cloudformation/01-network-stack.yaml
-    cf_validate cloudformation/02-core-infrastructure-stack.yaml
+    cf_validate cloudformation/02-core-infrastructure-stack.template.json
     cf_validate cloudformation/03-observability-stack.yaml
     cf_validate cloudformation/04-microservice-stack.yaml
     echo "AWS validate-template completed for all four templates."
@@ -224,6 +235,7 @@ case "$MODE" in
 
   foundation)
     preflight
+    rds_preflight
     EMAIL="${2:-}"
     echo "Deploying network..."
     deploy_network
@@ -235,7 +247,8 @@ case "$MODE" in
     deploy_micro_phase1
     echo
     echo "Foundation deployment complete."
-    echo "Next:"
+    echo "Routine setup continues automatically when invoked through scripts/lab.sh."
+    echo "For individual phase work:"
     echo "  ./scripts/part12_build_push.sh v1 catalogue-service"
     echo "  ./scripts/part12_seed_catalogue.sh"
     echo "  ./scripts/part11_s3_test.sh upload sample-images/P1001.jpg products/P1001.jpg"

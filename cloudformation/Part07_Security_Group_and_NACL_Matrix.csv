@@ -1,8 +1,4 @@
 ControlType,Name,Direction,Protocol,PortRange,Source/Destination,Purpose,StackOwner
-SG,NatSecurityGroup,Inbound,tcp,80-80,VpcCidr,HTTP from private VPC resources,01-network-stack.yaml
-SG,NatSecurityGroup,Inbound,tcp,443-443,VpcCidr,HTTPS from private VPC resources,01-network-stack.yaml
-SG,NatSecurityGroup,Outbound,tcp,80-80,0.0.0.0/0,HTTP to internet,01-network-stack.yaml
-SG,NatSecurityGroup,Outbound,tcp,443-443,0.0.0.0/0,HTTPS to internet,01-network-stack.yaml
 NACL,PublicNetworkAcl,Inbound,6,80-80,0.0.0.0/0,ALLOW rule 100; PublicNaclIngressHttp,01-network-stack.yaml
 NACL,PublicNetworkAcl,Inbound,6,443-443,0.0.0.0/0,ALLOW rule 110; PublicNaclIngressHttps,01-network-stack.yaml
 NACL,PublicNetworkAcl,Inbound,6,1024-65535,0.0.0.0/0,ALLOW rule 120; PublicNaclIngressEphemeral,01-network-stack.yaml
@@ -23,7 +19,7 @@ SG,FrontendSecurityGroup,Inbound,tcp,80-80,PublicAlbSecurityGroup,Frontend HTTP 
 SG,InternalAlbSecurityGroup,Inbound,tcp,80-80,FrontendSecurityGroup,Frontend EC2 to internal ALB HTTP,02-core-infrastructure-stack.yaml
 SG,InternalAlbSecurityGroup,Outbound,tcp,8080-8080,BackendSecurityGroup,Internal ALB to legacy backend API,02-core-infrastructure-stack.yaml
 SG,BackendSecurityGroup,Inbound,tcp,8080-8080,InternalAlbSecurityGroup,Backend API only from internal ALB,02-core-infrastructure-stack.yaml
-SG,BackendSecurityGroup,Outbound,tcp,1521-1521,DbSecurityGroup,Backend to dummy Oracle-like DB tier,02-core-infrastructure-stack.yaml
+SG,BackendSecurityGroup,Outbound,tcp,1521-1521,DbSecurityGroup,Backend SQL to private RDS Oracle,02-core-infrastructure-stack.yaml
 SG,DbSecurityGroup,Inbound,tcp,1521-1521,BackendSecurityGroup,DB listener only from backend,02-core-infrastructure-stack.yaml
 SG,FrontendSecurityGroup,Outbound,tcp,80-80,0.0.0.0/0,Package installation through NAT,02-core-infrastructure-stack.yaml
 SG,FrontendSecurityGroup,Outbound,tcp,443-443,0.0.0.0/0,SSM and HTTPS through NAT,02-core-infrastructure-stack.yaml

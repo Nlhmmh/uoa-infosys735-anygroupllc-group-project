@@ -1,39 +1,46 @@
-ID,Area,Evidence,Expected,Status
-IAC-01,Static validation,All 4 YAML templates parse locally,PASS,Local PASS
-IAC-02,Cross-stack,Every ImportValue resolves to a declared export,PASS,Local PASS
-IAC-03,Dependencies,Dependency graph is acyclic,PASS,Local PASS
-IAC-04,AWS validation,aws cloudformation validate-template for all stacks,PASS,Pending live AWS
-IAC-05,Network create,anygroup-gp2-network,CREATE_COMPLETE,Verified lab snapshot 2026-10-06
-IAC-06,Core create/update,anygroup-gp2-core,CREATE/UPDATE_COMPLETE,Verified CREATE_COMPLETE snapshot 2026-10-06; core update not tested
-IAC-07,Observability create,anygroup-gp2-observability,CREATE_COMPLETE,Verified lab snapshot 2026-10-06
-IAC-08,Microservice phase 1,DeployService=false,CREATE_COMPLETE,Pending live AWS
-IAC-09,ECR delivery,New immutable amd64 image tag pushed,Verified digest and X86_64 image,Verified push transcript and running digest; v1/v2 same content
-IAC-10,DynamoDB data,seed items inserted,P1001-P1003 visible,Verified smoke seed checks 2026-10-06
-IAC-11,Microservice phase 2,DeployService=true with verified ContainerImageDigest,UPDATE_COMPLETE,Verified UPDATE_COMPLETE and running tasks 2026-10-06
-IAC-12,Feature routing,/catalogue/* listener rule,Route active,Verified rule and functional smoke 2026-10-06
-IAC-13,Coexistence,"/, /api/*, /catalogue/*",All work simultaneously,Verified smoke 2026-10-06
-IAC-14,Update,Change image v1→v2 or safe parameter,UPDATE_COMPLETE,Verified version-label update/reversal; image content unchanged
-IAC-15,Source of truth,No manual duplicate infrastructure,Confirmed,Pending team audit
-IAC-16,Teardown,Delete dependency order,All stacks DELETE_COMPLETE,Verified transcript and final inventory 2026-10-06
-IAC-17,S3 cleanup,Bucket emptied before core delete,No DELETE_FAILED,Verified transcript and no matching S3 bucket 2026-10-06
-IAC-18,ECR cleanup,Images/repository removed with micro stack,No orphan repository/images,Verified no matching repository 2026-10-06
-IAC-19,Recreate,Redeploy after teardown,Same intended architecture,Pending live AWS
-IAC-20,Inventory,Final resources match templates,No unexpected manual resources,Pending team audit
-LOCAL-04,Schema validation,cfn-lint on all four templates,PASS,Local PASS
-LOCAL-05,Regression tests,30 mocked application and lab-tool regression tests,PASS,Local PASS
-LOCAL-06,Bootstrap syntax,Embedded Python shell and rendered storefront JavaScript,PASS,Local PASS
-LOCAL-07,Security references,Generated SG/NACL matrix and fragments match full templates,PASS,Local PASS
-LOCAL-08,Lab package,Extracted ZIP validates and matches current sources,PASS,Local PASS
-OE-01,Operational Excellence,Bootstrap signals and four stack Events,Successful signals and stacks,Stack completion verified; bootstrap Events not supplied
-OE-02,Operational Excellence,Pinned version update and known-good image reversal,Smoke checks pass before and after,Verified configuration release/reversal; same image digest
-OE-03,Operational Excellence,Named owner and incident/test review,Completed team review,Pending team
-REL-01,Reliability,AZ placement and healthy EC2/ECS target counts,Two per tier across two AZs,Verified baseline AZ placement and healthy counts 2026-10-06
-REL-02,Reliability,Functional probes during isolated EC2 and task replacement,Measured responses and restored capacity,Probe observed 7 failures; trigger/replacement evidence missing
-REL-03,Reliability,Actual metric-driven alarm and confirmed SNS delivery,Captured alarm and delivered notification,Subscription confirmed; failure/alarm delivery evidence missing
-REL-04,Reliability,Sustained request load and ASG Activity,Observed scale-out and scale-in,Load passed; scale-out and scale-in evidence missing
-SEC-01,Security,Effective private addresses SG/NACL and S3 controls,Captured configuration,Verified saved configuration 2026-10-06
-SEC-02,Security,Signed image works unsigned image rejected and frontend-to-DB denied,HTTP 200/403 and failed forbidden flow,Signed/unsigned image checks verified; DB negative test pending
-SEC-03,Security,Production security gaps and incident response design,Reviewed design and limitations,Documented; team drill pending
-COST-01,Cost Optimisation,Owner and dated price/usage model,Recorded assumptions and no invented costs,Pending lab/team
-COST-02,Cost Optimisation,Read-only orphan check after explicit teardown and budget captures,Zero matching resources with complete reads,Scoped cleanup verified; budget captures missing
-PITCH-01,Presentation,Four pillars all speakers configuration then feature and diagrams,Recorded pitch within 15 minutes,Pending final deck/recording
+ID,Area,Evidence,Expected,Status,PreviousVersionObservation
+IAC-01,Static validation,Four deployment templates parse; readable core YAML equals compact core JSON,PASS,PASS local 2026-10-07T04:38:32.686827+00:00,
+IAC-02,Cross-stack,Every ImportValue resolves to a declared export,PASS,PASS local 2026-10-07T04:38:32.686827+00:00,
+IAC-03,Dependencies,Dependency graph is acyclic,PASS,PASS local 2026-10-07T04:38:32.686827+00:00,
+IAC-04,AWS validation,aws cloudformation validate-template for all stacks,PASS,Pending new managed-service lab run,
+IAC-05,Network create,anygroup-gp2-network,CREATE_COMPLETE,Pending new managed-service lab run,Verified lab snapshot 2026-10-06
+IAC-06,Core create/update,anygroup-gp2-core,CREATE/UPDATE_COMPLETE,Pending new managed-service lab run,Verified CREATE_COMPLETE snapshot 2026-10-06; core update not tested
+IAC-07,Observability create,anygroup-gp2-observability,CREATE_COMPLETE,Pending new managed-service lab run,Verified lab snapshot 2026-10-06
+IAC-08,Microservice phase 1,DeployService=false,CREATE_COMPLETE,Pending new managed-service lab run,
+IAC-09,ECR delivery,New immutable amd64 image tag pushed,Verified digest and X86_64 image,Pending new managed-service lab run,Verified push transcript and running digest; v1/v2 same content
+IAC-10,DynamoDB data,seed items inserted,P1001-P1003 visible,Pending new managed-service lab run,Verified smoke seed checks 2026-10-06
+IAC-11,Microservice phase 2,DeployService=true with verified ContainerImageDigest,UPDATE_COMPLETE,Pending new managed-service lab run,Verified UPDATE_COMPLETE and running tasks 2026-10-06
+IAC-12,Feature routing,/catalogue/* listener rule,Route active,Pending new managed-service lab run,Verified rule and functional smoke 2026-10-06
+IAC-13,Coexistence,"/, /api/*, /catalogue/*",All work simultaneously,Pending new managed-service lab run,Verified smoke 2026-10-06
+IAC-14,Update,Change image v1→v2 or safe parameter,UPDATE_COMPLETE,Pending new managed-service lab run,Verified version-label update/reversal; image content unchanged
+IAC-15,Source of truth,No manual duplicate infrastructure,Confirmed,Pending team/current submission,
+IAC-16,Teardown,Delete dependency order,All stacks DELETE_COMPLETE,Pending new managed-service lab run,Verified transcript and final inventory 2026-10-06
+IAC-17,S3 cleanup,Bucket emptied before core delete,No DELETE_FAILED,Pending new managed-service lab run,Verified transcript and no matching S3 bucket 2026-10-06
+IAC-18,ECR cleanup,Images/repository removed with micro stack,No orphan repository/images,Pending new managed-service lab run,Verified no matching repository 2026-10-06
+IAC-19,Recreate,Redeploy after teardown,Same intended architecture,Pending new managed-service lab run,
+IAC-20,Inventory,Final resources match templates,No unexpected manual resources,Pending team/current submission,
+LOCAL-04,Schema validation,cfn-lint on all four templates,PASS,PASS local 2026-10-07T04:38:32.686827+00:00,
+LOCAL-05,Regression tests,46 mocked catalogue/backend/storefront/deployment/setup/evidence/failover regression tests,PASS,PASS local 2026-10-07T04:38:32.686827+00:00,
+LOCAL-06,Bootstrap syntax,Embedded Python shell and rendered storefront JavaScript,PASS,PASS local 2026-10-07T04:38:32.686827+00:00,
+LOCAL-07,Security references,Generated SG/NACL matrix and fragments match full templates,PASS,PASS local 2026-10-07T04:38:32.686827+00:00,
+LOCAL-08,Lab package,Extracted ZIP validates and matches current sources,PASS,PASS extracted ZIP validation and source comparison; 2026-10-07T04:38:32.686827+00:00,
+OE-01,Operational Excellence,Bootstrap signals and four stack Events,Successful signals and stacks,Pending new managed-service lab run,Stack completion verified; bootstrap Events not supplied
+OE-02,Operational Excellence,Pinned version update and known-good image reversal,Smoke checks pass before and after,Pending new managed-service lab run,Verified configuration release/reversal; same image digest
+OE-03,Operational Excellence,Named owner and incident/test review,Completed team review,Pending team/current submission,
+REL-01,Reliability,AZ placement and healthy EC2/ECS target counts,Two per tier across two AZs,Pending new managed-service lab run,Verified baseline AZ placement and healthy counts 2026-10-06
+REL-02,Reliability,Functional probes during isolated EC2 and task replacement,Measured responses and restored capacity,Pending new managed-service lab run,Probe observed 7 failures; trigger/replacement evidence missing
+REL-03,Reliability,Actual metric-driven alarm and confirmed SNS delivery,Captured alarm and delivered notification,Pending new managed-service lab run,Subscription confirmed; failure/alarm delivery evidence missing
+REL-04,Reliability,Sustained request load and ASG Activity,Observed scale-out and scale-in,Pending new managed-service lab run,Load passed; scale-out and scale-in evidence missing
+SEC-01,Security,Effective private addresses SG/NACL and S3 controls,Captured configuration,Pending new managed-service lab run,Verified saved configuration 2026-10-06
+SEC-02,Security,Signed image works unsigned image rejected and frontend-to-DB denied,HTTP 200/403 and failed forbidden flow,Pending new managed-service lab run,Signed/unsigned image checks verified; DB negative test pending
+SEC-03,Security,Production security gaps and incident response design,Reviewed design and limitations,Pending team/current submission,
+COST-01,Cost Optimisation,Owner and dated price/usage model,Recorded assumptions and no invented costs,Pending team/current submission,
+COST-02,Cost Optimisation,Read-only orphan check after explicit teardown and budget captures,Zero matching resources with complete reads,Pending new managed-service lab run,Scoped cleanup verified; budget captures missing
+PITCH-01,Presentation,Four pillars all speakers configuration then feature and diagrams,Recorded pitch within 15 minutes,Pending team/current submission,
+NAT-01,Network,Two available NAT gateways/EIPs and matching app subnet routes,AZ-local outbound in both AZs,Pending new managed-service lab run,
+RDS-01,Database,Private encrypted Oracle SE2 License Included Multi-AZ,Primary and standby in distinct AZs,Pending new managed-service lab run,
+RDS-02,Integration,SQL-backed db/orders/customer endpoints,Seeded persisted data via SELECT-only app user,Pending new managed-service lab run,
+RDS-03,Recovery,Forced failover trigger/AZ switch/stable endpoint/rows/probe,Actual recovery and preserved records; failures reported,Pending new managed-service lab run,
+RDS-04,Backup,Automated backup setting and separate real restore,Configuration and restore evidence distinguished,Pending new managed-service lab run,
+RDS-05,Cleanup,RDS/backup/snapshot/subnet-group/secret/NAT/EIP orphan check,Zero matching active resources and complete reads,Pending new managed-service lab run,
+SETUP-01,Automation,One-command setup deploys/builds/seeds/activates/tests,Setup complete only after current smoke and capture pass,Pending new managed-service lab run,

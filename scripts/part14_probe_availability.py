@@ -23,12 +23,12 @@ def sample(url, timeout, expected_key=None, expected_value=None):
             if expected_key:
                 value = json.loads(body)
                 for key in expected_key.split("."):
-                    value = value[key]
+                    value = value[int(key)] if isinstance(value, list) else value[key]
                 valid = valid and str(value) == expected_value
     except HTTPError as exc:
         status = exc.code
         exc.close()
-    except (URLError, OSError, ValueError, KeyError, TypeError):
+    except (URLError, OSError, ValueError, KeyError, TypeError, IndexError):
         valid = False
     return {"timestamp_utc": datetime.now(timezone.utc).isoformat(), "http_status": status,
             "functional_success": valid, "latency_ms": round((time.monotonic() - start) * 1000, 2)}

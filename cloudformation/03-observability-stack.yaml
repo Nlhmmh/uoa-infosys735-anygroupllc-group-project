@@ -1,46 +1,38 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: >-
-  INFOSYS 735 GP2 - AnyGroupLLC updated observability stack. Creates SNS notifications plus CloudWatch alarms for frontend/public
-  ALB, backend/internal ALB and service health.
-
+Description: INFOSYS 735 GP2 - AnyGroupLLC updated observability stack. Creates SNS notifications plus CloudWatch alarms for
+  frontend/public ALB, backend/internal ALB and service health.
 Parameters:
   EnvironmentName:
     Type: String
     Default: anygroup-gp2
-
   CoreStackName:
     Type: String
     Default: anygroup-gp2-core
     Description: Name of the deployed Part 8/9 core CloudFormation stack.
-
   NotificationEmail:
     Type: String
     Default: ''
-    Description: >
-      Optional email address for SNS alarm notifications. If supplied, AWS sends
-      a confirmation email that must be manually accepted before notifications
-      are delivered.
+    Description: 'Optional email address for SNS alarm notifications. If supplied, AWS sends a confirmation email that must
+      be manually accepted before notifications are delivered.
 
+      '
   MinimumHealthyFrontendTargets:
     Type: Number
     Default: 2
     MinValue: 1
     MaxValue: 4
     Description: Expected minimum healthy frontend capacity.
-
   Target5xxThreshold:
     Type: Number
     Default: 1
     MinValue: 1
     Description: Target-generated 5XX responses in one minute before alarm.
-
 Conditions:
   HasNotificationEmail:
     Fn::Not:
     - Fn::Equals:
       - Ref: NotificationEmail
       - ''
-
 Resources:
   OperationsTopic:
     Type: AWS::SNS::Topic
@@ -60,7 +52,6 @@ Resources:
         Value: CloudFormation
       - Key: Component
         Value: Observability
-
   OperationsEmailSubscription:
     Type: AWS::SNS::Subscription
     Condition: HasNotificationEmail
@@ -70,15 +61,15 @@ Resources:
       Protocol: email
       Endpoint:
         Ref: NotificationEmail
-
   FrontendUnhealthyHostAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName:
         Fn::Sub: ${EnvironmentName}-frontend-unhealthy-target
-      AlarmDescription: >
-        Alarm when one or more frontend ALB targets are unhealthy. Used as
-        Reliability and Operational Excellence evidence during controlled tests.
+      AlarmDescription: 'Alarm when one or more frontend ALB targets are unhealthy. Used as Reliability and Operational Excellence
+        evidence during controlled tests.
+
+        '
       Namespace: AWS/ApplicationELB
       MetricName: UnHealthyHostCount
       Dimensions:
@@ -106,15 +97,15 @@ Resources:
         Value: INFOSYS735-GP2
       - Key: ManagedBy
         Value: CloudFormation
-
   FrontendInServiceCapacityAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName:
         Fn::Sub: ${EnvironmentName}-frontend-capacity-below-minimum
-      AlarmDescription: >
-        Alarm when frontend Auto Scaling in-service capacity is below the expected
-        baseline. The ASG should normally maintain at least two frontend instances.
+      AlarmDescription: 'Alarm when frontend Auto Scaling in-service capacity is below the expected baseline. The ASG should
+        normally maintain at least two frontend instances.
+
+        '
       Namespace: AWS/AutoScaling
       MetricName: GroupInServiceInstances
       Dimensions:
@@ -139,15 +130,14 @@ Resources:
         Value: INFOSYS735-GP2
       - Key: ManagedBy
         Value: CloudFormation
-
   AlbTarget5xxAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
       AlarmName:
         Fn::Sub: ${EnvironmentName}-alb-target-5xx
-      AlarmDescription: >
-        Alarm when targets behind the ALB return one or more HTTP 5XX responses
-        during a one-minute period.
+      AlarmDescription: 'Alarm when targets behind the ALB return one or more HTTP 5XX responses during a one-minute period.
+
+        '
       Namespace: AWS/ApplicationELB
       MetricName: HTTPCode_Target_5XX_Count
       Dimensions:
@@ -172,7 +162,6 @@ Resources:
         Value: INFOSYS735-GP2
       - Key: ManagedBy
         Value: CloudFormation
-
   BackendUnhealthyHostAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
@@ -243,6 +232,64 @@ Resources:
         Value: CloudFormation
       - Key: Component
         Value: Observability
+  DatabaseCpuAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName:
+        Fn::Sub: ${EnvironmentName}-databasecpualarm
+      AlarmDescription: Oracle CPU remains above 80 percent
+      Namespace: AWS/RDS
+      MetricName: CPUUtilization
+      Dimensions:
+      - Name: DBInstanceIdentifier
+        Value:
+          Fn::ImportValue:
+            Fn::Sub: ${CoreStackName}-DatabaseInstanceIdentifier
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 2
+      DatapointsToAlarm: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+      - Ref: OperationsTopic
+      OKActions:
+      - Ref: OperationsTopic
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
+  DatabaseFreeStorageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName:
+        Fn::Sub: ${EnvironmentName}-databasefreestoragealarm
+      AlarmDescription: Oracle free storage is below 1 GiB
+      Namespace: AWS/RDS
+      MetricName: FreeStorageSpace
+      Dimensions:
+      - Name: DBInstanceIdentifier
+        Value:
+          Fn::ImportValue:
+            Fn::Sub: ${CoreStackName}-DatabaseInstanceIdentifier
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 2
+      DatapointsToAlarm: 2
+      Threshold: 1073741824
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+      - Ref: OperationsTopic
+      OKActions:
+      - Ref: OperationsTopic
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
 Outputs:
   OperationsTopicArn:
     Description: SNS topic used by CloudWatch alarms.
@@ -251,15 +298,12 @@ Outputs:
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-OperationsTopicArn
-
   FrontendUnhealthyHostAlarmName:
     Value:
       Ref: FrontendUnhealthyHostAlarm
-
   FrontendInServiceCapacityAlarmName:
     Value:
       Ref: FrontendInServiceCapacityAlarm
-
   AlbTarget5xxAlarmName:
     Value:
       Ref: AlbTarget5xxAlarm
@@ -269,3 +313,9 @@ Outputs:
   BackendInServiceCapacityAlarmName:
     Value:
       Ref: BackendInServiceCapacityAlarm
+  DatabaseCpuAlarmName:
+    Value:
+      Ref: DatabaseCpuAlarm
+  DatabaseFreeStorageAlarmName:
+    Value:
+      Ref: DatabaseFreeStorageAlarm

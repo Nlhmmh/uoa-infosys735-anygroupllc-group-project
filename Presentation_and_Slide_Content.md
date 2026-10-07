@@ -4,7 +4,7 @@ This is the group's authoring guide for creating a stakeholder pitch in PowerPoi
 
 The slides target the highest marking bands in [instructions.md](instructions.md): an integrated additional feature, substantive assessment of **four Well-Architected pillars**, functioning basic and additional infrastructure, and a clear client pitch. The potential five bonus marks are discretionary. A polished deck cannot replace working infrastructure and an accurate AWS Console demonstration.
 
-Use the **copy-ready content** on the slides. Put the **speaker notes** in presenter notes. Use the **visual and console instructions** to create graphics and prepare the recording. Detailed tables belong in appendices; do not paste every paragraph onto the slide. Replace `[MEMBER NAME]`, `[SOURCE/DATE]` and other placeholders with real information before submission. Use the supplied lab observations unless a later run provides stronger evidence.
+Use the **copy-ready content** on the slides. Put the **speaker notes** in presenter notes. Use the **visual and console instructions** to create graphics and prepare the recording. Detailed tables belong in appendices; do not paste every paragraph onto the slide. Replace `[MEMBER NAME]`, `[SOURCE/DATE]` and other placeholders with real information before submission. The current templates use two NAT gateways and real Multi-AZ Oracle RDS. Capture a new lab run before recording current implementation claims; the supplied 6 October observations in Section 4 belong to the previous NAT-instance/dummy-DB version.
 
 ## 1. Presentation strategy and timing
 
@@ -162,17 +162,17 @@ These are areas the proposal addresses, not automatically proven omissions in th
 **Copy-ready content**
 
 - `us-east-1`: one VPC, six subnets and two AZs.
-- Seven EC2 at baseline: one NAT, two frontend, two backend and two dummy DB nodes.
+- Four EC2 at baseline: two frontend and two backend; two AZ-local NAT gateways.
 - Public ALB → private Apache frontend → internal ALB → legacy API or catalogue.
-- Two Fargate tasks; DynamoDB metadata; private S3 product images.
+- Private Multi-AZ Oracle RDS; two Fargate tasks; DynamoDB metadata; private S3 images.
 
-Footer: **Dummy DB connectivity is simulated. Lab HTTP, shared LabRole and one NAT are explicit limitations.**
+Footer: **Synthetic data and a Python backend represent the retained application. HTTP/shared LabRole and private SQL without added transport encryption remain limits; Oracle migration and production readiness are not established.**
 
-**Visual specification:** Use the actual lab diagram in Section 3. Label backend as “Python demo API representing legacy app tier” and DB nodes as “dummy TCP listeners; no replication”. Frontend/backend/catalogue share the private app subnets in each AZ; do not invent dedicated subnets for each tier.
+**Visual specification:** Use the actual prototype diagram in Section 3. Label the backend “Python demo API; real Oracle queries” and the database “RDS Oracle SE2 Multi-AZ; synchronous standby; no standby reads”. Show a NAT gateway in each public AZ and local application outbound routes. Frontend/backend/catalogue share the private app subnets in each AZ; do not invent dedicated subnets for each tier.
 
 **Speaker notes**
 
-> The prototype implements the website routing and tier boundaries using seven EC2 instances, two load balancers and two catalogue tasks across two AZs. The catalogue reads synthetic metadata and private images. A demo backend and dummy database listeners represent the retained application. This lets us demonstrate integration and selected controls before production migration; Oracle failover, payment compliance and forecast customer capacity remain separate validation work.
+> The prototype implements the website tiers using four EC2 instances, two load balancers and two catalogue tasks across two AZs. Each AZ has its own managed NAT gateway. The Python backend queries synthetic data in private Multi-AZ Oracle RDS; the catalogue uses DynamoDB and private images. We will demonstrate the actual configuration and results. Real application migration, payment compliance and forecast customer capacity remain production validation work.
 
 **Transition:** “We first show how that infrastructure is provisioned and operated.”
 
@@ -190,7 +190,7 @@ Footer: **Dummy DB connectivity is simulated. Lab HTTP, shared LabRole and one N
 > - Make small, reversible changes; test procedures and review incidents to improve them.
 > - Managed catalogue services reduce host administration; staff retain application and security responsibilities.
 
-Evidence strip: **Four successful stack snapshots; v1 → v2 → v1 smoke PASS. Both tags used the same image content in this run.**
+Evidence strip: **[CURRENT RUN/DATE]: four successful stacks; [RELEASE/REVERSAL RESULT AND DIGESTS]. The earlier run verified a configuration release with identical image content; current deployment evidence is required.**
 
 **Console sequence, about 0:50**
 
@@ -204,7 +204,7 @@ Evidence strip: **Four successful stack snapshots; v1 → v2 → v1 smoke PASS. 
 
 **Speaker notes, about 0:30 alongside the console**
 
-> For your IT team, the aim is a platform that can be provisioned consistently and changed with a clear recovery path. These four CloudFormation stacks connect the website, network, monitoring and catalogue. Startup checks expose bootstrap failures, while image digests identify what ECS runs. Our saved run verified a deployment-version update and explicit reversal using the same image content. CloudWatch and a maintained response runbook support day-to-day operations; changed-code releases and automatic rollback still need separate tests.
+> For your IT team, the aim is consistent provisioning and a clear recovery path. These four stacks connect the website, network, Oracle database, monitoring and catalogue. Startup checks expose bootstrap failures and image digests identify releases. Managed NAT and RDS reduce host administration, while CloudWatch and owned procedures support operations. Show the current release/reversal results here; distinguish configuration changes from changed code and explicit reversal from automatic rollback.
 
 **Design improvements beyond the shown console:** Assign an owner for alerts and deployment, maintain the main guide, test failures, record lessons and use managed services to reduce host administration. Use the eight principle areas in [the rubric checklist](Rubric_and_Assessment_Checklist.md#appendix-a--full-four-pillar-assessment-for-submitted-slides) to build any submitted appendix slides.
 
@@ -220,22 +220,22 @@ Evidence strip: **Four successful stack snapshots; v1 → v2 → v1 smoke PASS. 
 |---|---|
 | Network | VPC `10.0.0.0/16`; public/app/DB subnets in two AZs |
 | Entry and routing | Public ALB to private frontend; internal ALB to backend or catalogue |
-| Compute | Frontend ASG 2–4; backend ASG fixed at 2; two dummy DB nodes |
-| Outbound support | One NAT EC2; S3/DynamoDB gateway endpoints |
+| Compute/data | Frontend ASG 2–4; backend ASG fixed at 2; private Oracle RDS Multi-AZ |
+| Outbound support | Two AZ-local NAT gateways; S3/DynamoDB gateway endpoints |
 
-Footer: **Prototype baseline: 7 EC2. Configured frontend maximum allows 9 total; the saved load run did not demonstrate scale-out.**
+Footer: **Configured baseline: 4 EC2; frontend maximum allows 6 total. Capture actual scale-out/scale-in before claiming it works.**
 
 **Console sequence, about 1:35**
 
 1. VPC → select project VPC → resource map/subnets: identify both AZs and all six subnets.
-2. Route tables: show public route to IGW, private app route to NAT, and gateway endpoint routes. DB subnets have no NAT default route.
-3. EC2: show NAT, two web/frontend instances, two backend instances and two dummy DB instances. Show private addresses and the NAT's disabled source/destination check.
+2. Route tables/NAT gateways: show the public IGW route, each private app subnet’s route to its same-AZ available NAT gateway, and gateway endpoint routes. DB subnets have no NAT default route.
+3. EC2: show two frontend and two backend instances with private addresses. RDS: show the private subnet group, Oracle SE2, encrypted storage, Multi-AZ/standby AZ and automated backup settings.
 4. Load balancers/target groups: show public versus internal scheme, frontend/backend healthy counts and the internal `/api/*` and `/catalogue/*` listener rules.
 5. Frontend ASG: show minimum/desired 2, maximum 4, both AZs and the request-count target-tracking policy. Backend ASG remains fixed at 2.
 
 **Speaker notes, about 0:25 alongside the console**
 
-> Customer traffic enters through the public load balancer, reaches private Apache instances and follows the internal load balancer to application services. Web and app instances span two AZs. The frontend scaling policy is configured, but scale-out remains unverified. Production needs resilient outbound paths because this prototype has one NAT instance.
+> Customer traffic reaches private Apache and application instances through the load balancers. Both tiers span two AZs, and each application subnet uses a local NAT gateway. The database is private Multi-AZ Oracle RDS. These settings support continuity; the current load and failover results must establish their observed behaviour.
 
 **Required continuation:** SG/NACL and S3 configuration is shown on Slide 7. CloudWatch/SNS configuration was shown on Slide 5; Slide 10 returns to their operational behaviour. All basic and additional configuration must be shown before the feature on Slide 9.
 
@@ -249,24 +249,24 @@ Footer: **Prototype baseline: 7 EC2. Configured frontend maximum allows 9 total;
 >
 > - Protect the entry point: proposed CloudFront, AWS WAF and Shield Standard with restricted origin access.
 > - Isolate tiers: private compute and source-based rules; no public SSH/RDP or database access.
-> - Protect data: private encrypted storage, controlled image delivery and production TLS.
+> - Protect data: private encrypted storage, controlled image delivery, managed secrets and a SELECT-only SQL user; complete production transport protection.
 > - Control and trace access: separate least-privilege roles, audited administration and security controls as code.
 > - Prepare for attacks: owned alerts, investigation procedures and incident-response exercises.
 
-Evidence footer: **Prototype signed image GET succeeds; unsigned GET returns 403. Shared LabRole and HTTP app path remain limitations; production edge/audit controls are proposed. PCI compliance is not established.**
+Evidence footer: **[CURRENT RUN/DATE]: signed/unsigned image and forbidden-network-path results. Shared LabRole, HTTP and private SQL without added transport encryption remain limitations; production edge/audit/TLS controls are proposed. PCI compliance is not established.**
 
-**Visual:** A short allowed-flow diagram: Public ALB → frontend → internal ALB → backend → dummy DB, plus internal ALB → catalogue → DynamoDB/S3. Mark frontend → DB as a forbidden path requiring the negative test. Distinguish verified image denial from the outstanding network test.
+**Visual:** A short allowed-flow diagram: Public ALB → frontend → internal ALB → backend → private RDS, plus internal ALB → catalogue → DynamoDB/S3. Mark frontend → DB as a forbidden path requiring the negative test. Use current-run results for both image denial and the network test; label any unperformed test pending.
 
 **Console sequence, about 0:50**
 
 1. Security Groups: show frontend ingress only from public ALB, backend ingress only from internal ALB, and DB TCP 1521 only from backend.
 2. NACLs: show associations and effective rules. Explain that these NACLs are broad and SGs enforce the fine-grained tier boundaries.
-3. S3: show all public-access-block settings, encryption and the deny-insecure-transport policy.
+3. S3: show public-access blocking, encryption and deny-insecure-transport. Briefly identify RDS-managed credentials and the separate application secret by metadata; never reveal secret values.
 4. Show the smoke result for signed image access and unsigned HTTP 403. Show frontend-to-DB failed connectivity only if recorded; otherwise label it pending.
 
 **Speaker notes, about 0:30**
 
-> Your previous attacks call for layered protection: edge filtering, restricted origins, private tiers, controlled identities and audited administration. Here, we show security groups and private encrypted storage. Tests verified signed image access and rejected unsigned access; these links are not user authentication. Production TLS, role separation, audit and incident exercises remain required before sensitive customer or payment use.
+> Your previous attacks call for layered protection: edge filtering, restricted origins, private tiers, controlled identities and audited administration. Here, we show security groups and private encrypted storage. The current smoke result should show signed image access and rejected unsigned access; these links are not user authentication. Production TLS, role separation, audit and incident exercises remain required before sensitive customer or payment use.
 
 **Value:** Reduce exposure and give the CISO a defined protection and response plan. Keep staff access through controlled administration rather than routine direct data access. Encryption and private networking alone do not establish compliance.
 
@@ -278,7 +278,8 @@ Evidence footer: **Prototype signed image GET succeeds; unsigned GET returns 403
 
 | Component | Role in the prototype | Business / technical rationale |
 |---|---|---|
-| CloudFormation | Provision service/network dependencies | Consistent configuration for the IT team |
+| CloudFormation | Provision website/service/database dependencies | Consistent configuration for the IT team |
+| RDS Oracle Multi-AZ + Secrets Manager | Persist backend order/customer records; managed credentials | Managed database availability and a SELECT-only application boundary |
 | ECR + ECS/Fargate | Identify and run catalogue image | Independent releases; no worker-node management |
 | DynamoDB | Service-owned synthetic product metadata | Prototype a separate data boundary; validate production access patterns |
 | Private S3 | Product image objects referenced by metadata | Remove image-server capacity dependence; separate storage from compute |
@@ -305,25 +306,25 @@ Evidence footer: **Prototype signed image GET succeeds; unsigned GET returns 403
 **Copy-ready content**
 
 - One storefront retrieves catalogue products and images.
-- `/api/*` retains the demo legacy path and dummy DB connectivity.
+- `/api/*` reads synthetic orders/customer records from real Oracle RDS.
 - `/catalogue/*` serves independent product metadata and signed image access.
-- Baseline, update and reversal smoke checks pass with two healthy targets per service.
+- Show current SQL/catalogue smoke results and healthy targets; identify the run/date.
 
 Footer: **Synthetic catalogue; browser cart counter only; no checkout or Oracle migration.**
 
 **Demonstration sequence, about 1:00**
 
-1. Open the public ALB storefront; show the three product cards and images. Briefly use search if it visibly supports catalogue browsing.
-2. Open `/api/health` and `/api/db`: identify backend EC2/AZ and both dummy listeners reachable.
+1. Open the public ALB storefront. Show **Legacy system → Your account & orders** with persisted order IDs/statuses and the synthetic customer account; use Refresh account & orders. Then show **Additional feature → Product catalogue**, with the three product cards, images and search.
+2. Open `/api/health`, `/api/db`, `/api/orders` and `/api/account`: identify backend EC2/AZ, SQL accessibility and persisted synthetic orders. The backend queries only the RDS primary endpoint.
 3. Open `/catalogue/products/P1001`: show product metadata from the catalogue path.
 4. Open `/catalogue/ready`: explain DynamoDB and S3 accessibility. `/catalogue/health` is process liveness; readiness alone does not prove data was seeded.
 5. Show a saved smoke PASS and running version. Do not display full presigned query strings in a recording.
 
 **Speaker notes, about 0:20**
 
-> Customers browse one website while the catalogue supplies metadata and images independently. The retained API still responds and reaches the dummy database tier, demonstrating coexistence. Saved smoke runs verified integration and selected access controls. This browsing prototype uses synthetic products and a browser cart counter; checkout and production data migration are outside it.
+> Customers browse one website while the catalogue supplies metadata and images independently. The retained API reads persisted synthetic orders from Oracle using a SELECT-only user, demonstrating coexistence of both service paths. Show the current smoke result. Products and customers are synthetic, the cart is a browser counter, and checkout/migration are outside this prototype.
 
-**Evidence source:** `evidence/baseline/smoke.json`, `evidence/update-v2/smoke.json`, `evidence/reversal-v1/smoke.json`. Use actual current URLs; deleted-stack DNS names are historical.
+**Evidence source:** the current timestamped setup/test/update directories produced by `scripts/lab.sh`. Use actual current URLs and digests; the old baseline/update/reversal directories describe the previous version.
 
 ### Slide 10 — Availability and capacity for launch and promotions
 
@@ -339,24 +340,24 @@ Footer: **Synthetic catalogue; browser cart counter only; no checkout or Oracle 
 > - Agree availability and recovery objectives; test database restore and service recovery.
 > - Use automated, reviewed changes to keep the intended recovery configuration reproducible.
 
-Evidence footer: **Two-AZ healthy baseline. Probe: 273/280 successes (97.5%). Load: 1,200 HTTP 200 at ~5 requests/s; p95 7.92 ms. Recovery completion, scale-out and alert receipt remain unverified. Prototype measurements are not a production SLA or capacity forecast.**
+Evidence footer: **[CURRENT RUN/DATE]: target health, RDS before/after primary AZ, preserved orders, request failures and scale-out/scale-in result. Use only observed values. Prototype measurements are not a production SLA or capacity forecast.**
 
-**Visual:** Highlight the AZ distribution on the prototype diagram, then show a compact dated probe/load evidence strip during console narration. If using a probe timeline, derive it from the actual JSONL samples. Add replacement/scaling events only after capturing them. Keep detailed test statistics in presenter notes or an evidence appendix rather than filling the slide with test output.
+**Visual:** Highlight AZ distribution, two NAT gateways and the managed Oracle standby. Show a compact dated failover/load evidence strip. Derive any timeline from current JSONL samples and captured AWS events; keep detailed statistics in notes or an evidence appendix.
 
 **Console/evidence sequence, about 1:00**
 
 1. Show CloudWatch target/capacity/error alarms and catalogue log group. Connect each selected signal to a response in the runbook.
-2. Show SNS confirmed subscription; show a delivered matching message only if preserved. Confirmation is currently verified, actual receipt is not.
-3. Show actual request failures. If a later run establishes the manual termination trigger and replacement, show the instance identity, ASG Activity and two healthy targets after restoration.
+2. Show SNS confirmed subscription; show a delivered matching message only if preserved. Use the current subscription state; confirmation alone does not prove receipt.
+3. Show the RDS failover trigger, changed primary AZ, stable endpoint and preserved SQL order rows, with actual probe failures/recovery. Show EC2 replacement/restored targets only if also captured.
 4. Show frontend target-tracking policy and its AWS-managed alarm/metric. If no scale-out occurred, state that result and the diagnostic next step; do not claim that generating load proves scaling.
 
 **Speaker notes, about 0:30**
 
-> For launch and promotions, we propose AZ-distributed capacity, health-based recovery and demand-based scaling with agreed service objectives. The console shows the policy, health checks, alarms and subscription. Our saved probe recorded seven failures; the small load run returned 1,200 successful responses but did not demonstrate new instance creation. Recovery completion, scale-out and delivered alerts still need verification. Production acceptance also requires real database restore tests and capacity tests based on customer behaviour.
+> For launch and promotions, this design combines distributed application capacity, local NAT paths and managed Oracle standby replication. The console shows the recovery/scaling settings and owned alarms. Present the current failover and load results here: whether the primary AZ changed, SQL rows survived and instances actually scaled. Report any interruption. Production also requires restore testing and capacity tests based on real customer behaviour.
 
 **If later evidence is captured:** Replace the pending line with specific observations: trigger time/instance, failed sample count, replacement Activity, restored two-target timestamp, peak ASG count and later scale-in count, matching alarm/email timestamp. Keep the original run labelled if comparing results.
 
-**Production improvement:** Real database recovery/restore tests, AZ-local outbound paths, capacity testing, task/backend demand scaling and agreed recovery objectives. The single lab NAT and dummy DBs do not provide full-platform failover.
+**Production acceptance:** Validate actual RDS failover and backup restore, outbound resilience, capacity, task/backend demand scaling and agreed recovery objectives. Two NAT gateways and Multi-AZ RDS improve the configured design but do not establish full-platform or whole-AZ recovery.
 
 **Value:** Protect customer access during failures and promotions through an explicit continuity plan and measurable acceptance criteria. The case's 500,000 visits/day does not equal 500,000 HTTP requests/day: size for requests per visit, images, peak concentration and data-access patterns.
 
@@ -405,7 +406,7 @@ Footer: **Compare normal and promotional demand with co-location at equivalent a
 
 **Trade-offs to explain:** Keep the availability/security baseline even when it costs more than a single-node setup. Evaluate image caching and storage lifecycle rules against real access and retention needs; neither automatically lowers total cost. Consider usage commitments only after stable demand is measured. Budget alerts notify owners; they do not automatically cap charges or guarantee sufficient capacity. OPEX changes the spending model but does not by itself prove lower total cost.
 
-**Supporting prototype evidence:** Configured frontend scaling, on-demand DynamoDB, gateway endpoint routing, managed catalogue services and resource inventory illustrate parts of the approach. Demand-driven scale-out and cost efficiency are not yet demonstrated. Verified teardown shows control of temporary experiment resources; production customer-serving resources remain available. The Academy balance is not a production cost model. `data/cost_model_inputs.json` is a prototype-cost input record, not a completed production forecast.
+**Supporting prototype evidence:** Configured frontend scaling, on-demand DynamoDB, gateway endpoint routing, managed catalogue services and resource inventory illustrate parts of the approach. Demand-driven scale-out and cost efficiency are not yet demonstrated. A successful current-run teardown check demonstrates control of temporary experiment resources; production customer-serving resources remain available. The Academy balance is not a production cost model. `data/cost_model_inputs.json` is a prototype-cost input record, not a completed production forecast.
 
 **Source for presenter notes:** [AWS Cost Optimisation design principles](https://docs.aws.amazon.com/wellarchitected/latest/framework/cost-dp.html). The five bullets above address all five principle areas; use the separate rubric checklist for the full assessment.
 
@@ -452,12 +453,12 @@ Create editable diagrams with readable service labels, arrows and subnet/AZ boun
 | Position | Actual component to draw | Boundary / arrow |
 |---|---|---|
 | Top | Customer/browser | HTTP → public ALB |
-| Public subnets A/B | Public ALB across two AZs; NAT EC2 only in A | Public default route to IGW; NAT supports private app outbound |
+| Public subnets A/B | Public ALB and one NAT gateway/EIP per AZ | Public route to IGW; each app subnet uses its local NAT |
 | Private app A/B | Apache frontend A/B | Public ALB → frontend TCP 80 |
 | Between app groups | Internal ALB across two app subnets | Frontend reverse proxy → internal ALB TCP 80 |
 | Private app A/B, legacy branch | Backend demo API A/B | `/api/*`, priority 100 → backend TCP 8080 |
 | Private app A/B, new branch | Catalogue Fargate A/B | `/catalogue/*`, priority 50 → catalogue TCP 8080 |
-| Private DB A/B | Dummy primary/standby | Backend TCP 1521; no replication arrow |
+| Private DB A/B | RDS Oracle SE2 Multi-AZ primary and managed synchronous standby | Backend TCP 1521 to stable primary endpoint; standby is not queried |
 | Outside VPC as managed regional services | DynamoDB and private S3 | Catalogue reads metadata/objects via gateway endpoints; HTTPS signed S3 image URL returned to browser |
 | Side operations panel | Four stacks, CloudWatch/logs/alarms, SNS, ECR | Provisioning/telemetry/image delivery, distinguished from customer request arrows |
 
@@ -469,7 +470,8 @@ flowchart TD
     PublicALB --> Frontend[Private Apache frontend ASG: two AZs]
     Frontend -->|Reverse proxy| InternalALB[Internal ALB]
     InternalALB -->|/api/*| Backend[Private demo backend ASG: two AZs]
-    Backend -->|TCP 1521| DB[Two dummy DB listeners: no replication]
+    Backend -->|SELECT-only SQL / TCP 1521| DB[Private RDS Oracle SE2 Multi-AZ]
+    DB -.->|Managed synchronous replication| Standby[Standby in other AZ: no application reads]
     InternalALB -->|/catalogue/*| Catalogue[Private Fargate catalogue: two AZs]
     Catalogue -->|Metadata via endpoint| DynamoDB[DynamoDB]
     Catalogue -->|Object access via endpoint| S3[Private S3 images]
@@ -477,7 +479,7 @@ flowchart TD
     Browser -->|HTTPS signed image request| S3
 ```
 
-The signed URL response travels back through the normal ALB/frontend request path; the dotted line represents a logical response, not direct Internet exposure of a task. Add actual AZ/subnet boundaries in the finished slide graphic. Lab CloudFront, WAF, managed Oracle and database replication must not appear as deployed components.
+The signed URL response travels back through the normal ALB/frontend request path; the dotted line represents a logical response, not direct Internet exposure of a task. Add actual AZ/subnet boundaries in the finished slide graphic. CloudFront and WAF remain production recommendations. RDS Oracle and synchronous standby replication are configured by the current templates; actual failover behaviour must be captured in the new run.
 
 ### 3.3 Connect the diagram to the console demonstration
 
@@ -495,7 +497,7 @@ Use brief highlights of the same architecture before showing each relevant conso
 
 ## 4. Evidence the group can use now
 
-The following observations are from the supplied 6 October 2026 run. Label later runs separately and preserve unsuccessful outcomes. Saved evidence remains under `evidence/`; operational steps are in the main IaC guide, Section 4.
+The following observations are historical: the supplied 6 October 2026 run used one NAT instance and dummy DB nodes. They must not be presented as current NAT/RDS verification. Capture a fresh setup/test/failover/load run and replace the main-slide evidence placeholders with its actual results. Preserve older and unsuccessful outcomes under `evidence/`; current commands are in the main IaC guide, Section 4.
 
 | Observation | Supported wording | Source | Boundary |
 |---|---|---|---|
@@ -508,7 +510,7 @@ The following observations are from the supplied 6 October 2026 run. Label later
 | Load | 1,200 HTTP 200; 239.81 seconds; 5 requests/s; p95 7.92 ms | scaling/load.json | Scale-out not observed/reliably demonstrated |
 | Cleanup | All matching project resource counts zero; no collection errors | after-teardown/summary.json | Defined tags/names/prefixes; not an account-wide billing result |
 
-**Preparation still needed:** distinct-code image release if claimed; manual failure trigger and replacement/restored-target evidence; successful demand-driven scale-out/scale-in or an accurate unresolved diagnosis; delivered SNS alert; frontend-to-DB denied connection; owners and incident review; a dated production cost scenario comparison with explicit assumptions; final console recording and graphical slides. Prototype cost/budget captures support temporary-resource management but do not replace the production comparison.
+**Preparation still needed:** current NAT/RDS/SQL/security baseline and real DB failover/restore evidence; distinct-code image release if claimed; manual failure trigger and replacement/restored-target evidence; successful demand-driven scale-out/scale-in or an accurate unresolved diagnosis; delivered SNS alert; frontend-to-DB denied connection; owners and incident review; a dated production cost scenario comparison with explicit assumptions; final console recording and graphical slides. Prototype cost/budget captures support temporary-resource management but do not replace the production comparison.
 
 Do not hide these gaps in footnotes while claiming they passed in the narration. Use the main guide to capture them before the final recording. If unresolved, describe the design, actual outcome and next validation step explicitly.
 
@@ -517,9 +519,9 @@ Do not hide these gaps in footnotes while claiming they passed in the narration.
 ### Before recording
 
 1. Fill member names and assign one console operator per segment; rehearse speaker handoffs.
-2. Follow the main IaC guide to deploy the current architecture and run the intended tests. The supplied run was torn down; its screenshots/JSON are historical evidence, not current live resources.
+2. Use `./scripts/lab.sh setup your-email@example.com` and the main IaC guide to deploy/test the current managed-service architecture. Use `./scripts/lab.sh failover` and `./scripts/lab.sh load` for separate experiments. Earlier screenshots/JSON are historical, not current resources.
 3. Complete long recovery, scaling and cleanup experiments beforehand. Save dated evidence and clear screenshots. Do not wait for replacement or deploy stacks while the 15-minute recording runs.
-4. Open console tabs in presentation order: CloudFormation; CloudWatch/SNS configuration; VPC/subnets/routes; EC2/ASGs; ALBs/target groups; SGs/NACLs; S3; ECR; ECS; DynamoDB; storefront/API; CloudWatch/SNS/ASG behaviour. Keep the production cost slide ready after the operational evidence.
+4. Open console tabs in presentation order: CloudFormation; CloudWatch/SNS configuration; VPC/subnets/routes; EC2/ASGs; RDS/subnet group/backup and secret metadata; ALBs/target groups; SGs/NACLs; S3; ECR; ECS; DynamoDB; storefront/API; CloudWatch/SNS/ASG behaviour. Keep the production cost slide ready after the operational evidence.
 5. Place each screenshot/graph beside the claim it proves and label run/date. Show genuine saved evidence if a live navigation issue occurs; explain that it is captured evidence.
 6. Confirm URLs and local files are accessible. Avoid displaying AWS credentials, complete signed URL query strings or personal subscription addresses.
 7. Run a timed rehearsal including switching applications and loading console pages. Cut repeated narration first. Keep architecture diagrams and required component configuration visible and readable.

@@ -21,8 +21,10 @@ Optional AWS-side template validation (requires AWS CLI credentials):
 from pathlib import Path
 import ast
 import argparse
+import base64
 from datetime import datetime, timezone
 import hashlib
+import gzip
 import json
 import re
 import shutil
@@ -35,7 +37,7 @@ ROOT = Path(__file__).resolve().parents[1] if Path(__file__).parent.name == "scr
 
 STACK_FILES = {
     "network": ROOT / "cloudformation" / "01-network-stack.yaml",
-    "core": ROOT / "cloudformation" / "02-core-infrastructure-stack.yaml",
+    "core": ROOT / "cloudformation" / "02-core-infrastructure-stack.template.json",
     "observability": ROOT / "cloudformation" / "03-observability-stack.yaml",
     "microservice": ROOT / "cloudformation" / "04-microservice-stack.yaml",
 }
@@ -185,6 +187,12 @@ def main():
         ROOT / "catalogue-service" / "app.py",
         ROOT / "catalogue-service" / "Dockerfile",
         ROOT / "catalogue-service" / "requirements.txt",
+        ROOT / "backend-service" / "app.py",
+        ROOT / "backend-service" / "requirements.txt",
+        ROOT / "frontend" / "index.html",
+        ROOT / "cloudformation" / "02-core-infrastructure-stack.yaml",
+        ROOT / "scripts" / "lab.sh",
+        ROOT / "scripts" / "part15_seed_database.py",
         ROOT / "scripts" / "part12_build_push.sh",
         ROOT / "scripts" / "part12_seed_catalogue.sh",
         ROOT / "scripts" / "part12_test_catalogue.sh",
@@ -204,7 +212,7 @@ def main():
             print(f"FAIL artefact: {path.relative_to(ROOT)} missing")
             failed = True
 
-    for path in sorted((ROOT/"scripts").glob("*.py")) + [ROOT/"catalogue-service"/"app.py"] + sorted((ROOT/"tests").glob("*.py")):
+    for path in sorted((ROOT/"scripts").glob("*.py")) + [ROOT/"catalogue-service"/"app.py", ROOT/"backend-service"/"app.py"] + sorted((ROOT/"tests").glob("*.py")):
         try:
             ast.parse(path.read_text())
             print(f"PASS Python syntax: {path.relative_to(ROOT)}")
@@ -245,13 +253,18 @@ def main():
                 except SyntaxError as exc:
                     print(f"FAIL embedded Python: {name}: {exc}")
                     failed = True
-            if "<script>" in data:
-                html = re.search(r"cat > /var/www/html/index.html <<EOF\n(.*?)\nEOF", data, re.S).group(1)
+            compressed = re.search(r"base64 -d <<'HTML_GZIP'[^\n]*\n([A-Za-z0-9+/=\n]+)\nHTML_GZIP", data)
+            if compressed or "<script>" in data:
+                if compressed:
+                    html = gzip.decompress(base64.b64decode(compressed.group(1))).decode()
+                    rendered = html.replace("__INSTANCE_ID__", "i-local").replace("__AZ__", "us-east-1a")
+                else:
+                    html = re.search(r"cat > /var/www/html/index.html <<EOF\n(.*?)\nEOF", data, re.S).group(1)
+                    rendered = subprocess.run(["bash", "-c", "INSTANCE_ID=i-local; AZ=us-east-1a; cat <<EOF\n" + html + "\nEOF"], capture_output=True, text=True, check=True).stdout
                 if "$(" in html or "`" in html:
                     print("FAIL HTML heredoc contains command substitution; cannot safely render locally")
                     failed = True
                     continue
-                rendered = subprocess.run(["bash", "-c", "INSTANCE_ID=i-local; AZ=us-east-1a; cat <<EOF\n" + html + "\nEOF"], capture_output=True, text=True, check=True).stdout
                 js = rendered.split("<script>", 1)[1].split("</script>", 1)[0]
                 node = shutil.which("node")
                 if node:
@@ -282,6 +295,9 @@ def main():
     result = subprocess.run([sys.executable, str(ROOT/"scripts"/"sync_security_reference.py"), "--check"])
     failed |= result.returncode != 0
     print(f"{'PASS' if result.returncode == 0 else 'FAIL'} current security reference consistency")
+    result = subprocess.run([sys.executable, str(ROOT/"scripts"/"sync_backend_template.py"), "--check"])
+    failed |= result.returncode != 0
+    print(f"{'PASS' if result.returncode == 0 else 'FAIL'} application sources/embedded user data/compact template consistency")
     if args.tests:
         result = subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", str(ROOT/"tests"), "-v"], capture_output=True, text=True)
         print(result.stdout + result.stderr)
@@ -317,7 +333,8 @@ def main():
             "validated_at_utc": datetime.now(timezone.utc).isoformat(),
             "aws_runtime_validation": "NOT_PERFORMED",
             "aws_template_validation": aws_validation_results or "NOT_PERFORMED",
-            "baseline_ec2_count": 7, "frontend_peak_ec2_count": 9,
+            "baseline_ec2_count": 4, "frontend_peak_ec2_count": 6,
+            "nat_gateway_count": 2, "rds": "Oracle SE2 License Included Multi-AZ, 20 GiB gp2",
             "resource_counts": {STACK_FILES[k].name: len(t["Resources"]) for k,t in templates.items()},
             "total_declared_resources": sum(len(t["Resources"]) for t in templates.values()),
             "matched_imports": len(imports) - len(unmatched), "unmatched_imports": unmatched,

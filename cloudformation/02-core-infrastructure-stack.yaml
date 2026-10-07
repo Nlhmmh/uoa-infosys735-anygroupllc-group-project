@@ -1,28 +1,22 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: >-
-  AnyGroupLLC Learner Lab core: two-AZ frontend/backend ASGs, public/internal ALBs, dummy DB tier, private S3,
-  security controls and frontend scaling. Apache proxies /api/* and /catalogue/* to the internal ALB.
-
+Description: 'AnyGroupLLC website: private Apache/frontend and Python legacy API across two AZs, private RDS Oracle SE2 Multi-AZ
+  with managed credentials, ALBs, scaling and private S3 images. Synthetic data only.'
 Parameters:
   EnvironmentName:
     Type: String
     Default: anygroup-gp2
-
   NetworkStackName:
     Type: String
     Default: anygroup-gp2-network
     Description: Name of the deployed Part 6 network CloudFormation stack.
-
   ApplicationAmiId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
     Description: Amazon Linux 2023 AMI resolved through AWS public SSM parameter.
-
   ExistingInstanceProfileName:
     Type: String
     Default: LabInstanceProfile
     Description: Existing AWS Academy Learner Lab instance profile.
-
   FrontendInstanceType:
     Type: String
     Default: t3.micro
@@ -32,7 +26,6 @@ Parameters:
     - t3.small
     - t3.medium
     - t3.large
-
   BackendInstanceType:
     Type: String
     Default: t3.micro
@@ -42,7 +35,6 @@ Parameters:
     - t3.small
     - t3.medium
     - t3.large
-
   BackendMinSize:
     Type: Number
     Default: 2
@@ -61,43 +53,53 @@ Parameters:
     MinValue: 2
     MaxValue: 2
     Description: Backend ASG maximum; fixed at two to protect Learner Lab EC2 quota.
-  DbInstanceType:
-    Type: String
-    Default: t3.micro
-    AllowedValues:
-    - t3.nano
-    - t3.micro
-    - t3.small
-    - t3.medium
-    - t3.large
-
   FrontendMinSize:
     Type: Number
     Default: 2
     MinValue: 2
     MaxValue: 2
-
   FrontendDesiredCapacity:
     Type: Number
     Default: 2
     MinValue: 2
     MaxValue: 2
-
   FrontendMaxSize:
     Type: Number
     Default: 4
     MinValue: 2
     MaxValue: 4
-
   FrontendRequestCountTarget:
     Type: Number
     Default: 50
     MinValue: 10
     MaxValue: 1000
-    Description: >
-      Target ALB requests per frontend target per minute. The low Learner Lab
-      default is intentional so scaling can be demonstrated with a small load test.
-
+    Description: |
+      Target ALB requests per frontend target per minute. The low Learner Lab default is intentional so scaling can be demonstrated with a small load test.
+  DbInstanceClass:
+    Type: String
+    Default: db.t3.small
+    AllowedValues:
+    - db.t3.small
+    - db.t3.medium
+    - db.t3.large
+    Description: Setup checks current Oracle SE2 License Included / Multi-AZ availability before deploying.
+  DbEngineVersion:
+    Type: String
+    Default: ''
+    Description: Setup resolves an orderable Oracle 19 version. Empty lets RDS choose its default.
+  DbAllocatedStorage:
+    Type: Number
+    Default: 20
+    MinValue: 20
+    MaxValue: 100
+  DbName:
+    Type: String
+    Default: ANYGROUP
+    AllowedPattern: '[A-Z][A-Z0-9]{0,7}'
+  DbMasterUsername:
+    Type: String
+    Default: anygroupadmin
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]{0,29}'
 Resources:
   PublicAlbSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -120,11 +122,14 @@ Resources:
       - Key: Name
         Value:
           Fn::Sub: ${EnvironmentName}-sg-public-alb
-      - {Key: Project, Value: INFOSYS735-GP2}
-      - {Key: Environment, Value: LearnerLab}
-      - {Key: ManagedBy, Value: CloudFormation}
-      - {Key: Component, Value: Core}
-
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Core
   InternalAlbSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -141,10 +146,14 @@ Resources:
       - Key: Name
         Value:
           Fn::Sub: ${EnvironmentName}-sg-internal-alb
-      - {Key: Project, Value: INFOSYS735-GP2}
-      - {Key: Environment, Value: LearnerLab}
-      - {Key: ManagedBy, Value: CloudFormation}
-      - {Key: Component, Value: Core}
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Core
   FrontendSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -161,11 +170,14 @@ Resources:
       - Key: Name
         Value:
           Fn::Sub: ${EnvironmentName}-sg-frontend
-      - {Key: Project, Value: INFOSYS735-GP2}
-      - {Key: Environment, Value: LearnerLab}
-      - {Key: ManagedBy, Value: CloudFormation}
-      - {Key: Component, Value: Core}
-
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Core
   BackendSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -182,15 +194,18 @@ Resources:
       - Key: Name
         Value:
           Fn::Sub: ${EnvironmentName}-sg-backend
-      - {Key: Project, Value: INFOSYS735-GP2}
-      - {Key: Environment, Value: LearnerLab}
-      - {Key: ManagedBy, Value: CloudFormation}
-      - {Key: Component, Value: Core}
-
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Core
   DbSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Dummy DB primary/standby - TCP 1521 only from backend
+      GroupDescription: Private RDS Oracle - TCP 1521 only from backend
       VpcId:
         Fn::ImportValue:
           Fn::Sub: ${NetworkStackName}-VpcId
@@ -203,11 +218,14 @@ Resources:
       - Key: Name
         Value:
           Fn::Sub: ${EnvironmentName}-sg-db
-      - {Key: Project, Value: INFOSYS735-GP2}
-      - {Key: Environment, Value: LearnerLab}
-      - {Key: ManagedBy, Value: CloudFormation}
-      - {Key: Component, Value: Core}
-
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Core
   AlbToFrontendEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties:
@@ -219,7 +237,6 @@ Resources:
       DestinationSecurityGroupId:
         Ref: FrontendSecurityGroup
       Description: ALB to frontend HTTP
-
   FrontendFromAlbIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -231,7 +248,6 @@ Resources:
       SourceSecurityGroupId:
         Ref: PublicAlbSecurityGroup
       Description: Frontend HTTP only from ALB
-
   InternalAlbFromFrontendIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -275,8 +291,7 @@ Resources:
       ToPort: 1521
       DestinationSecurityGroupId:
         Ref: DbSecurityGroup
-      Description: Backend to dummy Oracle-like DB tier
-
+      Description: Backend SQL to private RDS Oracle
   DbFromBackendIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -288,7 +303,6 @@ Resources:
       SourceSecurityGroupId:
         Ref: BackendSecurityGroup
       Description: DB listener only from backend
-
   FrontendHttpEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties:
@@ -299,7 +313,6 @@ Resources:
       ToPort: 80
       CidrIp: 0.0.0.0/0
       Description: Package installation through NAT
-
   FrontendHttpsEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties:
@@ -310,7 +323,6 @@ Resources:
       ToPort: 443
       CidrIp: 0.0.0.0/0
       Description: SSM and HTTPS through NAT
-
   BackendHttpEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties:
@@ -321,7 +333,6 @@ Resources:
       ToPort: 80
       CidrIp: 0.0.0.0/0
       Description: Package installation through NAT
-
   BackendHttpsEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties:
@@ -332,131 +343,6 @@ Resources:
       ToPort: 443
       CidrIp: 0.0.0.0/0
       Description: SSM and AWS service HTTPS through NAT
-
-  DummyDbPrimaryInstance:
-    Type: AWS::EC2::Instance
-    Properties:
-      ImageId:
-        Ref: ApplicationAmiId
-      InstanceType:
-        Ref: DbInstanceType
-      SubnetId:
-        Fn::ImportValue:
-          Fn::Sub: ${NetworkStackName}-PrivateDbSubnetAId
-      SecurityGroupIds:
-      - Ref: DbSecurityGroup
-      MetadataOptions:
-        HttpEndpoint: enabled
-        HttpTokens: required
-      UserData:
-        Fn::Base64: |
-          #!/bin/bash
-          set -eux
-
-          cat > /opt/anygroup_dummy_db.py <<'PY'
-          import socket
-
-          HOST = "0.0.0.0"
-          PORT = 1521
-          MESSAGE = b"ANYGROUP-DUMMY-DB-PRIMARY OK\n"
-
-          with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
-              server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-              server.bind((HOST, PORT))
-              server.listen(20)
-              while True:
-                  conn, addr = server.accept()
-                  with conn:
-                      conn.sendall(MESSAGE)
-          PY
-
-          cat > /etc/systemd/system/anygroup-dummy-db.service <<'EOF'
-          [Unit]
-          Description=AnyGroupLLC Dummy DB Primary Listener
-          After=network.target
-
-          [Service]
-          Type=simple
-          ExecStart=/usr/bin/python3 /opt/anygroup_dummy_db.py
-          Restart=always
-          RestartSec=2
-
-          [Install]
-          WantedBy=multi-user.target
-          EOF
-
-          systemctl daemon-reload
-          systemctl enable --now anygroup-dummy-db.service
-      Tags:
-      - Key: Name
-        Value:
-          Fn::Sub: ${EnvironmentName}-dummy-db-primary
-      - {Key: Project, Value: INFOSYS735-GP2}
-      - {Key: Environment, Value: LearnerLab}
-      - {Key: ManagedBy, Value: CloudFormation}
-      - {Key: Tier, Value: Database}
-  DummyDbStandbyInstance:
-    Type: AWS::EC2::Instance
-    Properties:
-      ImageId:
-        Ref: ApplicationAmiId
-      InstanceType:
-        Ref: DbInstanceType
-      SubnetId:
-        Fn::ImportValue:
-          Fn::Sub: ${NetworkStackName}-PrivateDbSubnetBId
-      SecurityGroupIds:
-      - Ref: DbSecurityGroup
-      MetadataOptions:
-        HttpEndpoint: enabled
-        HttpTokens: required
-      UserData:
-        Fn::Base64: |
-          #!/bin/bash
-          set -eux
-
-          cat > /opt/anygroup_dummy_db.py <<'PY'
-          import socket
-
-          HOST = "0.0.0.0"
-          PORT = 1521
-          MESSAGE = b"ANYGROUP-DUMMY-DB-STANDBY OK\n"
-
-          with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
-              server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-              server.bind((HOST, PORT))
-              server.listen(20)
-              while True:
-                  conn, addr = server.accept()
-                  with conn:
-                      conn.sendall(MESSAGE)
-          PY
-
-          cat > /etc/systemd/system/anygroup-dummy-db.service <<'EOF'
-          [Unit]
-          Description=AnyGroupLLC Dummy DB Standby Listener
-          After=network.target
-
-          [Service]
-          Type=simple
-          ExecStart=/usr/bin/python3 /opt/anygroup_dummy_db.py
-          Restart=always
-          RestartSec=2
-
-          [Install]
-          WantedBy=multi-user.target
-          EOF
-
-          systemctl daemon-reload
-          systemctl enable --now anygroup-dummy-db.service
-      Tags:
-      - Key: Name
-        Value:
-          Fn::Sub: ${EnvironmentName}-dummy-db-standby
-      - {Key: Project, Value: INFOSYS735-GP2}
-      - {Key: Environment, Value: LearnerLab}
-      - {Key: ManagedBy, Value: CloudFormation}
-      - {Key: Tier, Value: Database}
   BackendLaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
@@ -481,67 +367,153 @@ Resources:
           - Key: Name
             Value:
               Fn::Sub: ${EnvironmentName}-backend
-          - {Key: Project, Value: INFOSYS735-GP2}
-          - {Key: Environment, Value: LearnerLab}
-          - {Key: ManagedBy, Value: CloudFormation}
-          - {Key: Tier, Value: Application}
+          - Key: Project
+            Value: INFOSYS735-GP2
+          - Key: Environment
+            Value: LearnerLab
+          - Key: ManagedBy
+            Value: CloudFormation
+          - Key: Tier
+            Value: Application
         UserData:
           Fn::Base64:
-            Fn::Sub:
-            - |
+            Fn::Sub: |
               #!/bin/bash
               set -euo pipefail
-
-              dnf install -y aws-cfn-bootstrap
+              dnf install -y aws-cfn-bootstrap python3-pip
               trap '/opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource BackendAutoScalingGroup --region ${AWS::Region}' EXIT
-
+              python3 -m venv /opt/anygroup-backend-venv
+              cat > /opt/anygroup-backend-requirements.txt <<'REQ'
+              boto3>=1.40,<2
+              oracledb>=3.2,<4
+              REQ
+              /opt/anygroup-backend-venv/bin/pip install -r /opt/anygroup-backend-requirements.txt
               cat > /opt/anygroup_backend.py <<'PY'
+              """Synthetic legacy API backed by private RDS Oracle, using a read-only DB user."""
+              import argparse
               import json
-              import socket
+              import os
+              import re
+              import threading
+              import time
               import urllib.request
               from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-              DBS = [
-                  {"role": "primary", "host": "${PrimaryDbIp}", "port": 1521},
-                  {"role": "standby", "host": "${StandbyDbIp}", "port": 1521},
-              ]
+              import boto3
+              from botocore.config import Config
+              import oracledb
+
+              REGION = os.getenv("AWS_REGION", "us-east-1")
+              OWNER = os.getenv("DB_OWNER", "anygroupadmin").upper()
+              _secret_cache = {}
+              _lock = threading.Lock()
+
+
+              def secret(arn, refresh=False):
+                  with _lock:
+                      cached = _secret_cache.get(arn)
+                      if not refresh and cached and time.monotonic() - cached[0] < 60:
+                          return cached[1]
+                      client = boto3.client("secretsmanager", region_name=REGION,
+                                            config=Config(connect_timeout=3, read_timeout=3,
+                                                          retries={"max_attempts": 1}))
+                      value = json.loads(client.get_secret_value(SecretId=arn)["SecretString"])
+                      _secret_cache[arn] = (time.monotonic(), value)
+                      return value
+
+
+              def connect(admin=False):
+                  arn = os.environ["DB_MASTER_SECRET_ARN" if admin else "DB_APP_SECRET_ARN"]
+                  for attempt in range(2):
+                      credentials = secret(arn, refresh=bool(attempt))
+                      try:
+                          connection = oracledb.connect(
+                              user=credentials["username"], password=credentials["password"],
+                              host=os.environ["DB_HOST"], port=int(os.getenv("DB_PORT", "1521")),
+                              sid=os.getenv("DB_NAME", "ANYGROUP"), tcp_connect_timeout=3,
+                              retry_count=0)
+                          connection.call_timeout = 5000
+                          return connection
+                      except oracledb.DatabaseError as exc:
+                          if attempt or getattr(exc.args[0], "code", None) != 1017:
+                              raise
+
+
+              def seed_database():
+                  """Run explicitly through SSM; application requests never write or use admin credentials."""
+                  app = secret(os.environ["DB_APP_SECRET_ARN"], refresh=True)
+                  username, password = app["username"].upper(), app["password"]
+                  if not re.fullmatch(r"[A-Z][A-Z0-9]{0,29}", username) or not re.fullmatch(r"[a-zA-Z0-9]{20,30}", password):
+                      raise ValueError("Unexpected generated application credential format")
+                  if not re.fullmatch(r"[A-Z][A-Z0-9]{0,29}", OWNER):
+                      raise ValueError("Invalid database owner")
+                  with connect(admin=True) as connection:
+                      with connection.cursor() as cursor:
+                          for ddl in (
+                              "CREATE TABLE demo_orders (order_id VARCHAR2(30) PRIMARY KEY, status VARCHAR2(30) NOT NULL)",
+                              "CREATE TABLE demo_customers (customer_id VARCHAR2(30) PRIMARY KEY, name VARCHAR2(80), status VARCHAR2(30))",
+                          ):
+                              try:
+                                  cursor.execute(ddl)
+                              except oracledb.DatabaseError as exc:
+                                  if getattr(exc.args[0], "code", None) != 955:
+                                      raise
+                          for order_id, status in (("ORD-1001", "Processing"), ("ORD-1002", "Ready")):
+                              cursor.execute("MERGE INTO demo_orders d USING (SELECT :id order_id, :status status FROM dual) s "
+                                             "ON (d.order_id=s.order_id) WHEN MATCHED THEN UPDATE SET d.status=s.status "
+                                             "WHEN NOT MATCHED THEN INSERT (order_id,status) VALUES (s.order_id,s.status)",
+                                             id=order_id, status=status)
+                          cursor.execute("MERGE INTO demo_customers d USING (SELECT 'CUST-1001' customer_id FROM dual) s "
+                                         "ON (d.customer_id=s.customer_id) WHEN NOT MATCHED THEN "
+                                         "INSERT (customer_id,name,status) VALUES ('CUST-1001','Demo Customer','Active')")
+                          connection.commit()
+                          try:
+                              cursor.execute(f'CREATE USER {username} IDENTIFIED BY "{password}"')
+                          except oracledb.DatabaseError as exc:
+                              if getattr(exc.args[0], "code", None) != 1920:
+                                  raise
+                              cursor.execute(f'ALTER USER {username} IDENTIFIED BY "{password}"')
+                          cursor.execute(f"GRANT CREATE SESSION TO {username}")
+                          for table in ("DEMO_ORDERS", "DEMO_CUSTOMERS"):
+                              cursor.execute(f"GRANT SELECT ON {OWNER}.{table} TO {username}")
+                  print(json.dumps({"status": "SEEDED", "engine": "oracle", "orders": 2, "customers": 1,
+                                    "application_access": "SELECT_ONLY"}))
+
+
+              def query(path):
+                  with connect() as connection:
+                      with connection.cursor() as cursor:
+                          if path == "/api/orders":
+                              cursor.execute(f"SELECT order_id, status FROM {OWNER}.demo_orders ORDER BY order_id")
+                              return {"orders": [{"order_id": row[0], "status": row[1]} for row in cursor.fetchall()]}
+                          if path == "/api/account":
+                              cursor.execute(f"SELECT name, status FROM {OWNER}.demo_customers WHERE customer_id=:id", id="CUST-1001")
+                              row = cursor.fetchone()
+                              if row is None:
+                                  raise ValueError("Seed customer missing")
+                              return {"customer": {"name": row[0], "status": row[1]}}
+                          cursor.execute("SELECT 1 FROM dual")
+                          accessible = cursor.fetchone()[0] == 1
+                          cursor.execute(f"SELECT COUNT(*) FROM {OWNER}.demo_orders")
+                          return {"database_tier": "RDS_ORACLE_MULTI_AZ", "database_accessible": accessible,
+                                  "seed_order_count": cursor.fetchone()[0], "application_access": "SELECT_ONLY"}
+
 
               def metadata(path):
                   try:
-                      req = urllib.request.Request(
-                          "http://169.254.169.254/latest/api/token",
-                          method="PUT",
-                          headers={"X-aws-ec2-metadata-token-ttl-seconds": "21600"},
-                      )
-                      token = urllib.request.urlopen(req, timeout=1).read().decode()
-                      req = urllib.request.Request(
-                          "http://169.254.169.254/latest/meta-data/" + path,
-                          headers={"X-aws-ec2-metadata-token": token},
-                      )
-                      return urllib.request.urlopen(req, timeout=1).read().decode()
+                      root = "http://169.254.169.254/latest/"
+                      request = urllib.request.Request(root + "api/token", method="PUT",
+                                                       headers={"X-aws-ec2-metadata-token-ttl-seconds": "21600"})
+                      token = urllib.request.urlopen(request, timeout=1).read().decode()
+                      request = urllib.request.Request(root + "meta-data/" + path, headers={"X-aws-ec2-metadata-token": token})
+                      return urllib.request.urlopen(request, timeout=1).read().decode()
                   except Exception:
                       return "unknown"
 
-              INSTANCE_ID = metadata("instance-id")
-              AZ = metadata("placement/availability-zone")
-
-              def check_db(db):
-                  try:
-                      with socket.create_connection((db["host"], db["port"]), timeout=3) as sock:
-                          response = sock.recv(1024).decode("utf-8").strip()
-                      return {
-                          "role": db["role"], "status": "reachable",
-                          "host": db["host"], "port": db["port"], "response": response,
-                      }
-                  except Exception as exc:
-                      return {
-                          "role": db["role"], "status": "unreachable",
-                          "host": db["host"], "port": db["port"], "error": str(exc),
-                      }
 
               class Handler(BaseHTTPRequestHandler):
                   def send_json(self, payload, status=200):
-                      body = json.dumps(payload, indent=2).encode("utf-8")
+                      body = json.dumps(payload).encode()
                       self.send_response(status)
                       self.send_header("Content-Type", "application/json")
                       self.send_header("Content-Length", str(len(body)))
@@ -550,91 +522,79 @@ Resources:
                       self.wfile.write(body)
 
                   def do_GET(self):
+                      base = {"service": "legacy-backend", **self.server.identity}
                       if self.path == "/api/health":
-                          self.send_json({
-                              "service": "legacy-backend",
-                              "status": "healthy",
-                              "instance_id": INSTANCE_ID,
-                              "availability_zone": AZ,
-                              "host": socket.gethostname(),
-                          })
-                          return
+                          self.send_json({**base, "status": "healthy"})
+                      elif self.path in {"/api/db", "/api/orders", "/api/account"}:
+                          try:
+                              self.send_json({**base, **query(self.path)})
+                          except Exception:
+                              # Never send/log driver exception text: it can contain sensitive connection details.
+                              self.send_json({**base, "error": "database_unavailable"}, 503)
+                      else:
+                          self.send_json({"error": "not_found"}, 404)
 
-                      if self.path == "/api/orders":
-                          self.send_json({
-                              "service": "legacy-backend",
-                              "orders": [
-                                  {"order_id": "ORD-1001", "status": "Processing"},
-                                  {"order_id": "ORD-1002", "status": "Ready"},
-                              ],
-                          })
-                          return
 
-                      if self.path == "/api/account":
-                          self.send_json({
-                              "service": "legacy-backend",
-                              "customer": {"name": "Demo Customer", "status": "Active"},
-                          })
-                          return
+              def main():
+                  parser = argparse.ArgumentParser(description=__doc__)
+                  parser.add_argument("--seed-db", action="store_true")
+                  args = parser.parse_args()
+                  if args.seed_db:
+                      try:
+                          seed_database()
+                      except Exception:
+                          print(json.dumps({"status": "FAIL", "error": "Database seed failed; check RDS, secrets permissions and connectivity"}))
+                          return 1
+                      return 0
+                  if not re.fullmatch(r"[A-Z][A-Z0-9]{0,29}", OWNER):
+                      raise ValueError("Invalid database owner")
+                  server = ThreadingHTTPServer(("0.0.0.0", 8080), Handler)
+                  server.identity = {"instance_id": metadata("instance-id"), "availability_zone": metadata("placement/availability-zone")}
+                  server.serve_forever()
 
-                      if self.path == "/api/db":
-                          checks = [check_db(db) for db in DBS]
-                          all_reachable = all(item["status"] == "reachable" for item in checks)
-                          self.send_json({
-                              "service": "legacy-backend",
-                              "backend_instance_id": INSTANCE_ID,
-                              "backend_availability_zone": AZ,
-                              "database_tier": "dummy primary/standby multi-AZ representation",
-                              "all_reachable": all_reachable,
-                              "databases": checks,
-                              "note": "The two EC2 database nodes simulate placement/connectivity only; this is not RDS replication.",
-                          }, status=200 if all_reachable else 503)
-                          return
 
-                      self.send_json({"error": "not_found", "path": self.path}, status=404)
-
-                  def log_message(self, fmt, *args):
-                      print("%s - %s" % (self.address_string(), fmt % args), flush=True)
-
-              ThreadingHTTPServer(("0.0.0.0", 8080), Handler).serve_forever()
+              if __name__ == "__main__":
+                  raise SystemExit(main())
               PY
-
-              cat > /etc/systemd/system/anygroup-backend.service <<'EOF'
+              cat > /etc/anygroup-backend.env <<'ENV'
+              AWS_REGION=${AWS::Region}
+              DB_HOST=${OracleDatabase.Endpoint.Address}
+              DB_PORT=${OracleDatabase.Endpoint.Port}
+              DB_NAME=${DbName}
+              DB_OWNER=${DbMasterUsername}
+              DB_MASTER_SECRET_ARN=${OracleDatabase.MasterUserSecret.SecretArn}
+              DB_APP_SECRET_ARN=${BackendDbCredentials}
+              ENV
+              chmod 600 /etc/anygroup-backend.env
+              cat > /etc/systemd/system/anygroup-backend.service <<'UNIT'
               [Unit]
-              Description=AnyGroupLLC Legacy Backend Demo API
+              Description=AnyGroupLLC RDS-backed Legacy Demo API
               After=network-online.target
               Wants=network-online.target
-
               [Service]
               Type=simple
-              ExecStart=/usr/bin/python3 /opt/anygroup_backend.py
+              EnvironmentFile=/etc/anygroup-backend.env
+              ExecStart=/opt/anygroup-backend-venv/bin/python /opt/anygroup_backend.py
               Restart=always
               RestartSec=2
-
               [Install]
               WantedBy=multi-user.target
-              EOF
-
+              UNIT
               systemctl daemon-reload
               systemctl enable --now anygroup-backend.service
               curl -fsS --retry 20 --retry-delay 2 --retry-connrefused http://127.0.0.1:8080/api/health
-            - PrimaryDbIp:
-                Fn::GetAtt:
-                - DummyDbPrimaryInstance
-                - PrivateIp
-              StandbyDbIp:
-                Fn::GetAtt:
-                - DummyDbStandbyInstance
-                - PrivateIp
       TagSpecifications:
       - ResourceType: launch-template
         Tags:
         - Key: Name
           Value:
             Fn::Sub: ${EnvironmentName}-backend-lt
-        - {Key: Project, Value: INFOSYS735-GP2}
-        - {Key: Environment, Value: LearnerLab}
-        - {Key: ManagedBy, Value: CloudFormation}
+        - Key: Project
+          Value: INFOSYS735-GP2
+        - Key: Environment
+          Value: LearnerLab
+        - Key: ManagedBy
+          Value: CloudFormation
   BackendTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -657,10 +617,12 @@ Resources:
       Matcher:
         HttpCode: '200'
       Tags:
-      - {Key: Project, Value: INFOSYS735-GP2}
-      - {Key: Environment, Value: LearnerLab}
-      - {Key: ManagedBy, Value: CloudFormation}
-
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
       TargetGroupAttributes:
       - Key: deregistration_delay.timeout_seconds
         Value: '30'
@@ -680,10 +642,14 @@ Resources:
       - Fn::ImportValue:
           Fn::Sub: ${NetworkStackName}-PrivateAppSubnetBId
       Tags:
-      - {Key: Project, Value: INFOSYS735-GP2}
-      - {Key: Environment, Value: LearnerLab}
-      - {Key: ManagedBy, Value: CloudFormation}
-      - {Key: Component, Value: Core}
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Core
   InternalHttpListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -778,8 +744,12 @@ Resources:
         Value:
           Fn::Sub: ${EnvironmentName}-backend
         PropagateAtLaunch: true
-      - {Key: Project, Value: INFOSYS735-GP2, PropagateAtLaunch: true}
-      - {Key: ManagedBy, Value: CloudFormation, PropagateAtLaunch: true}
+      - Key: Project
+        Value: INFOSYS735-GP2
+        PropagateAtLaunch: true
+      - Key: ManagedBy
+        Value: CloudFormation
+        PropagateAtLaunch: true
   FrontendLaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
@@ -804,10 +774,14 @@ Resources:
           - Key: Name
             Value:
               Fn::Sub: ${EnvironmentName}-frontend
-          - {Key: Project, Value: INFOSYS735-GP2}
-          - {Key: Environment, Value: LearnerLab}
-          - {Key: ManagedBy, Value: CloudFormation}
-          - {Key: Tier, Value: Web}
+          - Key: Project
+            Value: INFOSYS735-GP2
+          - Key: Environment
+            Value: LearnerLab
+          - Key: ManagedBy
+            Value: CloudFormation
+          - Key: Tier
+            Value: Web
         UserData:
           Fn::Base64:
             Fn::Sub:
@@ -842,71 +816,13 @@ Resources:
               ProxyPassReverse /catalogue/  http://${InternalAlbDns}/catalogue/
               EOF
 
-              cat > /var/www/html/index.html <<EOF
-              <!doctype html>
-              <html lang="en">
-              <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width,initial-scale=1">
-                <title>AnyGroup Market</title>
-                <style>
-                  :root{--ink:#183027;--muted:#66736d;--line:#e3e9e5;--paper:#fbfcfb;--panel:#fff;--brand:#2f7656;--brand2:#e8f4ed;--good:#1f7a4f;--shadow:0 16px 38px rgba(36,65,52,.10)}
-                  *{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--paper);color:var(--ink)}
-                  a{color:inherit;text-decoration:none}header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-                  .nav{max-width:1180px;margin:auto;min-height:74px;padding:0 24px;display:flex;align-items:center;gap:24px}.brand{font-size:22px;font-weight:850;color:var(--brand)}.brand span{color:var(--ink)}
-                  .navlinks{display:flex;gap:22px;margin-left:auto;color:var(--muted);font-size:14px}.cart{border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 14px;font-weight:800}
-                  .hero{max-width:1180px;margin:34px auto 18px;padding:0 24px}.heroBox{border-radius:28px;overflow:hidden;min-height:330px;padding:56px;display:grid;grid-template-columns:1.15fr .85fr;align-items:center;background:linear-gradient(135deg,#eaf5ee,#f8f2e7);box-shadow:var(--shadow)}
-                  .eyebrow{color:var(--brand);font-size:13px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}h1{margin:10px 0 16px;max-width:650px;font-size:clamp(42px,6vw,72px);line-height:.98;letter-spacing:-.055em}.lead{max-width:580px;color:var(--muted);font-size:18px;line-height:1.65}
-                  .actions{margin-top:28px;display:flex;gap:12px;flex-wrap:wrap}.btn{border:none;border-radius:12px;padding:13px 18px;font-weight:800;cursor:pointer}.primary{background:var(--brand);color:#fff}.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
-                  .heroArt{display:flex;justify-content:center}.basket{width:min(320px,90%);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 38% 35%,#fff 0 15%,#f5d79a 16% 31%,#8dc5a2 32% 47%,#f2b868 48% 63%,#d8eadf 64%);box-shadow:inset 0 0 0 20px rgba(255,255,255,.42),0 24px 45px rgba(53,100,74,.18)}
-                  main{max-width:1180px;margin:auto;padding:18px 24px 60px}.sectionHead{display:flex;align-items:end;justify-content:space-between;gap:20px;margin:34px 0 18px}.sectionHead h2{margin:0;font-size:28px;letter-spacing:-.03em}.sectionHead p{margin:5px 0 0;color:var(--muted)}
-                  .search{width:min(320px,100%);border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}.products{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
-                  .product{overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:20px;box-shadow:0 10px 28px rgba(34,57,47,.06);transition:.18s}.product:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
-                  .productImage{aspect-ratio:4/3;background:#eef2ef;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#829087}.productImage img{width:100%;height:100%;object-fit:cover}.productBody{padding:18px}.category{color:var(--brand);font-size:12px;text-transform:uppercase;font-weight:850;letter-spacing:.09em}.product h3{margin:7px 0 4px;font-size:19px}
-                  .priceRow{display:flex;align-items:center;justify-content:space-between;margin-top:18px}.price{font-size:22px;font-weight:850}.stock{color:var(--good);font-size:12px;font-weight:800}.add{width:100%;margin-top:14px;background:var(--brand2);color:var(--brand)}
-                  .empty{grid-column:1/-1;padding:30px;border:1px dashed var(--line);border-radius:18px;color:var(--muted);background:#fff}.statusWrap{margin-top:48px;border:1px solid var(--line);border-radius:24px;background:#fff;padding:24px}
-                  .statusGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}.statusCard{border:1px solid var(--line);border-radius:16px;padding:17px;background:#fcfdfc}.statusTop{display:flex;justify-content:space-between;gap:10px}.statusTitle{font-weight:850}
-                  .pill{font-size:11px;font-weight:850;padding:5px 8px;border-radius:999px;background:#eef2ef;color:var(--muted)}.pill.good{background:#e8f5ee;color:var(--good)}.pill.bad{background:#fff0ec;color:#a53a28}.statusBody{margin-top:12px;color:var(--muted);font-size:13px;line-height:1.7;min-height:66px}.techNote{margin-top:16px;color:var(--muted);font-size:12px;line-height:1.6}
-                  footer{border-top:1px solid var(--line);color:var(--muted);padding:30px 24px 40px;text-align:center;font-size:13px}@media(max-width:850px){.heroBox{grid-template-columns:1fr;padding:36px}.heroArt{display:none}.products{grid-template-columns:repeat(2,1fr)}.statusGrid{grid-template-columns:1fr}.navlinks{display:none}}@media(max-width:560px){.products{grid-template-columns:1fr}.sectionHead{align-items:stretch;flex-direction:column}.heroBox{padding:30px 24px}}
-                </style>
-              </head>
-              <body>
-              <header><div class="nav"><a class="brand" href="/">AnyGroup <span>Market</span></a><nav class="navlinks"><a href="#products">Products</a><a href="#platform">Platform status</a></nav><div class="cart">Cart <span id="cartCount">0</span></div></div></header>
-
-              <section class="hero"><div class="heroBox"><div><div class="eyebrow">Fresh everyday essentials</div><h1>Good food, made simple.</h1><p class="lead">Browse a small live catalogue powered by AnyGroup's cloud platform. Product information and images are loaded dynamically while existing customer services remain available.</p><div class="actions"><button class="btn primary" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Shop products</button><button class="btn ghost" onclick="refreshStatus()">Refresh platform status</button></div></div><div class="heroArt"><div class="basket"></div></div></div></section>
-
-              <main>
-              <section id="products"><div class="sectionHead"><div><h2>Featured products</h2><p>Live catalogue products with images stored privately in S3.</p></div><input id="search" class="search" type="search" placeholder="Search products..." oninput="renderProducts()"></div><div id="productGrid" class="products"><div class="empty">Loading catalogue…</div></div></section>
-
-              <section id="platform" class="statusWrap"><div class="sectionHead" style="margin:0"><div><h2>Live platform status</h2><p>A compact technical view for the cloud demonstration.</p></div><button class="btn ghost" onclick="refreshStatus()">Refresh</button></div>
-              <div class="statusGrid">
-              <div class="statusCard"><div class="statusTop"><span class="statusTitle">Web tier</span><span class="pill good">HEALTHY</span></div><div class="statusBody">Frontend EC2<br>Instance: $INSTANCE_ID<br>Availability Zone: $AZ</div></div>
-              <div class="statusCard"><div class="statusTop"><span class="statusTitle">Legacy API</span><span id="apiPill" class="pill">CHECKING</span></div><div id="apiBody" class="statusBody">Frontend → internal ALB → backend</div></div>
-              <div class="statusCard"><div class="statusTop"><span class="statusTitle">Database tier</span><span id="dbPill" class="pill">CHECKING</span></div><div id="dbBody" class="statusBody">Backend → primary / standby DB simulation</div></div>
-              </div>
-              <div class="techNote">Status calls pass through this frontend Apache node to the internal ALB, then to the backend ASG. The backend checks both private dummy DB nodes on TCP 1521.</div>
-              </section>
-              </main>
-
-              <footer>AnyGroup Market · Learner Lab prototype</footer>
-
-              <script>
-              let products=[],cart=0;
-              function money(v){const n=Number(v);return Number.isFinite(n)?"$"+n.toFixed(2):String(v||"")}
-              function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;","\\"":"&quot;","'":"&#39;"}[c]})}
-              async function imgUrl(id){try{const r=await fetch("/catalogue/products/"+encodeURIComponent(id)+"/image-url",{cache:"no-store"});if(!r.ok)return null;const d=await r.json();return d.image_url||d.url||d.presigned_url||null}catch(e){return null}}
-              async function loadProducts(){const g=document.getElementById("productGrid");try{const r=await fetch("/catalogue/products",{cache:"no-store"});if(!r.ok)throw new Error("HTTP "+r.status);const d=await r.json();products=Array.isArray(d)?d:(d.products||d.items||[]);await Promise.all(products.map(async p=>p._image=await imgUrl(p.product_id)));renderProducts()}catch(e){g.innerHTML='<div class="empty"><strong>Catalogue is not available yet.</strong><br>The storefront remains online while the catalogue service is being deployed or updated.</div>'}}
-              function renderProducts(){const q=document.getElementById("search").value.trim().toLowerCase();const list=products.filter(p=>!q||String(p.name||"").toLowerCase().includes(q)||String(p.category||"").toLowerCase().includes(q));const g=document.getElementById("productGrid");if(!list.length){g.innerHTML='<div class="empty">No matching products.</div>';return}g.innerHTML=list.map(function(p){const image=p._image?'<img src="'+esc(p._image)+'" alt="'+esc(p.name)+'">':'<div>Image unavailable</div>';const ok=p.availability!==false&&String(p.availability).toLowerCase()!=="false";return'<article class="product"><div class="productImage">'+image+'</div><div class="productBody"><div class="category">'+esc(p.category||"Everyday")+'</div><h3>'+esc(p.name||p.product_id)+'</h3><div class="priceRow"><span class="price">'+money(p.price)+'</span><span class="stock">'+(ok?"● In stock":"Out of stock")+'</span></div><button class="btn add" '+(ok?"":"disabled")+' onclick="addToCart()">'+(ok?"Add to cart":"Unavailable")+'</button></div></article>'}).join("")}
-              function addToCart(){cart++;document.getElementById("cartCount").textContent=String(cart)}
-              function pill(id,ok,text){const e=document.getElementById(id);e.className="pill "+(ok?"good":"bad");e.textContent=text}
-              async function refreshStatus(){document.getElementById("apiPill").className="pill";document.getElementById("apiPill").textContent="CHECKING";document.getElementById("dbPill").className="pill";document.getElementById("dbPill").textContent="CHECKING";
-              try{const r=await fetch("/api/health",{cache:"no-store"}),d=await r.json();pill("apiPill",r.ok,r.ok?"CONNECTED":"ERROR");document.getElementById("apiBody").innerHTML="Backend EC2<br>Instance: "+esc(d.instance_id||"unknown")+"<br>Availability Zone: "+esc(d.availability_zone||"unknown")}catch(e){pill("apiPill",false,"OFFLINE");document.getElementById("apiBody").textContent="Legacy backend request failed."}
-              try{const r=await fetch("/api/db",{cache:"no-store"}),d=await r.json();const rows=(d.databases||[]).map(x=>esc(x.role)+": "+esc(x.status));pill("dbPill",!!d.all_reachable,d.all_reachable?"CONNECTED":"DEGRADED");document.getElementById("dbBody").innerHTML=(rows.length?rows.join("<br>"):"No database status returned")+"<br><small>Dummy primary/standby representation</small>"}catch(e){pill("dbPill",false,"OFFLINE");document.getElementById("dbBody").textContent="Database connectivity check failed."}}
-              loadProducts();refreshStatus();
-              </script>
-              </body>
-              </html>
-              EOF
+              # FRONTEND_HTML_START
+              base64 -d <<'HTML_GZIP' | gzip -dc > /var/www/html/index.html
+              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
+              HTML_GZIP
+              sed "s/__INSTANCE_ID__/$INSTANCE_ID/g; s/__AZ__/$AZ/g" /var/www/html/index.html > /var/www/html/index.tmp
+              mv /var/www/html/index.tmp /var/www/html/index.html
+              # FRONTEND_HTML_END
 
               systemctl restart httpd
               curl -fsS --retry 20 --retry-delay 2 --retry-connrefused http://127.0.0.1/
@@ -920,9 +836,10 @@ Resources:
         - Key: Name
           Value:
             Fn::Sub: ${EnvironmentName}-frontend-lt
-        - {Key: Project, Value: INFOSYS735-GP2}
-        - {Key: ManagedBy, Value: CloudFormation}
-
+        - Key: Project
+          Value: INFOSYS735-GP2
+        - Key: ManagedBy
+          Value: CloudFormation
   FrontendTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -948,10 +865,12 @@ Resources:
       - Key: deregistration_delay.timeout_seconds
         Value: '30'
       Tags:
-      - {Key: Project, Value: INFOSYS735-GP2}
-      - {Key: Environment, Value: LearnerLab}
-      - {Key: ManagedBy, Value: CloudFormation}
-
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
   ApplicationLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
@@ -968,11 +887,14 @@ Resources:
       - Fn::ImportValue:
           Fn::Sub: ${NetworkStackName}-PublicSubnetBId
       Tags:
-      - {Key: Project, Value: INFOSYS735-GP2}
-      - {Key: Environment, Value: LearnerLab}
-      - {Key: ManagedBy, Value: CloudFormation}
-      - {Key: Component, Value: Core}
-
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Core
   HttpListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -984,7 +906,6 @@ Resources:
       - Type: forward
         TargetGroupArn:
           Ref: FrontendTargetGroup
-
   FrontendAutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     CreationPolicy:
@@ -1050,10 +971,12 @@ Resources:
         Value:
           Fn::Sub: ${EnvironmentName}-frontend
         PropagateAtLaunch: true
-      - {Key: Project, Value: INFOSYS735-GP2, PropagateAtLaunch: true}
-      - {Key: ManagedBy, Value: CloudFormation, PropagateAtLaunch: true}
-
-
+      - Key: Project
+        Value: INFOSYS735-GP2
+        PropagateAtLaunch: true
+      - Key: ManagedBy
+        Value: CloudFormation
+        PropagateAtLaunch: true
   FrontendRequestCountScalingPolicy:
     Type: AWS::AutoScaling::ScalingPolicy
     DependsOn:
@@ -1078,8 +1001,6 @@ Resources:
               - Fn::GetAtt:
                 - FrontendTargetGroup
                 - TargetGroupFullName
-
-
   CatalogueImageBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Delete
@@ -1101,12 +1022,16 @@ Resources:
       - Key: Name
         Value:
           Fn::Sub: ${EnvironmentName}-catalogue-images
-      - {Key: Project, Value: INFOSYS735-GP2}
-      - {Key: Environment, Value: LearnerLab}
-      - {Key: ManagedBy, Value: CloudFormation}
-      - {Key: Component, Value: Core}
-      - {Key: Purpose, Value: CatalogueImages}
-
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Core
+      - Key: Purpose
+        Value: CatalogueImages
   CatalogueImageBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -1118,7 +1043,7 @@ Resources:
         - Sid: DenyInsecureTransport
           Effect: Deny
           Principal: '*'
-          Action: 's3:*'
+          Action: s3:*
           Resource:
           - Fn::GetAtt:
             - CatalogueImageBucket
@@ -1132,7 +1057,100 @@ Resources:
           Condition:
             Bool:
               aws:SecureTransport: false
-
+  DbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Private DB subnets across two AZs
+      SubnetIds:
+      - Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-PrivateDbSubnetAId
+      - Fn::ImportValue:
+          Fn::Sub: ${NetworkStackName}-PrivateDbSubnetBId
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-rds-subnets
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Database
+  BackendDbCredentials:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name:
+        Fn::Sub: ${EnvironmentName}/backend-db
+      Description: Synthetic backend read-only Oracle application user
+      GenerateSecretString:
+        SecretStringTemplate: '{"username":"anygroupapp"}'
+        GenerateStringKey: password
+        PasswordLength: 24
+        ExcludePunctuation: true
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-backend-db-credentials
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Database
+  OracleDatabase:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      DBInstanceIdentifier:
+        Fn::Sub: ${EnvironmentName}-rds-oracle
+      Engine: oracle-se2
+      EngineVersion:
+        Fn::If:
+        - HasDbEngineVersion
+        - Ref: DbEngineVersion
+        - Ref: AWS::NoValue
+      LicenseModel: license-included
+      DBInstanceClass:
+        Ref: DbInstanceClass
+      AllocatedStorage:
+        Ref: DbAllocatedStorage
+      StorageType: gp2
+      StorageEncrypted: true
+      MultiAZ: true
+      DBName:
+        Ref: DbName
+      MasterUsername:
+        Ref: DbMasterUsername
+      ManageMasterUserPassword: true
+      Port: '1521'
+      DBSubnetGroupName:
+        Ref: DbSubnetGroup
+      VPCSecurityGroups:
+      - Ref: DbSecurityGroup
+      PubliclyAccessible: false
+      BackupRetentionPeriod: 1
+      CopyTagsToSnapshot: true
+      DeleteAutomatedBackups: true
+      DeletionProtection: false
+      AutoMinorVersionUpgrade: true
+      MonitoringInterval: 0
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-rds-oracle
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Database
 Outputs:
   AlbDnsName:
     Description: Open this DNS name in a browser for the live demo.
@@ -1143,14 +1161,12 @@ Outputs:
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-AlbDnsName
-
   AlbArn:
     Value:
       Ref: ApplicationLoadBalancer
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-AlbArn
-
   AlbFullName:
     Description: Application Load Balancer full name used by CloudWatch dimensions.
     Value:
@@ -1160,28 +1176,24 @@ Outputs:
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-AlbFullName
-
   PublicAlbSecurityGroupId:
     Value:
       Ref: PublicAlbSecurityGroup
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-PublicAlbSecurityGroupId
-
   HttpListenerArn:
     Value:
       Ref: HttpListener
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-HttpListenerArn
-
   FrontendTargetGroupArn:
     Value:
       Ref: FrontendTargetGroup
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-FrontendTargetGroupArn
-
   FrontendTargetGroupFullName:
     Description: Frontend target group full name used by CloudWatch dimensions.
     Value:
@@ -1191,14 +1203,12 @@ Outputs:
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-FrontendTargetGroupFullName
-
   BackendTargetGroupArn:
     Value:
       Ref: BackendTargetGroup
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-BackendTargetGroupArn
-
   BackendTargetGroupFullName:
     Description: Backend target group full name for monitoring and later diagnostics.
     Value:
@@ -1208,62 +1218,39 @@ Outputs:
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-BackendTargetGroupFullName
-
   FrontendSecurityGroupId:
     Value:
       Ref: FrontendSecurityGroup
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-FrontendSecurityGroupId
-
   BackendSecurityGroupId:
     Value:
       Ref: BackendSecurityGroup
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-BackendSecurityGroupId
-
   DbSecurityGroupId:
     Value:
       Ref: DbSecurityGroup
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-DbSecurityGroupId
-
   FrontendAutoScalingGroupName:
     Value:
       Ref: FrontendAutoScalingGroup
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-FrontendAutoScalingGroupName
-
   FrontendScalingPolicyArn:
     Value:
       Ref: FrontendRequestCountScalingPolicy
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-FrontendScalingPolicyArn
-
   FrontendRequestCountTarget:
     Value:
       Ref: FrontendRequestCountTarget
-
-  DummyDbInstanceId:
-    Description: Backward-compatible alias for primary dummy DB.
-    Value:
-      Ref: DummyDbPrimaryInstance
-    Export:
-      Name:
-        Fn::Sub: ${AWS::StackName}-DummyDbInstanceId
-  DummyDbPrivateIp:
-    Description: Backward-compatible alias for primary dummy DB private IP.
-    Value:
-      Fn::GetAtt:
-      - DummyDbPrimaryInstance
-      - PrivateIp
-    Export:
-      Name:
-        Fn::Sub: ${AWS::StackName}-DummyDbPrivateIp
   CatalogueImageBucketName:
     Description: Private S3 bucket used for catalogue product images and demo objects.
     Value:
@@ -1271,7 +1258,6 @@ Outputs:
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-CatalogueImageBucketName
-
   CatalogueImageBucketArn:
     Description: ARN of the private catalogue image bucket.
     Value:
@@ -1322,31 +1308,51 @@ Outputs:
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-BackendAutoScalingGroupName
-  DummyDbPrimaryInstanceId:
+  DatabaseInstanceIdentifier:
     Value:
-      Ref: DummyDbPrimaryInstance
+      Ref: OracleDatabase
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-DummyDbPrimaryInstanceId
-  DummyDbPrimaryPrivateIp:
-    Value:
-      Fn::GetAtt:
-      - DummyDbPrimaryInstance
-      - PrivateIp
-    Export:
-      Name:
-        Fn::Sub: ${AWS::StackName}-DummyDbPrimaryPrivateIp
-  DummyDbStandbyInstanceId:
-    Value:
-      Ref: DummyDbStandbyInstance
-    Export:
-      Name:
-        Fn::Sub: ${AWS::StackName}-DummyDbStandbyInstanceId
-  DummyDbStandbyPrivateIp:
+        Fn::Sub: ${AWS::StackName}-DatabaseInstanceIdentifier
+  DatabaseEndpointAddress:
     Value:
       Fn::GetAtt:
-      - DummyDbStandbyInstance
-      - PrivateIp
+      - OracleDatabase
+      - Endpoint.Address
     Export:
       Name:
-        Fn::Sub: ${AWS::StackName}-DummyDbStandbyPrivateIp
+        Fn::Sub: ${AWS::StackName}-DatabaseEndpointAddress
+  DatabaseEndpointPort:
+    Value:
+      Fn::GetAtt:
+      - OracleDatabase
+      - Endpoint.Port
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DatabaseEndpointPort
+  DatabaseName:
+    Value:
+      Ref: DbName
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DatabaseName
+  DatabaseMasterSecretArn:
+    Value:
+      Fn::GetAtt:
+      - OracleDatabase
+      - MasterUserSecret.SecretArn
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DatabaseMasterSecretArn
+  DatabaseApplicationSecretArn:
+    Value:
+      Ref: BackendDbCredentials
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DatabaseApplicationSecretArn
+Conditions:
+  HasDbEngineVersion:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: DbEngineVersion
+      - ''

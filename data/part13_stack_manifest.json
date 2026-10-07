@@ -1,6 +1,6 @@
 {
   "region": "us-east-1",
-  "baseline_ec2_count": 7,
+  "baseline_ec2_count": 4,
   "routing": {
     "public_alb": "default -> frontend ASG",
     "frontend_apache": [
@@ -14,11 +14,17 @@
     }
   },
   "database": {
-    "primary": "dummy EC2 in private DB subnet A",
-    "standby": "dummy EC2 in private DB subnet B",
-    "replication": "not implemented; simulation only"
+    "engine": "RDS Oracle SE2",
+    "licensing": "license-included",
+    "instance_class": "db.t3.small (preflight checked; override allowed)",
+    "storage": "20 GiB gp2, encrypted",
+    "availability": "Multi-AZ synchronous standby; not a readable replica",
+    "credentials": "RDS-managed master secret; separate generated SELECT-only application secret",
+    "integration": "real SQL orders/customer queries; SSM seeds synthetic data",
+    "failover_verification": "LAB_TEST_PENDING",
+    "deletion": "synthetic data deleted; no final snapshot; automatic backups removed"
   },
-  "verification": "LAB_BASELINE_CONFIG_UPDATE_REVERSAL_AND_TEARDOWN_VERIFIED_RECOVERY_SCALING_COST_INCOMPLETE",
+  "verification": "MANAGED_NAT_RDS_IMPLEMENTATION_LOCAL_VALIDATION_ONLY_LAB_TEST_PENDING",
   "pillars": [
     "Operational Excellence",
     "Reliability",
@@ -35,8 +41,14 @@
     "fargate_deployment_peak": 4
   },
   "evidence_plan": "IaC_Deployment_and_Usage_Instructions.md",
-  "lab_evidence_date": "2026-10-06",
+  "lab_evidence_date": "2026-10-06 (previous NAT-instance/dummy-DB version only)",
   "evidence_results": "data/lab_evidence_review.json",
   "presentation_guide": "Presentation_and_Slide_Content.md",
-  "rubric_checklist": "Rubric_and_Assessment_Checklist.md"
+  "rubric_checklist": "Rubric_and_Assessment_Checklist.md",
+  "frontend_peak_ec2_count": 6,
+  "network": {
+    "nat": "two public NAT gateways, one per AZ",
+    "private_app_egress": "AZ-local NAT route plus S3/DynamoDB gateway endpoints"
+  },
+  "setup_entrypoint": "scripts/lab.sh setup [notification-email] [image-tag]"
 }

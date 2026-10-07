@@ -80,5 +80,6 @@ delete_and_wait "$NETWORK_STACK"
 
 echo
 echo "Teardown sequence completed."
-echo "Check CloudFormation, EC2, ELB, ECS, ECR, DynamoDB, S3, SNS and Tag Editor for orphaned resources."
+echo "Synthetic RDS data and automated backups were deleted; this lab stack does not retain a final DB snapshot."
+echo "Check RDS/snapshots, Secrets Manager, NAT gateways/EIPs and the remaining project resources for orphans."
 echo "Read-only verification: python3 scripts/part14_collect_evidence.py --after-teardown --output evidence/after-teardown"

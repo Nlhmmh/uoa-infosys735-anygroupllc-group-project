@@ -14,6 +14,8 @@ def build():
     files.extend(ROOT / "data" / name for name in ("part11_sample_catalogue_keys.json", "part12_catalogue_seed.json",
         "part13_stack_manifest.json", "part13_static_validation_report.json", "cost_model_inputs.json", "lab_evidence_review.json"))
     files.extend(ROOT / "catalogue-service" / name for name in ("app.py", "Dockerfile", "requirements.txt", "README.md", ".dockerignore"))
+    files.extend(ROOT / "backend-service" / name for name in ("app.py", "requirements.txt"))
+    files.append(ROOT / "frontend" / "index.html")
     files.extend(ROOT / name for name in ("README.md", "instructions.md", "AnyGroupLLC_case_study.md",
         "IaC_Deployment_and_Usage_Instructions.md", "Presentation_and_Slide_Content.md", "Rubric_and_Assessment_Checklist.md", "requirements-validation.txt", "part13_iac_evidence_checklist.csv"))
     archive = ROOT / "anygroup-gp2-deployment.zip"

@@ -21,7 +21,9 @@ def value(flag): return a[a.index(flag)+1] if flag in a else ""
 if os.getenv("STUB_DENY"):
  print("An error occurred (AccessDenied) when calling DescribeStacks",file=sys.stderr);sys.exit(255)
 if a[:2]==["sts","get-caller-identity"]: print('{"Account":"000000000000","Arn":"test"}')
-elif a[:2]==["ec2","describe-instances"]: print(os.getenv("STUB_COUNT","7") if "length(Reservations[].Instances[])"==value("--query") else "0")
+elif a[:2]==["ec2","describe-instances"]: print(os.getenv("STUB_COUNT","4") if "length(Reservations[].Instances[])"==value("--query") else "0")
+elif a[:2]==["rds","describe-orderable-db-instance-options"]:
+ print(json.dumps({"OrderableDBInstanceOptions": [] if os.getenv("STUB_NO_RDS") else [{"MultiAZCapable":True,"Vpc":True,"StorageType":"gp2","EngineVersion":"19.0.0.0.ru-2026-07.rur-2026-07.r1","MinStorageSize":20}]}))
 elif a[:2]==["cloudformation","describe-stacks"]:
  q=value("--query")
  if q=="Stacks[0].Parameters":
@@ -64,6 +66,12 @@ class DeploymentTests(unittest.TestCase):
         result, calls = self.run_script("part13_deploy_all.sh", ["foundation"], STUB_COUNT="9")
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse(any(c[:2] == ["cloudformation", "deploy"] for c in calls))
+
+    def test_unsupported_oracle_multi_az_blocks_before_charged_resources(self):
+        result, calls = self.run_script("part13_deploy_all.sh", ["foundation"], STUB_NO_RDS="1")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(any(c[:2] == ["cloudformation", "deploy"] for c in calls))
+        self.assertIn("No orderable Oracle", result.stderr)
 
     def test_foundation_preserves_active_service_parameters(self):
         result, calls = self.run_script("part13_deploy_all.sh", ["foundation"], STUB_ACTIVE="1")
@@ -109,6 +117,16 @@ class EvidenceTests(unittest.TestCase):
     def test_failed_teardown_reads_cannot_claim_no_orphans(self):
         with tempfile.TemporaryDirectory() as directory, patch.object(collector, "aws_json", side_effect=RuntimeError("AccessDenied")):
             self.assertEqual(collector.collect(Path(directory), True)["status"], "PARTIAL")
+
+    def test_known_managed_secret_not_found_counts_as_removed(self):
+        def reads(*args):
+            if args[:2] == ("secretsmanager", "describe-secret"):
+                raise RuntimeError("ResourceNotFoundException")
+            return {}
+        with tempfile.TemporaryDirectory() as directory, patch.object(collector, "aws_json", side_effect=reads):
+            result = collector.collect(Path(directory), True, "known-rds-secret-arn")
+        self.assertEqual(result["status"], "PASS")
+        self.assertEqual(result["remaining_resource_counts"]["known_rds_managed_secret"], 0)
 
     def test_probe_summary_preserves_failures_and_latency(self):
         data = [{"http_status": 200, "functional_success": True, "latency_ms": 20},
@@ -173,4 +191,18 @@ class SmokeTests(unittest.TestCase):
         with patch.object(smoke, "stack_outputs", side_effect=[self.core, self.micro]), \
              patch.object(smoke, "http_get", return_value=b"AnyGroup Market Instance: ${!INSTANCE_ID}"):
             with self.assertRaisesRegex(AssertionError, "metadata missing"):
+                smoke.run_checks()
+
+    def test_old_dummy_database_response_cannot_pass_current_smoke(self):
+        responses = [b'AnyGroup Market Instance: i-123abc Legacy system Additional feature id="ordersBody" id="accountBody"', {"instance_id": "i-123abc", "availability_zone": "zone-a"},
+                     {"all_reachable": True, "databases": [{}, {}]}]
+        with patch.object(smoke, "stack_outputs", side_effect=[self.core, self.micro]), \
+             patch.object(smoke, "http_get", side_effect=responses):
+            with self.assertRaisesRegex(AssertionError, "RDS Oracle SQL"):
+                smoke.run_checks()
+
+    def test_old_storefront_without_legacy_panels_is_rejected(self):
+        with patch.object(smoke, "stack_outputs", side_effect=[self.core, self.micro]), \
+             patch.object(smoke, "http_get", return_value=b"AnyGroup Market Instance: i-123abc"):
+            with self.assertRaisesRegex(AssertionError, "legacy order/account panels"):
                 smoke.run_checks()

@@ -30,13 +30,5 @@
   {
     "ParameterKey": "PrivateDbSubnetBCidr",
     "ParameterValue": "10.0.21.0/24"
-  },
-  {
-    "ParameterKey": "NatInstanceType",
-    "ParameterValue": "t3.micro"
-  },
-  {
-    "ParameterKey": "ExistingInstanceProfileName",
-    "ParameterValue": "LabInstanceProfile"
   }
 ]

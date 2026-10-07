@@ -1,65 +1,32 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: >
-  INFOSYS 735 GP2 Part 6 - Learner Lab network foundation for AnyGroupLLC.
-  Creates a two-AZ VPC with public, private application, and private database
-  subnets, an Internet Gateway, a cost-conscious EC2 NAT instance, custom NACLs,
-  and S3/DynamoDB gateway endpoints. No custom IAM roles are created.
-
+Description: 'AnyGroupLLC two-AZ network: AZ-local public NAT gateways, six subnets, NACLs and S3/DynamoDB gateway endpoints.
+  No EC2 NAT or custom IAM roles.'
 Parameters:
   EnvironmentName:
     Type: String
     Default: anygroup-gp2
     Description: Prefix used for resource names and tags.
-
   VpcCidr:
     Type: String
     Default: 10.0.0.0/16
-
   PublicSubnetACidr:
     Type: String
     Default: 10.0.0.0/24
-
   PublicSubnetBCidr:
     Type: String
     Default: 10.0.1.0/24
-
   PrivateAppSubnetACidr:
     Type: String
     Default: 10.0.10.0/24
-
   PrivateAppSubnetBCidr:
     Type: String
     Default: 10.0.11.0/24
-
   PrivateDbSubnetACidr:
     Type: String
     Default: 10.0.20.0/24
-
   PrivateDbSubnetBCidr:
     Type: String
     Default: 10.0.21.0/24
-
-  NatInstanceType:
-    Type: String
-    Default: t3.micro
-    AllowedValues:
-      - t3.nano
-      - t3.micro
-      - t3.small
-      - t3.medium
-      - t3.large
-    Description: Learner Lab supported NAT instance size.
-
-  NatAmiId:
-    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
-    Description: Public SSM parameter resolving to a current Amazon Linux 2023 AMI.
-
-  ExistingInstanceProfileName:
-    Type: String
-    Default: LabInstanceProfile
-    Description: Existing Learner Lab instance profile. This template does not create IAM roles.
-
 Resources:
   VPC:
     Type: AWS::EC2::VPC
@@ -70,30 +37,28 @@ Resources:
       EnableDnsHostnames: true
       InstanceTenancy: default
       Tags:
-        - Key: Name
-          Value:
-            Fn::Sub: ${EnvironmentName}-vpc
-        - Key: Project
-          Value: INFOSYS735-GP2
-        - Key: Environment
-          Value: LearnerLab
-        - Key: ManagedBy
-          Value: CloudFormation
-        - Key: Component
-          Value: Network
-
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-vpc
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Network
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
-        - Key: Name
-          Value:
-            Fn::Sub: ${EnvironmentName}-igw
-        - Key: Project
-          Value: INFOSYS735-GP2
-        - Key: ManagedBy
-          Value: CloudFormation
-
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-igw
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
   InternetGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
@@ -101,7 +66,6 @@ Resources:
         Ref: VPC
       InternetGatewayId:
         Ref: InternetGateway
-
   PublicSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
@@ -109,22 +73,21 @@ Resources:
         Ref: VPC
       AvailabilityZone:
         Fn::Select:
-          - 0
-          - Fn::GetAZs: ''
+        - 0
+        - Fn::GetAZs: ''
       CidrBlock:
         Ref: PublicSubnetACidr
       MapPublicIpOnLaunch: true
       Tags:
-        - Key: Name
-          Value:
-            Fn::Sub: ${EnvironmentName}-public-a
-        - Key: Tier
-          Value: Public
-        - Key: Project
-          Value: INFOSYS735-GP2
-        - Key: ManagedBy
-          Value: CloudFormation
-
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-public-a
+      - Key: Tier
+        Value: Public
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
   PublicSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
@@ -132,22 +95,21 @@ Resources:
         Ref: VPC
       AvailabilityZone:
         Fn::Select:
-          - 1
-          - Fn::GetAZs: ''
+        - 1
+        - Fn::GetAZs: ''
       CidrBlock:
         Ref: PublicSubnetBCidr
       MapPublicIpOnLaunch: true
       Tags:
-        - Key: Name
-          Value:
-            Fn::Sub: ${EnvironmentName}-public-b
-        - Key: Tier
-          Value: Public
-        - Key: Project
-          Value: INFOSYS735-GP2
-        - Key: ManagedBy
-          Value: CloudFormation
-
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-public-b
+      - Key: Tier
+        Value: Public
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
   PrivateAppSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
@@ -155,22 +117,21 @@ Resources:
         Ref: VPC
       AvailabilityZone:
         Fn::Select:
-          - 0
-          - Fn::GetAZs: ''
+        - 0
+        - Fn::GetAZs: ''
       CidrBlock:
         Ref: PrivateAppSubnetACidr
       MapPublicIpOnLaunch: false
       Tags:
-        - Key: Name
-          Value:
-            Fn::Sub: ${EnvironmentName}-app-a
-        - Key: Tier
-          Value: Application
-        - Key: Project
-          Value: INFOSYS735-GP2
-        - Key: ManagedBy
-          Value: CloudFormation
-
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-app-a
+      - Key: Tier
+        Value: Application
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
   PrivateAppSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
@@ -178,22 +139,21 @@ Resources:
         Ref: VPC
       AvailabilityZone:
         Fn::Select:
-          - 1
-          - Fn::GetAZs: ''
+        - 1
+        - Fn::GetAZs: ''
       CidrBlock:
         Ref: PrivateAppSubnetBCidr
       MapPublicIpOnLaunch: false
       Tags:
-        - Key: Name
-          Value:
-            Fn::Sub: ${EnvironmentName}-app-b
-        - Key: Tier
-          Value: Application
-        - Key: Project
-          Value: INFOSYS735-GP2
-        - Key: ManagedBy
-          Value: CloudFormation
-
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-app-b
+      - Key: Tier
+        Value: Application
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
   PrivateDbSubnetA:
     Type: AWS::EC2::Subnet
     Properties:
@@ -201,22 +161,21 @@ Resources:
         Ref: VPC
       AvailabilityZone:
         Fn::Select:
-          - 0
-          - Fn::GetAZs: ''
+        - 0
+        - Fn::GetAZs: ''
       CidrBlock:
         Ref: PrivateDbSubnetACidr
       MapPublicIpOnLaunch: false
       Tags:
-        - Key: Name
-          Value:
-            Fn::Sub: ${EnvironmentName}-db-a
-        - Key: Tier
-          Value: Database
-        - Key: Project
-          Value: INFOSYS735-GP2
-        - Key: ManagedBy
-          Value: CloudFormation
-
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-db-a
+      - Key: Tier
+        Value: Database
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
   PrivateDbSubnetB:
     Type: AWS::EC2::Subnet
     Properties:
@@ -224,36 +183,34 @@ Resources:
         Ref: VPC
       AvailabilityZone:
         Fn::Select:
-          - 1
-          - Fn::GetAZs: ''
+        - 1
+        - Fn::GetAZs: ''
       CidrBlock:
         Ref: PrivateDbSubnetBCidr
       MapPublicIpOnLaunch: false
       Tags:
-        - Key: Name
-          Value:
-            Fn::Sub: ${EnvironmentName}-db-b
-        - Key: Tier
-          Value: Database
-        - Key: Project
-          Value: INFOSYS735-GP2
-        - Key: ManagedBy
-          Value: CloudFormation
-
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-db-b
+      - Key: Tier
+        Value: Database
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId:
         Ref: VPC
       Tags:
-        - Key: Name
-          Value:
-            Fn::Sub: ${EnvironmentName}-rt-public
-        - Key: Project
-          Value: INFOSYS735-GP2
-        - Key: ManagedBy
-          Value: CloudFormation
-
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-rt-public
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
   PublicDefaultRoute:
     Type: AWS::EC2::Route
     DependsOn: InternetGatewayAttachment
@@ -263,7 +220,6 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId:
         Ref: InternetGateway
-
   PublicSubnetARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -271,7 +227,6 @@ Resources:
         Ref: PublicSubnetA
       RouteTableId:
         Ref: PublicRouteTable
-
   PublicSubnetBRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -279,49 +234,45 @@ Resources:
         Ref: PublicSubnetB
       RouteTableId:
         Ref: PublicRouteTable
-
   PrivateAppRouteTableA:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId:
         Ref: VPC
       Tags:
-        - Key: Name
-          Value:
-            Fn::Sub: ${EnvironmentName}-rt-app-a
-        - Key: Project
-          Value: INFOSYS735-GP2
-        - Key: ManagedBy
-          Value: CloudFormation
-
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-rt-app-a
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
   PrivateAppRouteTableB:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId:
         Ref: VPC
       Tags:
-        - Key: Name
-          Value:
-            Fn::Sub: ${EnvironmentName}-rt-app-b
-        - Key: Project
-          Value: INFOSYS735-GP2
-        - Key: ManagedBy
-          Value: CloudFormation
-
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-rt-app-b
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
   PrivateDbRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId:
         Ref: VPC
       Tags:
-        - Key: Name
-          Value:
-            Fn::Sub: ${EnvironmentName}-rt-db
-        - Key: Project
-          Value: INFOSYS735-GP2
-        - Key: ManagedBy
-          Value: CloudFormation
-
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-rt-db
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
   PrivateAppSubnetARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -329,7 +280,6 @@ Resources:
         Ref: PrivateAppSubnetA
       RouteTableId:
         Ref: PrivateAppRouteTableA
-
   PrivateAppSubnetBRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -337,7 +287,6 @@ Resources:
         Ref: PrivateAppSubnetB
       RouteTableId:
         Ref: PrivateAppRouteTableB
-
   PrivateDbSubnetARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -345,7 +294,6 @@ Resources:
         Ref: PrivateDbSubnetA
       RouteTableId:
         Ref: PrivateDbRouteTable
-
   PrivateDbSubnetBRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -353,123 +301,22 @@ Resources:
         Ref: PrivateDbSubnetB
       RouteTableId:
         Ref: PrivateDbRouteTable
-
-  NatSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: NAT instance - HTTP/HTTPS forwarding from the VPC only
-      VpcId:
-        Ref: VPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp:
-            Ref: VpcCidr
-          Description: HTTP from private VPC resources
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp:
-            Ref: VpcCidr
-          Description: HTTPS from private VPC resources
-      SecurityGroupEgress:
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
-          Description: HTTP to internet
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
-          Description: HTTPS to internet
-      Tags:
-        - Key: Name
-          Value:
-            Fn::Sub: ${EnvironmentName}-sg-nat
-        - Key: Project
-          Value: INFOSYS735-GP2
-        - Key: ManagedBy
-          Value: CloudFormation
-
-  NatInstance:
-    Type: AWS::EC2::Instance
-    CreationPolicy:
-      ResourceSignal:
-        Count: 1
-        Timeout: PT15M
-    DependsOn: PublicDefaultRoute
-    Properties:
-      ImageId:
-        Ref: NatAmiId
-      InstanceType:
-        Ref: NatInstanceType
-      SubnetId:
-        Ref: PublicSubnetA
-      SecurityGroupIds:
-        - Ref: NatSecurityGroup
-      IamInstanceProfile:
-        Ref: ExistingInstanceProfileName
-      SourceDestCheck: false
-      MetadataOptions:
-        HttpEndpoint: enabled
-        HttpTokens: required
-      UserData:
-        Fn::Base64:
-          Fn::Sub: |
-            #!/bin/bash
-            set -euo pipefail
-
-            dnf install -y iptables-services aws-cfn-bootstrap
-            trap '/opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource NatInstance --region ${AWS::Region}' EXIT
-            systemctl enable iptables
-            systemctl start iptables
-
-            cat > /etc/sysctl.d/99-anygroup-nat.conf <<'EOF'
-            net.ipv4.ip_forward=1
-            EOF
-
-            sysctl --system
-
-            PRIMARY_IF=$(ip route show default | awk '{print $5; exit}')
-
-            iptables -t nat -A POSTROUTING -s ${VpcCidr} -o "$PRIMARY_IF" -j MASQUERADE
-            iptables -F FORWARD
-            iptables -P FORWARD ACCEPT
-
-            service iptables save
-      Tags:
-        - Key: Name
-          Value:
-            Fn::Sub: ${EnvironmentName}-nat
-        - Key: Project
-          Value: INFOSYS735-GP2
-        - Key: Environment
-          Value: LearnerLab
-        - Key: ManagedBy
-          Value: CloudFormation
-        - Key: Component
-          Value: Network
-
   PrivateAppDefaultRouteA:
     Type: AWS::EC2::Route
     Properties:
       RouteTableId:
         Ref: PrivateAppRouteTableA
       DestinationCidrBlock: 0.0.0.0/0
-      InstanceId:
-        Ref: NatInstance
-
+      NatGatewayId:
+        Ref: NatGatewayA
   PrivateAppDefaultRouteB:
     Type: AWS::EC2::Route
     Properties:
       RouteTableId:
         Ref: PrivateAppRouteTableB
       DestinationCidrBlock: 0.0.0.0/0
-      InstanceId:
-        Ref: NatInstance
-
+      NatGatewayId:
+        Ref: NatGatewayB
   S3GatewayEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -479,9 +326,8 @@ Resources:
       ServiceName:
         Fn::Sub: com.amazonaws.${AWS::Region}.s3
       RouteTableIds:
-        - Ref: PrivateAppRouteTableA
-        - Ref: PrivateAppRouteTableB
-
+      - Ref: PrivateAppRouteTableA
+      - Ref: PrivateAppRouteTableB
   DynamoDbGatewayEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -491,23 +337,21 @@ Resources:
       ServiceName:
         Fn::Sub: com.amazonaws.${AWS::Region}.dynamodb
       RouteTableIds:
-        - Ref: PrivateAppRouteTableA
-        - Ref: PrivateAppRouteTableB
-
+      - Ref: PrivateAppRouteTableA
+      - Ref: PrivateAppRouteTableB
   PublicNetworkAcl:
     Type: AWS::EC2::NetworkAcl
     Properties:
       VpcId:
         Ref: VPC
       Tags:
-        - Key: Name
-          Value:
-            Fn::Sub: ${EnvironmentName}-nacl-public
-        - Key: Project
-          Value: INFOSYS735-GP2
-        - Key: ManagedBy
-          Value: CloudFormation
-
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-nacl-public
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
   PublicNaclIngressHttp:
     Type: AWS::EC2::NetworkAclEntry
     Properties:
@@ -521,7 +365,6 @@ Resources:
       PortRange:
         From: 80
         To: 80
-
   PublicNaclIngressHttps:
     Type: AWS::EC2::NetworkAclEntry
     Properties:
@@ -535,7 +378,6 @@ Resources:
       PortRange:
         From: 443
         To: 443
-
   PublicNaclIngressEphemeral:
     Type: AWS::EC2::NetworkAclEntry
     Properties:
@@ -549,7 +391,6 @@ Resources:
       PortRange:
         From: 1024
         To: 65535
-
   PublicNaclEgressAll:
     Type: AWS::EC2::NetworkAclEntry
     Properties:
@@ -560,7 +401,6 @@ Resources:
       RuleAction: allow
       Egress: true
       CidrBlock: 0.0.0.0/0
-
   PublicSubnetANaclAssociation:
     Type: AWS::EC2::SubnetNetworkAclAssociation
     Properties:
@@ -568,7 +408,6 @@ Resources:
         Ref: PublicSubnetA
       NetworkAclId:
         Ref: PublicNetworkAcl
-
   PublicSubnetBNaclAssociation:
     Type: AWS::EC2::SubnetNetworkAclAssociation
     Properties:
@@ -576,21 +415,19 @@ Resources:
         Ref: PublicSubnetB
       NetworkAclId:
         Ref: PublicNetworkAcl
-
   PrivateAppNetworkAcl:
     Type: AWS::EC2::NetworkAcl
     Properties:
       VpcId:
         Ref: VPC
       Tags:
-        - Key: Name
-          Value:
-            Fn::Sub: ${EnvironmentName}-nacl-app
-        - Key: Project
-          Value: INFOSYS735-GP2
-        - Key: ManagedBy
-          Value: CloudFormation
-
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-nacl-app
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
   PrivateAppNaclIngressVpc:
     Type: AWS::EC2::NetworkAclEntry
     Properties:
@@ -602,7 +439,6 @@ Resources:
       Egress: false
       CidrBlock:
         Ref: VpcCidr
-
   PrivateAppNaclIngressEphemeral:
     Type: AWS::EC2::NetworkAclEntry
     Properties:
@@ -616,7 +452,6 @@ Resources:
       PortRange:
         From: 1024
         To: 65535
-
   PrivateAppNaclEgressAll:
     Type: AWS::EC2::NetworkAclEntry
     Properties:
@@ -627,7 +462,6 @@ Resources:
       RuleAction: allow
       Egress: true
       CidrBlock: 0.0.0.0/0
-
   PrivateAppSubnetANaclAssociation:
     Type: AWS::EC2::SubnetNetworkAclAssociation
     Properties:
@@ -635,7 +469,6 @@ Resources:
         Ref: PrivateAppSubnetA
       NetworkAclId:
         Ref: PrivateAppNetworkAcl
-
   PrivateAppSubnetBNaclAssociation:
     Type: AWS::EC2::SubnetNetworkAclAssociation
     Properties:
@@ -643,21 +476,19 @@ Resources:
         Ref: PrivateAppSubnetB
       NetworkAclId:
         Ref: PrivateAppNetworkAcl
-
   PrivateDbNetworkAcl:
     Type: AWS::EC2::NetworkAcl
     Properties:
       VpcId:
         Ref: VPC
       Tags:
-        - Key: Name
-          Value:
-            Fn::Sub: ${EnvironmentName}-nacl-db
-        - Key: Project
-          Value: INFOSYS735-GP2
-        - Key: ManagedBy
-          Value: CloudFormation
-
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-nacl-db
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: ManagedBy
+        Value: CloudFormation
   PrivateDbNaclIngressVpc:
     Type: AWS::EC2::NetworkAclEntry
     Properties:
@@ -669,7 +500,6 @@ Resources:
       Egress: false
       CidrBlock:
         Ref: VpcCidr
-
   PrivateDbNaclEgressVpc:
     Type: AWS::EC2::NetworkAclEntry
     Properties:
@@ -681,7 +511,6 @@ Resources:
       Egress: true
       CidrBlock:
         Ref: VpcCidr
-
   PrivateDbSubnetANaclAssociation:
     Type: AWS::EC2::SubnetNetworkAclAssociation
     Properties:
@@ -689,7 +518,6 @@ Resources:
         Ref: PrivateDbSubnetA
       NetworkAclId:
         Ref: PrivateDbNetworkAcl
-
   PrivateDbSubnetBNaclAssociation:
     Type: AWS::EC2::SubnetNetworkAclAssociation
     Properties:
@@ -697,7 +525,86 @@ Resources:
         Ref: PrivateDbSubnetB
       NetworkAclId:
         Ref: PrivateDbNetworkAcl
-
+  NatElasticIpA:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-nat-eip-a
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Network
+  NatGatewayA:
+    Type: AWS::EC2::NatGateway
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - NatElasticIpA
+        - AllocationId
+      SubnetId:
+        Ref: PublicSubnetA
+      ConnectivityType: public
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-nat-a
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Network
+  NatElasticIpB:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-nat-eip-b
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Network
+  NatGatewayB:
+    Type: AWS::EC2::NatGateway
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - NatElasticIpB
+        - AllocationId
+      SubnetId:
+        Ref: PublicSubnetB
+      ConnectivityType: public
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${EnvironmentName}-nat-b
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+      - Key: Component
+        Value: Network
 Outputs:
   VpcId:
     Description: VPC ID used by later stacks.
@@ -706,7 +613,6 @@ Outputs:
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-VpcId
-
   VpcCidr:
     Description: VPC CIDR.
     Value:
@@ -714,92 +620,101 @@ Outputs:
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-VpcCidr
-
   PublicSubnetAId:
     Value:
       Ref: PublicSubnetA
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-PublicSubnetAId
-
   PublicSubnetBId:
     Value:
       Ref: PublicSubnetB
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-PublicSubnetBId
-
   PrivateAppSubnetAId:
     Value:
       Ref: PrivateAppSubnetA
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-PrivateAppSubnetAId
-
   PrivateAppSubnetBId:
     Value:
       Ref: PrivateAppSubnetB
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-PrivateAppSubnetBId
-
   PrivateDbSubnetAId:
     Value:
       Ref: PrivateDbSubnetA
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-PrivateDbSubnetAId
-
   PrivateDbSubnetBId:
     Value:
       Ref: PrivateDbSubnetB
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-PrivateDbSubnetBId
-
   PublicRouteTableId:
     Value:
       Ref: PublicRouteTable
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-PublicRouteTableId
-
   PrivateAppRouteTableAId:
     Value:
       Ref: PrivateAppRouteTableA
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-PrivateAppRouteTableAId
-
   PrivateAppRouteTableBId:
     Value:
       Ref: PrivateAppRouteTableB
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-PrivateAppRouteTableBId
-
   PrivateDbRouteTableId:
     Value:
       Ref: PrivateDbRouteTable
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-PrivateDbRouteTableId
-
-  NatInstanceId:
-    Value:
-      Ref: NatInstance
-    Export:
-      Name:
-        Fn::Sub: ${AWS::StackName}-NatInstanceId
-
   AvailabilityZoneA:
     Value:
       Fn::Select:
-        - 0
-        - Fn::GetAZs: ''
-
+      - 0
+      - Fn::GetAZs: ''
   AvailabilityZoneB:
     Value:
       Fn::Select:
-        - 1
-        - Fn::GetAZs: ''
+      - 1
+      - Fn::GetAZs: ''
+  NatGatewayAId:
+    Value:
+      Ref: NatGatewayA
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-NatGatewayAId
+  NatElasticIpAAllocationId:
+    Value:
+      Fn::GetAtt:
+      - NatElasticIpA
+      - AllocationId
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-NatElasticIpAAllocationId
+  NatGatewayBId:
+    Value:
+      Ref: NatGatewayB
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-NatGatewayBId
+  NatElasticIpBAllocationId:
+    Value:
+      Fn::GetAtt:
+      - NatElasticIpB
+      - AllocationId
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-NatElasticIpBAllocationId

@@ -106,7 +106,7 @@ Resources:
   DbSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Dummy DB primary/standby - TCP 1521 only from backend
+      GroupDescription: Private RDS Oracle - TCP 1521 only from backend
       VpcId:
         Fn::ImportValue:
           Fn::Sub: ${NetworkStackName}-VpcId
@@ -192,7 +192,7 @@ Resources:
       ToPort: 1521
       DestinationSecurityGroupId:
         Ref: DbSecurityGroup
-      Description: Backend to dummy Oracle-like DB tier
+      Description: Backend SQL to private RDS Oracle
   DbFromBackendIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:

@@ -29,11 +29,23 @@ def run_checks(wait=False):
     require("AnyGroup Market" in page, "Storefront page missing")
     require(re.search(r"Instance:\s*i-[0-9a-f]+", page), "Frontend instance metadata missing")
     require("${!" not in page, "Unresolved launch-template variable in storefront")
+    require(all(marker in page for marker in ('Legacy system', 'Additional feature', 'id="ordersBody"', 'id="accountBody"')),
+            "Storefront legacy order/account panels or additional feature label missing; deploy the updated core template")
     legacy = http_get(base + "/api/health")
     require(re.fullmatch(r"i-[0-9a-f]+", legacy.get("instance_id", "")), "Backend instance metadata missing")
     require(legacy.get("availability_zone", "unknown") != "unknown", "Backend AZ missing")
     db = http_get(base + "/api/db")
-    require(db.get("all_reachable") and len(db.get("databases", [])) == 2, "Both dummy DB nodes must be reachable")
+    require(db.get("database_tier") == "RDS_ORACLE_MULTI_AZ" and db.get("database_accessible")
+            and db.get("seed_order_count", 0) >= 2, "RDS Oracle SQL access and seeded orders must work")
+    orders = http_get(base + "/api/orders")
+    require({"ORD-1001", "ORD-1002"} <= {o["order_id"] for o in orders.get("orders", [])}, "RDS order query failed")
+    account = http_get(base + "/api/account")
+    require(account.get("customer", {}).get("name") == "Demo Customer", "RDS customer query failed")
+    database = aws_json("rds", "describe-db-instances", "--db-instance-identifier", core["DatabaseInstanceIdentifier"])["DBInstances"][0]
+    require(database["DBInstanceStatus"] == "available" and database["MultiAZ"]
+            and not database["PubliclyAccessible"] and database["StorageEncrypted"], "RDS must be available, private, encrypted and Multi-AZ")
+    require(database.get("SecondaryAvailabilityZone") and database["AvailabilityZone"] != database["SecondaryAvailabilityZone"], "RDS standby AZ not established")
+    require(database.get("BackupRetentionPeriod", 0) >= 1, "RDS automated backups are not enabled")
     health = http_get(base + "/catalogue/health")
     require(health.get("status") == "healthy", "Catalogue process is not live")
     ready = http_get(base + "/catalogue/ready")
@@ -81,7 +93,9 @@ def run_checks(wait=False):
     return {"status": "PASS", "captured_at_utc": datetime.now(timezone.utc).isoformat(),
             "catalogue_version": health["version"], "catalogue_task_azs": zones,
             "healthy_targets": targets, "seed_product_and_image_checks": 3,
-            "unsigned_image_access": "HTTP_403", "database_replication": "NOT_IMPLEMENTED_SIMULATION_ONLY"}
+            "unsigned_image_access": "HTTP_403", "database_replication": "RDS_ORACLE_MULTI_AZ_CONFIGURED",
+            "database_sql_queries": "PASS", "database_azs": [database["AvailabilityZone"], database["SecondaryAvailabilityZone"]],
+            "database_failover_test": "NOT_RUN_BY_SMOKE"}
 
 
 def main():
