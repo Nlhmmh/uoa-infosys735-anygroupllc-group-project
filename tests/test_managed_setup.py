@@ -21,8 +21,13 @@ class SetupTests(unittest.TestCase):
             for name in ("part13_deploy_all.sh", "part12_build_push.sh", "part12_seed_catalogue.sh", "part12_test_catalogue.sh"):
                 (scripts / name).write_text(stub)
                 (scripts / name).chmod(0o755)
-            for name in ("part15_seed_database.py", "part14_collect_evidence.py"):
+            for name in ("part15_seed_database.py", "part14_collect_evidence.py", "part16_package_rotation.py", "part16_test_secret_rotation.py"):
                 (scripts / name).write_text('import os\nfrom pathlib import Path\nwith open(os.environ["CALL_LOG"],"a") as f: f.write(Path(__file__).name+"\\n")\n')
+            with (scripts / "part16_package_rotation.py").open("a") as stream:
+                stream.write('print("rotation/"+"a"*64+".zip")\n')
+            for name in ("part15_seed_database.py", "part16_package_rotation.py", "part16_test_secret_rotation.py"):
+                with (scripts / name).open("a") as stream:
+                    stream.write('if Path(__file__).name == os.environ["FAIL_STEP"]: raise SystemExit(1)\n')
             (bin_dir / "docker").write_text('#!/bin/bash\nexit 0\n')
             (bin_dir / "docker").chmod(0o755)
             (bin_dir / "aws").write_text('''#!/usr/bin/env python3
@@ -48,16 +53,29 @@ else: sys.exit("Unexpected stub operation")
         stages = [c for c in calls if not c.startswith("aws")]
         self.assertEqual([c.split()[0] for c in stages], [
             "part13_deploy_all.sh", "part13_deploy_all.sh", "part12_build_push.sh", "part12_seed_catalogue.sh",
-            "part15_seed_database.py", "part13_deploy_all.sh", "part12_test_catalogue.sh", "part14_collect_evidence.py"])
+            "part15_seed_database.py", "part16_package_rotation.py", "part13_deploy_all.sh",
+            "part16_test_secret_rotation.py", "part13_deploy_all.sh", "part12_test_catalogue.sh", "part14_collect_evidence.py"])
         self.assertEqual(sum(c == "aws s3 cp" for c in calls), 3)
         self.assertIn("foundation test@example.invalid", stages[1])
-        self.assertIn("feature v1", stages[5])
+        self.assertIn("rotation rotation/", stages[6])
+        self.assertIn("feature v1", stages[8])
 
     def test_failed_foundation_stops_before_images_seeding_or_feature_activation(self):
         result, calls = self.run_setup("part13_deploy_all.sh")
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue(any("foundation" in c for c in calls))
         self.assertFalse(any("seed" in c or "feature" in c or "s3 cp" in c for c in calls))
+
+    def test_failed_initial_rotation_stops_before_feature_and_smoke(self):
+        result, calls = self.run_setup("part16_test_secret_rotation.py")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertTrue(any("rotation rotation/" in c for c in calls))
+        self.assertFalse(any("feature" in c or "part12_test_catalogue" in c for c in calls))
+
+    def test_failed_seed_never_enables_rotation(self):
+        result, calls = self.run_setup("part15_seed_database.py")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(any("rotation" in c or "feature" in c for c in calls))
 
 
 class FailoverEvidenceTests(unittest.TestCase):

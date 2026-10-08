@@ -1350,6 +1350,12 @@ Outputs:
     Export:
       Name:
         Fn::Sub: ${AWS::StackName}-DatabaseApplicationSecretArn
+  DatabaseOwner:
+    Value:
+      Ref: DbMasterUsername
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-DatabaseOwner
 Conditions:
   HasDbEngineVersion:
     Fn::Not:

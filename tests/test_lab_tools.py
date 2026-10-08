@@ -79,6 +79,22 @@ class DeploymentTests(unittest.TestCase):
         micro = next(c for c in calls if c[:2] == ["cloudformation", "deploy"] and "anygroup-gp2-microservice" in c)
         self.assertNotIn("DeployService=false", micro)
         self.assertFalse(any(c.startswith("ContainerImageTag=") for c in micro))
+        observability = next(c for c in calls if c[:2] == ["cloudformation", "deploy"] and "anygroup-gp2-observability" in c)
+        self.assertFalse(any(c.startswith(("BackendRotationCodeKey=", "BackendRotationDays=")) for c in observability))
+
+    def test_rotation_updates_existing_stack_without_resetting_notifications(self):
+        result, calls = self.run_script("part13_deploy_all.sh", ["rotation", "rotation/" + "a" * 64 + ".zip", "7"])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        deploy = next(c for c in calls if c[:2] == ["cloudformation", "deploy"])
+        self.assertIn("anygroup-gp2-observability", deploy)
+        self.assertIn("BackendRotationDays=7", deploy)
+        self.assertFalse(any(c.startswith("NotificationEmail=") for c in deploy))
+
+    def test_invalid_rotation_key_or_interval_cannot_deploy(self):
+        for key, days in (("arbitrary.zip", "30"), ("rotation/" + "a" * 64 + ".zip", "1")):
+            result, calls = self.run_script("part13_deploy_all.sh", ["rotation", key, days])
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(calls)
 
     def test_status_does_not_disguise_access_denial_as_missing_stack(self):
         result, _ = self.run_script("part13_deploy_all.sh", ["status"], STUB_DENY="1")

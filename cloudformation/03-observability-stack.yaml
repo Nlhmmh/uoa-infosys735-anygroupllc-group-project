@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: INFOSYS 735 GP2 - AnyGroupLLC updated observability stack. Creates SNS notifications plus CloudWatch alarms for
-  frontend/public ALB, backend/internal ALB and service health.
+Description: AnyGroupLLC alarms/SNS and application-secret rotation using the existing LabRole. Rotation is activated after
+  Oracle seeding.
 Parameters:
   EnvironmentName:
     Type: String
@@ -12,10 +12,8 @@ Parameters:
   NotificationEmail:
     Type: String
     Default: ''
-    Description: 'Optional email address for SNS alarm notifications. If supplied, AWS sends a confirmation email that must
-      be manually accepted before notifications are delivered.
-
-      '
+    Description: |
+      Optional email address for SNS alarm notifications. If supplied, AWS sends a confirmation email that must be manually accepted before notifications are delivered.
   MinimumHealthyFrontendTargets:
     Type: Number
     Default: 2
@@ -27,11 +25,37 @@ Parameters:
     Default: 1
     MinValue: 1
     Description: Target-generated 5XX responses in one minute before alarm.
+  NetworkStackName:
+    Type: String
+    Default: anygroup-gp2-network
+  LabRoleName:
+    Type: String
+    Default: LabRole
+    Description: Existing role with Lambda trust, VPC ENI, secret rotation, S3 read and logging permissions; no role is created.
+  BackendRotationCodeKey:
+    Type: String
+    Default: ''
+    AllowedPattern: ^$|rotation/[a-f0-9]{64}\.zip
+    Description: Immutable Lambda ZIP key in the core bucket. Empty disables rotation during initial foundation deployment.
+  BackendRotationDays:
+    Type: Number
+    Default: 30
+    AllowedValues:
+    - 7
+    - 30
+    - 60
+    - 90
+    Description: Application-password rotation interval in days.
 Conditions:
   HasNotificationEmail:
     Fn::Not:
     - Fn::Equals:
       - Ref: NotificationEmail
+      - ''
+  HasBackendRotationCode:
+    Fn::Not:
+    - Fn::Equals:
+      - Ref: BackendRotationCodeKey
       - ''
 Resources:
   OperationsTopic:
@@ -66,10 +90,8 @@ Resources:
     Properties:
       AlarmName:
         Fn::Sub: ${EnvironmentName}-frontend-unhealthy-target
-      AlarmDescription: 'Alarm when one or more frontend ALB targets are unhealthy. Used as Reliability and Operational Excellence
-        evidence during controlled tests.
-
-        '
+      AlarmDescription: |
+        Alarm when one or more frontend ALB targets are unhealthy. Used as Reliability and Operational Excellence evidence during controlled tests.
       Namespace: AWS/ApplicationELB
       MetricName: UnHealthyHostCount
       Dimensions:
@@ -102,10 +124,8 @@ Resources:
     Properties:
       AlarmName:
         Fn::Sub: ${EnvironmentName}-frontend-capacity-below-minimum
-      AlarmDescription: 'Alarm when frontend Auto Scaling in-service capacity is below the expected baseline. The ASG should
-        normally maintain at least two frontend instances.
-
-        '
+      AlarmDescription: |
+        Alarm when frontend Auto Scaling in-service capacity is below the expected baseline. The ASG should normally maintain at least two frontend instances.
       Namespace: AWS/AutoScaling
       MetricName: GroupInServiceInstances
       Dimensions:
@@ -135,9 +155,8 @@ Resources:
     Properties:
       AlarmName:
         Fn::Sub: ${EnvironmentName}-alb-target-5xx
-      AlarmDescription: 'Alarm when targets behind the ALB return one or more HTTP 5XX responses during a one-minute period.
-
-        '
+      AlarmDescription: |
+        Alarm when targets behind the ALB return one or more HTTP 5XX responses during a one-minute period.
       Namespace: AWS/ApplicationELB
       MetricName: HTTPCode_Target_5XX_Count
       Dimensions:
@@ -290,6 +309,139 @@ Resources:
         Value: INFOSYS735-GP2
       - Key: ManagedBy
         Value: CloudFormation
+  BackendRotationLogGroup:
+    Type: AWS::Logs::LogGroup
+    Condition: HasBackendRotationCode
+    Properties:
+      LogGroupName:
+        Fn::Sub: /${EnvironmentName}/backend-db-rotation
+      RetentionInDays: 7
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+  BackendRotationFunction:
+    Type: AWS::Lambda::Function
+    Condition: HasBackendRotationCode
+    Properties:
+      FunctionName:
+        Fn::Sub: ${EnvironmentName}-backend-db-rotation
+      Description: Four-step single-user Oracle rotation; tests SELECT access before promoting AWSCURRENT.
+      Runtime: python3.12
+      Handler: app.lambda_handler
+      Architectures:
+      - x86_64
+      Role:
+        Fn::Sub: arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${LabRoleName}
+      Timeout: 60
+      MemorySize: 256
+      Code:
+        S3Bucket:
+          Fn::ImportValue:
+            Fn::Sub: ${CoreStackName}-CatalogueImageBucketName
+        S3Key:
+          Ref: BackendRotationCodeKey
+      VpcConfig:
+        SecurityGroupIds:
+        - Fn::ImportValue:
+            Fn::Sub: ${CoreStackName}-BackendSecurityGroupId
+        SubnetIds:
+        - Fn::ImportValue:
+            Fn::Sub: ${NetworkStackName}-PrivateAppSubnetAId
+        - Fn::ImportValue:
+            Fn::Sub: ${NetworkStackName}-PrivateAppSubnetBId
+      Environment:
+        Variables:
+          APP_SECRET_ARN:
+            Fn::ImportValue:
+              Fn::Sub: ${CoreStackName}-DatabaseApplicationSecretArn
+          DB_HOST:
+            Fn::ImportValue:
+              Fn::Sub: ${CoreStackName}-DatabaseEndpointAddress
+          DB_PORT:
+            Fn::ImportValue:
+              Fn::Sub: ${CoreStackName}-DatabaseEndpointPort
+          DB_NAME:
+            Fn::ImportValue:
+              Fn::Sub: ${CoreStackName}-DatabaseName
+          DB_OWNER:
+            Fn::ImportValue:
+              Fn::Sub: ${CoreStackName}-DatabaseOwner
+      LoggingConfig:
+        LogFormat: Text
+        LogGroup:
+          Ref: BackendRotationLogGroup
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
+  BackendRotationPermission:
+    Type: AWS::Lambda::Permission
+    Condition: HasBackendRotationCode
+    Properties:
+      FunctionName:
+        Ref: BackendRotationFunction
+      Action: lambda:InvokeFunction
+      Principal: secretsmanager.amazonaws.com
+      SourceAccount:
+        Ref: AWS::AccountId
+      SourceArn:
+        Fn::ImportValue:
+          Fn::Sub: ${CoreStackName}-DatabaseApplicationSecretArn
+  BackendRotationSchedule:
+    Type: AWS::SecretsManager::RotationSchedule
+    Condition: HasBackendRotationCode
+    DependsOn:
+    - BackendRotationPermission
+    Properties:
+      SecretId:
+        Fn::ImportValue:
+          Fn::Sub: ${CoreStackName}-DatabaseApplicationSecretArn
+      RotationLambdaARN:
+        Fn::GetAtt:
+        - BackendRotationFunction
+        - Arn
+      RotateImmediatelyOnUpdate: true
+      RotationRules:
+        ScheduleExpression:
+          Fn::Sub: rate(${BackendRotationDays} days)
+        Duration: 2h
+  BackendRotationErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Condition: HasBackendRotationCode
+    Properties:
+      AlarmName:
+        Fn::Sub: ${EnvironmentName}-backend-db-rotation-errors
+      AlarmDescription: 'Rotation Lambda error: inspect rotation metadata/logs; do not edit the password manually.'
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+      - Name: FunctionName
+        Value:
+          Ref: BackendRotationFunction
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+      - Ref: OperationsTopic
+      OKActions:
+      - Ref: OperationsTopic
+      Tags:
+      - Key: Project
+        Value: INFOSYS735-GP2
+      - Key: Environment
+        Value: LearnerLab
+      - Key: ManagedBy
+        Value: CloudFormation
 Outputs:
   OperationsTopicArn:
     Description: SNS topic used by CloudWatch alarms.
@@ -319,3 +471,11 @@ Outputs:
   DatabaseFreeStorageAlarmName:
     Value:
       Ref: DatabaseFreeStorageAlarm
+  BackendRotationFunctionName:
+    Condition: HasBackendRotationCode
+    Value:
+      Ref: BackendRotationFunction
+  BackendRotationDays:
+    Condition: HasBackendRotationCode
+    Value:
+      Ref: BackendRotationDays

@@ -61,6 +61,7 @@ def collect(output, after_teardown=False, managed_secret_arn=None):
             ("ecr", ("ecr", "describe-repositories"), "repositories", "repositoryName"),
             ("dynamodb", ("dynamodb", "list-tables"), "TableNames", None),
             ("ecs", ("ecs", "list-clusters"), "clusterArns", None),
+            ("lambda", ("lambda", "list-functions"), "Functions", "FunctionName"),
             ("sns", ("sns", "list-topics"), "Topics", "TopicArn"),
             ("s3", ("s3api", "list-buckets"), "Buckets", "Name"),
         ):
@@ -132,6 +133,9 @@ def collect(output, after_teardown=False, managed_secret_arn=None):
                 capture(name + "_targets", "elbv2", "describe-target-health", "--target-group-arn", arn)
             capture("listener_rules", "elbv2", "describe-rules", "--listener-arn", core["InternalHttpListenerArn"])
             observability = stack_outputs(stack_names[2])
+            if observability.get("BackendRotationFunctionName"):
+                capture("database_rotation_function", "lambda", "get-function-configuration",
+                        "--function-name", observability["BackendRotationFunctionName"])
             capture("sns_subscriptions", "sns", "list-subscriptions-by-topic",
                     "--topic-arn", observability["OperationsTopicArn"])
             security = {

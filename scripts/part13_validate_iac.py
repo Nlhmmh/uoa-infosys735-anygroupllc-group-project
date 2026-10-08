@@ -189,6 +189,11 @@ def main():
         ROOT / "catalogue-service" / "requirements.txt",
         ROOT / "backend-service" / "app.py",
         ROOT / "backend-service" / "requirements.txt",
+        ROOT / "rotation-service" / "app.py",
+        ROOT / "rotation-service" / "requirements.txt",
+        ROOT / "scripts" / "part16_package_rotation.py",
+        ROOT / "scripts" / "part16_test_secret_rotation.py",
+        ROOT / "README.md",
         ROOT / "frontend" / "index.html",
         ROOT / "cloudformation" / "02-core-infrastructure-stack.yaml",
         ROOT / "scripts" / "lab.sh",
@@ -212,7 +217,7 @@ def main():
             print(f"FAIL artefact: {path.relative_to(ROOT)} missing")
             failed = True
 
-    for path in sorted((ROOT/"scripts").glob("*.py")) + [ROOT/"catalogue-service"/"app.py", ROOT/"backend-service"/"app.py"] + sorted((ROOT/"tests").glob("*.py")):
+    for path in sorted((ROOT/"scripts").glob("*.py")) + [ROOT/"catalogue-service"/"app.py", ROOT/"backend-service"/"app.py", ROOT/"rotation-service"/"app.py"] + sorted((ROOT/"tests").glob("*.py")):
         try:
             ast.parse(path.read_text())
             print(f"PASS Python syntax: {path.relative_to(ROOT)}")

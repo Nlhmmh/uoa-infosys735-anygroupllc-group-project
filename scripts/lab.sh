@@ -31,6 +31,7 @@ ensure_image() {
 
 case "$MODE" in
   setup)
+    export EVIDENCE_DIR="${EVIDENCE_DIR:-evidence/$(date -u +%Y%m%dT%H%M%SZ)}"
     for command in aws docker python3; do
       command -v "$command" >/dev/null || { echo "Missing $command. Use AWS CloudShell with Docker available." >&2; exit 1; }
     done
@@ -45,6 +46,10 @@ case "$MODE" in
       aws s3 cp "sample-images/$product.jpg" "s3://$bucket/products/$product.jpg" --region "$AWS_REGION"
     done
     python3 scripts/part15_seed_database.py
+    rotation_key="$(python3 scripts/part16_package_rotation.py --bucket "$bucket")"
+    ./scripts/part13_deploy_all.sh rotation "$rotation_key" "${BACKEND_ROTATION_DAYS:-30}"
+    python3 scripts/part16_test_secret_rotation.py --wait-initial \
+      --output "${EVIDENCE_DIR:-evidence/$(date -u +%Y%m%dT%H%M%SZ)}/rotation"
     ./scripts/part13_deploy_all.sh feature "${3:-v1}"
     verify
     echo "Setup complete. Confirm the SNS email subscription, then follow the guide for failover/scaling tests."
@@ -56,6 +61,12 @@ case "$MODE" in
     verify
     ;;
   test) verify ;;
+  rotate)
+    export EVIDENCE_DIR="${EVIDENCE_DIR:-evidence/rotation-$(date -u +%Y%m%dT%H%M%SZ)}"
+    python3 scripts/part16_test_secret_rotation.py --rotate \
+      --output "${EVIDENCE_DIR:-evidence/rotation-$(date -u +%Y%m%dT%H%M%SZ)}"
+    verify
+    ;;
   load)
     base="$(aws cloudformation describe-stacks --stack-name "${CORE_STACK_NAME:-anygroup-gp2-core}" \
       --region "$AWS_REGION" --query "Stacks[0].Outputs[?OutputKey=='AlbDnsName'].OutputValue | [0]" --output text)"
@@ -84,7 +95,7 @@ case "$MODE" in
     ;;
   *)
     echo "Usage: $0 setup [notification-email] [image-tag]"
-    echo "       $0 test | status | load | failover | update NEW_IMAGE_TAG | teardown [--yes]"
+    echo "       $0 test | status | load | failover | rotate | update NEW_IMAGE_TAG | teardown [--yes]"
     exit 1
     ;;
 esac

@@ -15,7 +15,7 @@ The current implementation replaces the NAT EC2 instance with **two AZ-local NAT
 | Retained application | `/api/*` → private Python demo backend ASG → real Oracle SQL queries |
 | Database | Oracle SE2 License Included, `db.t3.small` default, 20 GiB gp2, encrypted, Multi-AZ primary/standby, private DB subnet group |
 | Catalogue | `/catalogue/*` → two private Fargate tasks → DynamoDB metadata and private S3 images |
-| Credentials | RDS-managed master secret; separate generated SELECT-only application credentials |
+| Credentials | RDS-managed master rotation; separate SELECT-only application credentials with 30-day Lambda rotation |
 | Operations | Four CloudFormation stacks, bootstrap signals, rolling updates, CloudWatch/SNS, ECR immutable tags and pinned digests |
 | EC2 capacity | Four baseline instances: two frontend + two backend. Frontend maximum 4 gives six total; rolling updates can temporarily add a replacement |
 
@@ -40,7 +40,7 @@ sudo service docker start
 docker info
 ```
 
-The existing `LabRole` and `LabInstanceProfile` must permit CloudFormation, EC2/VPC/NAT, ALB/ASG, RDS Oracle Multi-AZ, Secrets Manager/KMS service integration, SSM Run Command, ECR/ECS/Fargate, DynamoDB, S3 and CloudWatch/SNS. No custom IAM roles are created. Regional service availability does not prove lab policy permission; an AccessDenied response must be resolved against the actual Learners Lab restrictions.
+The existing `LabRole` and `LabInstanceProfile` must permit CloudFormation, EC2/VPC/NAT, ALB/ASG, RDS Oracle Multi-AZ, Secrets Manager/KMS service integration, SSM Run Command, ECR/ECS/Fargate, DynamoDB, S3 and CloudWatch/SNS. No custom IAM roles are created. Application rotation additionally requires `LabRole` to trust Lambda and permit VPC ENI management, logging, S3 code retrieval and Secrets Manager DescribeSecret/GetSecretValue/GetRandomPassword/PutSecretValue/UpdateSecretVersionStage, plus permission to pass that role and deploy the Lambda/invocation policy/schedule. Regional service availability does not prove lab policy permission; an AccessDenied response must be resolved against the actual Learners Lab restrictions.
 
 Setup checks current Oracle 19 orderable options for the selected class, License Included, Multi-AZ and 20 GiB gp2 **before deploying the network**. It stops if no compatible option is advertised. If the lab permits `db.t3.medium` but the default class has no compatible option, use:
 
@@ -81,8 +81,9 @@ This one command performs the following sequence:
 4. Build and publish the AMD64 catalogue image to ECR if the requested immutable tag is absent; reuse an existing tag without overwriting it.
 5. Seed DynamoDB and upload all three product images.
 6. Use SSM on one backend to create/seed Oracle demo tables and a SELECT-only application user. Passwords stay in Secrets Manager and the backend; they are not printed or returned to CloudShell.
-7. Activate the catalogue using the verified ECR image digest.
-8. Wait for ECS/target health, run functional/security/database smoke checks and capture read-only configuration evidence.
+7. Build a Linux/x86_64 Python 3.12 Lambda ZIP with the Oracle driver, upload it under `rotation/<SHA256>.zip` in the existing private bucket, and activate application-secret rotation in the observability stack. Wait for initial rotation and SQL-backed API success; no password values are printed.
+8. Activate the catalogue using the verified ECR image digest.
+9. Wait for ECS/target health, run functional/security/database smoke checks and capture read-only configuration evidence.
 
 Allow time for RDS creation and Multi-AZ provisioning. Keep the CloudShell session open. Long creation/failover operations should finish before recording the presentation. On any failed phase, the command exits without printing “Setup complete”; it does not silently delete partially created resources. Inspect the failing stack/command, then retry an appropriate phase or explicitly tear down.
 
@@ -92,7 +93,7 @@ Allow time for RDS creation and Multi-AZ provisioning. Keep the CloudShell sessi
 ./scripts/lab.sh setup your-email@example.com v1
 ```
 
-`AWS_REGION`, `DB_INSTANCE_CLASS`, `NOTIFICATION_EMAIL` and `EVIDENCE_DIR` can be supplied as environment variables. Stack-name overrides are `NETWORK_STACK_NAME`, `CORE_STACK_NAME`, `OBS_STACK_NAME` and `MICROSERVICE_STACK_NAME`; keep the default `anygroup-gp2` resource prefix so evidence collection can attribute resources.
+`AWS_REGION`, `DB_INSTANCE_CLASS`, `NOTIFICATION_EMAIL`, `BACKEND_ROTATION_DAYS` and `EVIDENCE_DIR` can be supplied as environment variables. Stack-name overrides are `NETWORK_STACK_NAME`, `CORE_STACK_NAME`, `OBS_STACK_NAME` and `MICROSERVICE_STACK_NAME`; keep the default `anygroup-gp2` resource prefix so evidence collection can attribute resources.
 
 ```bash
 EVIDENCE_DIR=evidence/managed-baseline ./scripts/lab.sh setup your-email@example.com v1
@@ -102,7 +103,7 @@ New runs normally receive a UTC timestamp directory. Choose a new directory rath
 
 ### Expected outputs
 
-Setup saves `smoke.json` and `configuration/summary.json` plus supporting JSON files. Retrieve the current storefront URL in CloudFormation → core stack → Outputs → `AlbDnsName`, or run:
+Setup also saves metadata and an initial-rotation summary under `rotation/` (the initial check allows up to ten minutes). Setup saves `smoke.json` and `configuration/summary.json` plus supporting JSON files. Retrieve the current storefront URL in CloudFormation → core stack → Outputs → `AlbDnsName`, or run:
 
 ```bash
 aws cloudformation describe-stacks --stack-name anygroup-gp2-core \
@@ -134,9 +135,10 @@ The cart is a browser counter, not checkout. Do not record full signed URL query
 | Publish/activate a catalogue image and verify it | `./scripts/lab.sh update v2` |
 | Run the sustained frontend scaling load experiment | `./scripts/lab.sh load` |
 | Force RDS failover and verify preserved SQL data | `./scripts/lab.sh failover` |
+| Rotate application password and verify data | `./scripts/lab.sh rotate` |
 | Delete the synthetic deployment and check for orphans | `./scripts/lab.sh teardown` |
 
-The numbered helper scripts remain available for diagnostics. You do not need to execute every helper for routine setup. `test` is read-only; `setup`, `update`, `failover` and `teardown` change the specified lab resources. `failover` deliberately interrupts the database and should be run separately from load/update experiments.
+The numbered helper scripts remain available for diagnostics. You do not need to execute every helper for routine setup. `test` is read-only; `setup`, `update`, `failover`, `rotate` and `teardown` change the specified lab resources. `failover` deliberately interrupts the database and should be run separately from load/update experiments.
 
 ## 4. Lab verification and presentation evidence
 
@@ -151,6 +153,24 @@ A smoke PASS requires real Oracle order/customer queries, available private/encr
 A configuration capture also checks four private EC2 instances, six project SGs, two available NAT gateways in different subnets, private task ENIs and RDS settings. It captures NAT/EIP metadata, route tables, RDS events and application-secret metadata. It never retrieves secret values. Missing API permissions result in PARTIAL/FAIL; empty reads cannot establish a security PASS.
 
 In the console, show each application subnet's route to its same-AZ NAT gateway. Show Oracle connectivity through the backend SG and DB TCP 1521 rule; no public database access. The shared LabRole can access more AWS resources than a production service role even though the database application user is SELECT-only.
+
+### Application-secret rotation
+
+`anygroup-gp2/backend-db` rotates every **30 days** by default through `AWS::SecretsManager::RotationSchedule` in the observability stack. Set `BACKEND_ROTATION_DAYS=7` (or 30, 60, 90) before setup to choose another interval. The separate master secret uses RDS-managed rotation; the application function never reads the master secret.
+
+Rotation is initially disabled while the foundation creates Oracle. After seeding, setup activates a Lambda using the existing `LabRole` and backend SG/private app subnets. It generates an AWSPENDING password, changes `anygroupapp`'s own Oracle password, tests SELECT access to both seeded tables, then promotes AWSCURRENT. The backend refreshes cached credentials after an invalid-password response. Single-user rotation can briefly interrupt new connections; do not promise zero downtime.
+
+To deliberately test it after setup:
+
+```bash
+EVIDENCE_DIR=evidence/rotation-test ./scripts/lab.sh rotate
+```
+
+This waits up to ten minutes for the requested version to become current, compares orders/account responses before/after, and saves `before_metadata.json`, `trigger.json`, `after_metadata.json` and `summary.json` under the chosen directory. Ordinary smoke/configuration checks follow. No secret values are captured. Run it separately from failover/load/update/seeding.
+
+In **Secrets Manager → `anygroup-gp2/backend-db` → Rotation**, show enabled rotation, the interval, linked Lambda and last/next rotation metadata. In **Lambda → `anygroup-gp2-backend-db-rotation`**, check Python 3.12/x86_64, `LabRole`, private subnet/SG placement and the custom log group. The Lambda Errors alarm notifies the existing operations topic. The 8 October 2026 files verify both initial rotation (`evidence_new/20261008T024000Z/rotation/summary.json`) and manual rotation (`evidence_new/rotation-20261008T025207Z/summary.json`). The requested version became AWSCURRENT, the previous version became AWSPREVIOUS, the harness reported preserved orders/account, and follow-up smoke passed. Use these dated results in the presentation; uninterrupted rotation availability and a later 30-day recurrence were not measured.
+
+If rotation is pending or failed, inspect metadata and `/anygroup-gp2/backend-db-rotation` logs. Seeding refuses an unfinished pending rotation. Do not change only the stored secret or reseed to mask a failed rotation. The AWS-hosted rotation template creates an execution role, so this implementation uses an explicit Lambda with the existing lab role. Deployment requires Lambda/Secrets Manager permissions allowed by your lab; save any AccessDenied instead of claiming rotation is enabled.
 
 ### 4.2 Database failover
 
@@ -283,6 +303,7 @@ Use CloudFormation Events on the failing stack first. A tool/lab permission fail
 | Oracle orderable preflight fails | Lab engine/class permissions, regional Oracle 19 Multi-AZ/gp2 options; supported `DB_INSTANCE_CLASS` override |
 | RDS/managed-secret creation denied | Lab's RDS, Secrets Manager and KMS service permissions; save the exact Event |
 | Backend bootstrap signal fails | EC2 system log, SSM, `/var/log/cloud-init-output.log`, AZ-local NAT routes and Python package installation |
+| Rotation deployment/test fails | Lambda trust/PassRole/VPC ENI/secret permissions; function logs, pending version and initial seed completion; no custom IAM role is created |
 | SSM seed command fails | Run Command status, private RDS routing/SG, managed/app secret access; the script deliberately suppresses raw driver/password output |
 | `/api/db` or `/api/orders` returns 503 | SQL credentials/schema/seed, RDS availability, SG/port and backend journal; health alone is not readiness |
 | Image tag already exists | Reuse it for reversal or choose a new tag for changed code |
@@ -298,7 +319,7 @@ python3 scripts/part15_seed_database.py
 ./scripts/part13_deploy_all.sh feature v1
 ```
 
-Foundation creates ECR/DynamoDB without requiring an existing image and preserves an already-active catalogue's activation parameters. Images and DynamoDB/S3 data must exist before feature activation. Credentials are retrieved only on the backend. Avoid `GetSecretValue` in the recording or any command that prints passwords.
+Foundation creates ECR/DynamoDB without requiring an existing image and preserves an already-active catalogue's activation parameters. Images and DynamoDB/S3 data must exist before feature activation. `part13_deploy_all.sh rotation ZIP_KEY [days]` activates rotation after SQL seeding; routine setup packages the function and invokes that phase automatically. Foundation retains existing rotation settings; it does not disable an active schedule. Credential values are retrieved by the backend and rotation function; CloudShell does not retrieve them. Avoid `GetSecretValue` in the recording or any command that prints passwords.
 
 ## 7. Local validation and packaging
 

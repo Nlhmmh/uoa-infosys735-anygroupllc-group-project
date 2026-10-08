@@ -8,13 +8,13 @@ Start with [IaC_Deployment_and_Usage_Instructions.md](IaC_Deployment_and_Usage_I
 
 The current version uses **two AZ-local NAT gateways** and **private RDS Oracle SE2 Multi-AZ**, replacing the earlier NAT instance and two dummy DB EC2 listeners. The Python backend queries real synthetic order/customer data using a SELECT-only database user. RDS manages the master password in Secrets Manager; a separate generated secret supplies the application user.
 
-**Status:** the managed-service implementation has been deployed and tested in Learners Lab. The 7 October 2026 results in `evidence_new/` verify real SQL queries, catalogue integration, RDS failover and frontend scale-out. On 8 October 2026, the user also confirmed that the current code works. That confirmation supports the current functional status; specific recovery, cleanup, release and financial claims still require their own evidence.
+**Status:** the managed-service implementation has been deployed and tested in Learners Lab. The 7 October 2026 results in `evidence_new/` verify real SQL queries, catalogue integration, RDS failover and frontend scale-out. On 8 October 2026, the user also confirmed that the current code works. That confirmation supports the current functional status; specific recovery, cleanup, release and financial claims still require their own evidence. The 8 October evidence also verifies initial and deliberately triggered application-secret rotation, followed by successful smoke checks.
 
 | Implemented improvement | Behaviour and business purpose |
 |---|---|
 | Two managed NAT gateways | Each private application subnet uses the gateway in its own AZ, reducing dependence on one outbound instance |
 | Real private Oracle RDS Multi-AZ | Persisted synthetic orders/customer data, a synchronous standby in the other AZ, encrypted storage and automated backups |
-| Managed database credentials | RDS-managed master secret and a separate SELECT-only application user; passwords are retrieved on the backend |
+| Managed database credentials | RDS-managed master rotation; separate SELECT-only application user with a 30-day Lambda rotation schedule activated after seeding; passwords are retrieved at runtime |
 | Visible legacy services | **Legacy system → Your account & orders** displays API-backed data and provides refresh/error states |
 | Integrated additional feature | **Additional feature → Product catalogue** displays three products/images with search through a separate Fargate service |
 | Demand-based frontend capacity | Recorded target tracking increased frontend capacity from two to four, with all four targets healthy |
@@ -34,11 +34,12 @@ It validates/deploys all four stacks, builds/pushes an image if absent, uploads 
 ./scripts/lab.sh test
 ./scripts/lab.sh load
 ./scripts/lab.sh failover
+./scripts/lab.sh rotate
 ./scripts/lab.sh update v2
 ./scripts/lab.sh teardown
 ```
 
-These are separate optional operations, not a sequence required after every setup. `failover` deliberately requests a DB failover; `teardown` deletes synthetic data. Do not run recovery/load/update experiments concurrently.
+These are separate optional operations, not a sequence required after every setup. `failover` deliberately requests a DB failover; `rotate` deliberately changes the application password and checks preserved API data; `teardown` deletes synthetic data. Do not run recovery/load/update/rotation experiments concurrently.
 
 ## Business proposal
 
@@ -94,7 +95,7 @@ The RDS box and standby represent one Multi-AZ DB deployment, not independently 
 | Frontend scaling | Min/desired 2, max 4; target 50 requests/target/min; six total EC2 at configured frontend peak |
 | Backend capacity | Fixed at two; real SQL orders/account endpoints |
 | RDS | Oracle SE2 License Included, default `db.t3.small`, 20 GiB gp2, encrypted, Multi-AZ, one-day backups, private TCP 1521 |
-| Credentials | RDS-managed master secret and separate SELECT-only application secret; no passwords in templates/evidence |
+| Credentials | RDS-managed master rotation; separate SELECT-only application secret with a deployed 30-day schedule; initial and manual rotation verified on 8 October; no passwords in templates/evidence |
 | Fargate | Two AMD64 tasks, 0.25 vCPU / 0.5 GiB each; immutable tag/digest; circuit breaker configured |
 | Data | Oracle demo orders/customer; DynamoDB P1001–P1003; S3 matching JPEGs |
 | Notifications | SNS topic with optional email subscription; confirmation/delivery are separate observations |
@@ -121,19 +122,22 @@ Use all principle areas in the rubric checklist for the submitted assessment app
 | `cloudformation/02-core-infrastructure-stack.yaml` | Readable source for ALBs/ASGs/security/S3/RDS/secrets and generated application payloads |
 | `frontend/index.html` | Storefront: legacy orders/account panels and additional catalogue feature |
 | `cloudformation/02-core-infrastructure-stack.template.json` | Generated equivalent core deployment template below AWS's inline size limit |
-| `cloudformation/03-observability-stack.yaml` | SNS and ALB/ASG/RDS CPU/free-storage alarms |
+| `cloudformation/03-observability-stack.yaml` | SNS, ALB/ASG/RDS alarms, application rotation Lambda/schedule/error alarm |
 | `cloudformation/04-microservice-stack.yaml` | ECR, DynamoDB, ECS/Fargate, catalogue route/alarm |
+| `rotation-service/app.py` | Four-step Oracle application-password rotation with SELECT checks before secret promotion |
 | `backend-service/app.py` | Oracle-backed demo API and explicitly invoked database seeding |
 | `catalogue-service/app.py` | Catalogue metadata/image endpoints |
-| `scripts/lab.sh` | Main setup/test/load/failover/update/teardown entry point |
+| `scripts/lab.sh` | Main setup/test/load/failover/rotate/update/teardown entry point |
 
-Stack order: network → core → observability → catalogue. The catalogue foundation creates its repository/table before image publication; activation pins a verified digest only after data/images exist. Setup checks current Oracle 19 Multi-AZ/gp2 orderable options and does not downgrade to dummy DBs on an error.
+Stack order: network → core → observability → catalogue. The catalogue foundation creates its repository/table before image publication; activation pins a verified digest only after data/images exist. After SQL seeding, setup builds/uploads the Linux rotation ZIP, updates the observability stack using the existing `LabRole`, and waits for initial rotation plus API checks. Default rotation is every 30 days; `BACKEND_ROTATION_DAYS` accepts 7, 30, 60 or 90. No new IAM role, NAT gateway or stack is created. Repeated setup preserves existing rotation parameters during foundation deployment.
+
+Setup checks current Oracle 19 Multi-AZ/gp2 orderable options and does not downgrade to dummy DBs on an error.
 
 Teardown deletes the catalogue, observability, image objects, core/RDS and network. Lab RDS uses `DeletionPolicy: Delete`, `UpdateReplacePolicy: Delete` and automatic-backup removal without a final snapshot, because records are synthetic and repeated tests should not retain billable DB snapshots. Production requires different retention/data-protection rules. The wrapper checks known managed-secret removal and project NAT/EIP/RDS/snapshot/backup resources as well as the other components.
 
 ## Verified lab results and presentation boundaries
 
-The reviewed `evidence_new/` contains 159 valid JSON/JSONL files. Its results support the following dated claims; the raw files are stored separately from the source-only deployment ZIP.
+The reviewed `evidence_new/` contains 244 valid JSON/JSONL files (242 JSON and two JSONL). Its results support the following dated claims; the raw files are stored separately from the source-only deployment ZIP.
 
 | Observation | Verified result | Evidence path under `evidence_new/` |
 |---|---|---|
@@ -143,7 +147,10 @@ The reviewed `evidence_new/` contains 159 valid JSON/JSONL files. Its results su
 | Database interruption | Approximately 61 seconds from the first failed sample to the first successful sample; the test confirmed completion after about 183 seconds | Failover `requests.jsonl`, `trigger.json` and `summary.json` |
 | Demand-based scale-out | Frontend desired capacity 2→4, two successful launches and four healthy targets; six EC2 including the two backend instances | `scaling-20261007T044349Z/configuration/frontend_activity.json`, `autoscaling.json`, `frontend_targets.json` |
 | HTTP load | 2,400/2,400 HTTP 200 over 479.81 seconds, about 5 requests/s; successful-response p95 9.6 ms | `scaling-20261007T044349Z/load.json` |
+| Application-secret rotation, 8 Oct | Initial rotation PASS; requested new version became AWSCURRENT, previous version became AWSPREVIOUS; harness reported unchanged orders/account; post-rotation smoke PASS | `20261008T024000Z/rotation/`, `rotation-20261008T025207Z/` |
 | Frontend probe | 283/292 successes; seven HTTP 502 and two connection errors; final sample successful | `frontend-recovery/requests.jsonl` and `requests.summary.json` |
+
+Rotation metadata confirms `rate(30 days)` with a two-hour window and an active Python 3.12/x86_64 function using `LabRole` and the backend SG/private app subnets. Manual rotation completed at `2026-10-08T02:52:14.120000+00:00`. This verifies a real password change and post-change functionality; a future 30-day recurrence, uninterrupted access during rotation and exact rotation costs are not measured.
 
 The RDS result demonstrates recovery with a measured interruption. Its standby cannot serve reads directly; reboot with failover can interrupt connections. The load result measures the storefront HTML endpoint, not a complete browser journey or production capacity. The frontend probe lacks a post-test replacement/capacity capture and therefore does not establish full recovery.
 
@@ -161,7 +168,7 @@ Submit the slides/PDF and a text file with an accessible recording URL. Every me
 
 ## Local validation and packaging
 
-Local validation checks template/code consistency and mocked behaviour; it does not substitute for runtime tests. The existing local report records 46 passing tests and CloudFormation lint. Use the following commands after implementation changes:
+Local validation checks template/code consistency and mocked behaviour; it does not substitute for runtime tests. The existing local report records the current mocked regression count and CloudFormation lint. Runtime rotation evidence is recorded separately under `evidence_new/`. Use the following commands after implementation changes:
 
 ```bash
 python3 -m venv .venv

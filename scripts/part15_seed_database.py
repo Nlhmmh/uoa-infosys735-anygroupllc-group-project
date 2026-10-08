@@ -12,6 +12,10 @@ from lab_support import aws_json, stack_outputs
 
 def seed():
     core = stack_outputs(os.getenv("CORE_STACK_NAME", "anygroup-gp2-core"))
+    metadata = aws_json("secretsmanager", "describe-secret", "--secret-id", core["DatabaseApplicationSecretArn"])
+    if any("AWSPENDING" in stages and "AWSCURRENT" not in stages
+           for stages in metadata.get("VersionIdsToStages", {}).values()):
+        raise RuntimeError("Application-password rotation is pending; wait or resolve it before seeding")
     group = aws_json("autoscaling", "describe-auto-scaling-groups", "--auto-scaling-group-names",
                      core["BackendAutoScalingGroupName"])["AutoScalingGroups"][0]
     instances = [i["InstanceId"] for i in group["Instances"] if i["LifecycleState"] == "InService"]

@@ -11,6 +11,7 @@ export AWS_PAGER=""
 #   validate
 #   foundation [notification-email]
 #   feature [image-tag]
+#   rotation ZIP_KEY [days]
 #   status
 #
 # For routine setup use ./scripts/lab.sh setup your-email@example.com.
@@ -104,6 +105,18 @@ deploy_observability() {
       MinimumHealthyFrontendTargets=2 \
       Target5xxThreshold=1 \
     --region "$REGION"
+}
+
+deploy_rotation() {
+  local key="${1:-}" days="${2:-30}"
+  [[ "$key" =~ ^rotation/[a-f0-9]{64}\.zip$ ]] || { echo "Supply the packaged rotation ZIP key." >&2; exit 1; }
+  [[ "$days" =~ ^(7|30|60|90)$ ]] || { echo "Rotation interval must be 7, 30, 60 or 90 days." >&2; exit 1; }
+  # Unspecified notification/alarm parameters retain their existing values.
+  aws cloudformation deploy --no-fail-on-empty-changeset \
+    --template-file cloudformation/03-observability-stack.yaml --stack-name "$OBS_STACK" \
+    --parameter-overrides EnvironmentName=anygroup-gp2 CoreStackName="$CORE_STACK" \
+      NetworkStackName="$NETWORK_STACK" LabRoleName=LabRole \
+      BackendRotationCodeKey="$key" BackendRotationDays="$days" --region "$REGION"
 }
 
 deploy_micro_phase1() {
@@ -267,11 +280,16 @@ case "$MODE" in
     status
     ;;
 
+  rotation)
+    deploy_rotation "${2:-}" "${3:-30}"
+    ;;
+
   *)
     echo "Usage:"
     echo "  $0 validate"
     echo "  $0 foundation [notification-email]"
     echo "  $0 feature [image-tag]"
+    echo "  $0 rotation ZIP_KEY [days]  (after Oracle seeding)"
     echo "  $0 status"
     exit 1
     ;;
