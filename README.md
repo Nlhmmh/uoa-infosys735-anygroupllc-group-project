@@ -8,7 +8,19 @@ Start with [IaC_Deployment_and_Usage_Instructions.md](IaC_Deployment_and_Usage_I
 
 The current version uses **two AZ-local NAT gateways** and **private RDS Oracle SE2 Multi-AZ**, replacing the earlier NAT instance and two dummy DB EC2 listeners. The Python backend queries real synthetic order/customer data using a SELECT-only database user. RDS manages the master password in Secrets Manager; a separate generated secret supplies the application user.
 
-**Status:** locally validated implementation, awaiting a new Learners Lab deployment/test. The supplied 6 October 2026 evidence belongs to the previous NAT-instance/dummy-DB version. Preserve it as historical evidence; it does not prove current NAT, SQL, RDS failover or cost behaviour.
+**Status:** the managed-service implementation has been deployed and tested in Learners Lab. The 7 October 2026 results in `evidence_new/` verify real SQL queries, catalogue integration, RDS failover and frontend scale-out. On 8 October 2026, the user also confirmed that the current code works. That confirmation supports the current functional status; specific recovery, cleanup, release and financial claims still require their own evidence.
+
+| Implemented improvement | Behaviour and business purpose |
+|---|---|
+| Two managed NAT gateways | Each private application subnet uses the gateway in its own AZ, reducing dependence on one outbound instance |
+| Real private Oracle RDS Multi-AZ | Persisted synthetic orders/customer data, a synchronous standby in the other AZ, encrypted storage and automated backups |
+| Managed database credentials | RDS-managed master secret and a separate SELECT-only application user; passwords are retrieved on the backend |
+| Visible legacy services | **Legacy system → Your account & orders** displays API-backed data and provides refresh/error states |
+| Integrated additional feature | **Additional feature → Product catalogue** displays three products/images with search through a separate Fargate service |
+| Demand-based frontend capacity | Recorded target tracking increased frontend capacity from two to four, with all four targets healthy |
+| One-command lab lifecycle | Setup handles provisioning, publishing, data/images, activation, smoke checks and evidence; separate commands run experiments and cleanup |
+
+The storefront uses synthetic data. Its cart is a browser counter; checkout, payment processing and migration of the real .NET application are outside the prototype.
 
 Routine CloudShell setup is one command after extracting the current ZIP:
 
@@ -92,12 +104,12 @@ The retained .NET application is represented by a Python API; this is not a migr
 
 ## Four Well-Architected pillars
 
-| Pillar | Production rationale | Current prototype mechanism | Evidence to collect |
+| Pillar | Production rationale | Current prototype mechanism | Recorded evidence and next check |
 |---|---|---|---|
-| Operational Excellence | Reproducible operations for the small team; observable and reversible changes | Four stacks, bootstrap checks, monitoring, identifiable catalogue releases and managed database/services | Stack Events, update/reversal, owned alert/runbook procedures; measure effort before claiming savings |
-| Reliability | Continuity during failures and promotions | AZ-distributed app/tasks, two local NAT gateways, health checks, scaling policy and RDS synchronous standby/backups | Actual instance recovery, demand scale-out/scale-in, RDS failover/data preservation, restore and delivered alerts |
-| Security | Layered protection for attacks and sensitive data | Private tiers, SG boundaries, encrypted storage, controlled images, managed credentials and SELECT-only SQL user | Allowed/denied paths, signed/unsigned image checks, role/transport/audit limitations |
-| Cost Optimisation | Control production expenditure as demand changes | Usage-based services/capacity, attributable inventory and explicit temporary-resource lifecycle | Dated production normal/peak/co-location assumptions; separate lab usage from savings claims |
+| Operational Excellence | Reproducible operations for the small team; observable and reversible changes | Four stacks, bootstrap checks, monitoring, identifiable catalogue releases and managed database/services | Four successful stacks and identifiable running image; capture a current code release/reversal and delivered alert before claiming those tests |
+| Reliability | Continuity during failures and promotions | AZ-distributed app/tasks, two local NAT gateways, health checks, scaling policy and RDS synchronous standby/backups | RDS failover/data preservation and frontend 2→4 scale-out verified; scale-in, EC2 replacement, restore and notification delivery still need evidence |
+| Security | Layered protection for attacks and sensitive data | Private tiers, SG boundaries, encrypted storage, controlled images, managed credentials and SELECT-only SQL user | Private/encrypted configuration and signed-image success/unsigned HTTP 403 verified; capture frontend-to-DB denial and retain role/transport/audit limits |
+| Cost Optimisation | Control production expenditure as demand changes | Usage-based services/capacity, attributable inventory and explicit temporary-resource lifecycle | Actual scale-out supports the consumption approach; prepare dated normal/peak/co-location costs at comparable service levels; savings are unmeasured |
 
 Use all principle areas in the rubric checklist for the submitted assessment appendix. Four labels alone are not a comprehensive assessment. Performance Efficiency can be an additional pillar with a proper service-selection and performance assessment; Sustainability needs goals and impact measures beyond generic managed-service claims.
 
@@ -119,11 +131,37 @@ Stack order: network → core → observability → catalogue. The catalogue fou
 
 Teardown deletes the catalogue, observability, image objects, core/RDS and network. Lab RDS uses `DeletionPolicy: Delete`, `UpdateReplacePolicy: Delete` and automatic-backup removal without a final snapshot, because records are synthetic and repeated tests should not retain billable DB snapshots. Production requires different retention/data-protection rules. The wrapper checks known managed-secret removal and project NAT/EIP/RDS/snapshot/backup resources as well as the other components.
 
-## Evidence and local validation
+## Verified lab results and presentation boundaries
 
-The current managed-service changes need a new lab run. [data/lab_evidence_review.json](data/lab_evidence_review.json) and `evidence/` retain the previous supplied run. Its baseline/configuration release/reversal/cleanup results are not current implementation verification. Both image tags in that run had identical content; its probe recorded seven failures and its load did not demonstrate new EC2 creation.
+The reviewed `evidence_new/` contains 159 valid JSON/JSONL files. Its results support the following dated claims; the raw files are stored separately from the source-only deployment ZIP.
 
-Current smoke checks require SQL data and RDS Multi-AZ/private/encrypted/backup settings, catalogue functionality and task/target health. The failover tool explicitly requests a lab DB failover and verifies changed primary AZ, stable endpoint and preserved order rows while retaining request failures. No local test has deployed AWS or established IAM permissions, real failover behaviour or cost.
+| Observation | Verified result | Evidence path under `evidence_new/` |
+|---|---|---|
+| Functional baseline | Three smoke runs PASS; real SQL orders/account, three catalogue products/images, unsigned image HTTP 403, two healthy targets per service | `20261007T042706Z/smoke.json`, `20261007T043249Z/smoke.json`, `20261007T044215Z/smoke.json` |
+| Network/data controls | Four private EC2 at baseline; two NAT gateways/EIPs with matching AZ routes; private encrypted Oracle Multi-AZ and automated backups | Baseline `configuration/` captures |
+| Database recovery | Primary `us-east-1b` → `us-east-1a`; same endpoint; preserved orders; 45 failed requests out of 143 samples | `rds-failover-20261007T043910Z/` |
+| Database interruption | Approximately 61 seconds from the first failed sample to the first successful sample; the test confirmed completion after about 183 seconds | Failover `requests.jsonl`, `trigger.json` and `summary.json` |
+| Demand-based scale-out | Frontend desired capacity 2→4, two successful launches and four healthy targets; six EC2 including the two backend instances | `scaling-20261007T044349Z/configuration/frontend_activity.json`, `autoscaling.json`, `frontend_targets.json` |
+| HTTP load | 2,400/2,400 HTTP 200 over 479.81 seconds, about 5 requests/s; successful-response p95 9.6 ms | `scaling-20261007T044349Z/load.json` |
+| Frontend probe | 283/292 successes; seven HTTP 502 and two connection errors; final sample successful | `frontend-recovery/requests.jsonl` and `requests.summary.json` |
+
+The RDS result demonstrates recovery with a measured interruption. Its standby cannot serve reads directly; reboot with failover can interrupt connections. The load result measures the storefront HTML endpoint, not a complete browser journey or production capacity. The frontend probe lacks a post-test replacement/capacity capture and therefore does not establish full recovery.
+
+Still unverified in these saved files: scale-in, frontend instance replacement/restored capacity, delivered SNS email, database restore, teardown/orphan cleanup, current changed-code release/reversal and the frontend-to-DB negative test. Preserve those boundaries even though the user confirmed current code functionality. Capture the latest labelled storefront for the recording.
+
+The 6 October results under `evidence/` and [data/lab_evidence_review.json](data/lab_evidence_review.json) belong to the older NAT-instance/dummy-DB version. Keep them historical; its same-digest version-label update is not current changed-code release evidence.
+
+## Presentation and demo preparation
+
+[Presentation_and_Slide_Content.md](Presentation_and_Slide_Content.md) provides copy-ready slide text, speaker notes, architecture specifications and exact console/demo cues. The proposed **12-slide recording targets 14:00**, with a one-minute margin inside the 15-minute limit and meaningful portions for all four members.
+
+The whole solution architecture is the centre of the pitch. Show basic and additional component configuration in the AWS Console before the website demonstration; then present recorded failover and scaling evidence. Complete the eight-minute load and database failover experiments before recording, and show their dated results instead of waiting for them live. Cost Optimisation addresses production demand, operating effort and OPEX/CAPEX comparison; lab balance changes are not production savings.
+
+Submit the slides/PDF and a text file with an accessible recording URL. Every member must also complete TeamMates feedback. The presentation guide includes the submission table and rehearsal checks.
+
+## Local validation and packaging
+
+Local validation checks template/code consistency and mocked behaviour; it does not substitute for runtime tests. The existing local report records 46 passing tests and CloudFormation lint. Use the following commands after implementation changes:
 
 ```bash
 python3 -m venv .venv
@@ -133,7 +171,7 @@ python scripts/part13_validate_iac.py --require-lint --tests --write-report
 python scripts/part13_package.py
 ```
 
-After changing backend/core source, regenerate the compact template and security references before validation/packaging:
+After changing backend/frontend/core source, regenerate the compact template and security references before validation/packaging:
 
 ```bash
 python scripts/sync_backend_template.py

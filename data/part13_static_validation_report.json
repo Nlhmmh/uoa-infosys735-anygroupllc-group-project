@@ -22,7 +22,7 @@
   "regression_test_count": 46,
   "source_sha256": {
     "IaC_Deployment_and_Usage_Instructions.md": "84ef99870acce3050a0954b01be5f37d2103d1fb3dd542fad1d171be1e956964",
-    "Presentation_and_Slide_Content.md": "c2d0ae3bb4b2bd38514e860ad2d31d03a95bcb958ae260524434fe7bf84a9294",
+    "Presentation_and_Slide_Content.md": "79df28e10567f4290c60304ce0ef19bc5347b8015bd682a5350d1ebafcaeeae8",
     "Rubric_and_Assessment_Checklist.md": "59f6671005efd1ca7d2db429d42a3391a40098cd16a93ce9a31a95cf61fb9aa4",
     "backend-service/app.py": "b8df908f941f7ccf600e008702d940bf797418a9dc57e4c295d12b0cd9fa038e",
     "backend-service/requirements.txt": "01ebb5f16c4fc4b05d6e63d25fc8f8ce94458f445619ab72754af398603031fd",
@@ -61,7 +61,8 @@
     "tests/test_catalogue.py": "5e660e7c3e8d5e68a869f2247df9956c8e82fb69602e734f505089502fbfda16",
     "tests/test_lab_tools.py": "58cbf514ff0e72d99850d40fc8b211942aa45a65bbdc5f7c20ac7b4af3854054",
     "tests/test_managed_setup.py": "a546724d6930de12da20421137e7039b6eda5b5124c552dab4f77f7fa0018ae7",
-    "tests/test_storefront.py": "18274a07489aae808e6388bb6f258365eb54334b91878c809e7a5f24e30c0e3a"
+    "tests/test_storefront.py": "18274a07489aae808e6388bb6f258365eb54334b91878c809e7a5f24e30c0e3a",
+    "README.md": "470369d252dfb51ad5f365daced18f0c1945802b27ec7297bc710c2f631a1d30"
   },
-  "documentation_updated_at_utc": "2026-10-07T04:58:18.019308+00:00"
+  "documentation_updated_at_utc": "2026-10-08T01:58:25.872744+00:00"
 }

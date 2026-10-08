@@ -4,7 +4,7 @@ This is the group's authoring guide for creating a stakeholder pitch in PowerPoi
 
 The slides target the highest marking bands in [instructions.md](instructions.md): an integrated additional feature, substantive assessment of **four Well-Architected pillars**, functioning basic and additional infrastructure, and a clear client pitch. The potential five bonus marks are discretionary. A polished deck cannot replace working infrastructure and an accurate AWS Console demonstration.
 
-Use the **copy-ready content** on the slides. Put the **speaker notes** in presenter notes. Use the **visual and console instructions** to create graphics and prepare the recording. Detailed tables belong in appendices; do not paste every paragraph onto the slide. Replace `[MEMBER NAME]`, `[SOURCE/DATE]` and other placeholders with real information before submission. The current templates use two NAT gateways and real Multi-AZ Oracle RDS. Capture a new lab run before recording current implementation claims; the supplied 6 October observations in Section 4 belong to the previous NAT-instance/dummy-DB version.
+Use the **copy-ready content** on the slides. Put the **speaker notes** in presenter notes. Use the **visual and console instructions** to create graphics and prepare the recording. Detailed tables belong in appendices; do not paste every paragraph onto the slide. Replace member names and any remaining placeholders before submission. The managed-service implementation has been tested in Learners Lab: `evidence_new/` records real SQL integration, RDS failover and frontend scale-out on 7 October 2026. The user confirmed the current code works on 8 October 2026. Use Section 4 for the exact measured claims and evidence boundaries. Show the latest labelled storefront in the recording; do not transfer older dummy-DB results to it.
 
 ## 1. Presentation strategy and timing
 
@@ -28,7 +28,7 @@ Use four pillars: **Operational Excellence, Reliability, Security and Cost Optim
 
 For assessment requirements and the complete four-pillar check, use [Rubric_and_Assessment_Checklist.md](Rubric_and_Assessment_Checklist.md).
 
-**Required order:** Show basic and additional component configuration in the AWS Management Console **before** demonstrating the additional services. Slides 5–8 show configuration: CloudFormation, CloudWatch/SNS, VPC/network/compute/load balancing/scaling, SGs/NACLs/S3 and ECR/ECS/DynamoDB. Slide 9 demonstrates the working catalogue feature. Slide 10 revisits monitoring and scaling to explain reliability behaviour. CloudShell results and screenshots support the console demonstration. They do not replace it.
+**Required order:** Show basic and additional component configuration in the AWS Management Console **before** demonstrating the additional services. Slides 5–8 show configuration: CloudFormation and CloudWatch/SNS; network/compute/load balancing/scaling; SGs/NACLs/S3; then RDS/Secrets Manager and ECR/ECS/DynamoDB. Slide 9 demonstrates the working catalogue feature. Slide 10 revisits monitoring and scaling to explain reliability behaviour. CloudShell results and screenshots support the console demonstration. They do not replace it.
 
 ### Architecture diagram as the presentation's anchor
 
@@ -38,25 +38,29 @@ Use the Task 1 architecture slide as the basis for this final diagram, updating 
 
 ### Main deck timing and speaking allocation
 
-These are allocated times, not verified rehearsal timings. Target **14 minutes 15 seconds**, leaving 45 seconds inside the 15-minute limit. All four members must speak. Change the member labels to real names.
+Target **14:00**, leaving **1:00 inside the 15-minute limit** for loading, handoffs and minor delays. These are allocations, not measured rehearsal results. The plan assumes four members, as in the current guide; replace Member 1–4 with names. If the actual roster differs, divide demo portions so everyone speaks without extending the total.
 
-| Slide | Title | Total time including console | Speaker | Rubric / pillar focus |
+| Slide | Title | Duration including demo | Recording interval | Speaker |
 |---|---|---:|---|---|
-| 1 | AWS website proposal for New Zealand growth | 0:20 | Member 1 | Whole solution and client recommendation |
-| 2 | Business priorities and the proposed response | 0:50 | Member 1 | Case study, value proposition, four pillars |
-| 3 | Website architecture with an independent catalogue | 2:00 | Member 1 | Main diagram walkthrough, additional feature, four-pillar alignment and design updates |
-| 4 | Implemented website prototype | 0:40 | Member 2 | Actual architecture and scope |
-| 5 | Repeatable operations for the IT team | 1:20 | Member 2 | Operational Excellence, CloudFormation |
-| 6 | Two AZs separate public entry from private tiers | 2:00 | Member 2 | Basic infrastructure configuration |
-| 7 | Layered protection for the website and its data | 1:20 | Member 3 | Security, SGs/NACLs/S3 |
-| 8 | Catalogue service configuration and integration | 1:00 | Member 3 | Additional services and technical rationale |
-| 9 | Customer browsing through the integrated catalogue | 1:20 | Member 3 | Additional-feature demonstration |
-| 10 | Availability and capacity for launch and promotions | 1:30 | Member 4 | Reliability, monitoring, scaling evidence |
-| 11 | Control production expenditure as demand changes | 1:10 | Member 4 | Cost Optimisation and investment comparison |
-| 12 | Approve the cloud direction and staged rollout | 0:45 | Member 4 | Stakeholder decision and production readiness |
-| **Total** | **Slides and demonstrations** | **14:15** | **All four** | |
+| 1 | AWS website proposal for New Zealand growth | 0:20 | 0:00–0:20 | Member 1 |
+| 2 | Business priorities and the proposed response | 0:40 | 0:20–1:00 | Member 1 |
+| 3 | Website architecture with an independent catalogue | 2:00 | 1:00–3:00 | Member 1 |
+| 4 | Implemented website prototype | 0:30 | 3:00–3:30 | Member 2 |
+| 5 | Repeatable operations for the IT team | 1:00 | 3:30–4:30 | Member 2 |
+| 6 | Two AZs separate public entry from private tiers | 2:10 | 4:30–6:40 | Member 2 |
+| 7 | Layered protection for the website and its data | 1:10 | 6:40–7:50 | Member 3 |
+| 8 | Managed Oracle and independent catalogue configuration | 1:40 | 7:50–9:30 | Member 3 |
+| 9 | Legacy services and the additional catalogue feature | 1:20 | 9:30–10:50 | Member 3 |
+| 10 | Tested database recovery and frontend scale-out | 1:30 | 10:50–12:20 | Member 4 |
+| 11 | Control production expenditure as demand changes | 1:00 | 12:20–13:20 | Member 4 |
+| 12 | Approve the cloud direction and staged rollout | 0:40 | 13:20–14:00 | Member 4 |
+| **Total** | **Slides, navigation, narration and handoffs** | **14:00** | **0:00–14:00** | **All four** |
 
-Member 1: 0:00–3:10. Member 2: 3:10–7:10. Member 3: 7:10–10:50. Member 4: 10:50–14:15. Slides 3–4 allocate 2:40 to the production/prototype architecture diagrams; Slides 5–10 allocate 8:30 to configuration, function and operational evidence. Narrate while showing the relevant console; use brief diagram highlights to connect the configuration to the proposal.
+Member 1: 3:00; Member 2: 3:40; Member 3: 4:10; Member 4: 3:10. Slides 3–4 reserve **2:30 for architecture**, with the main diagram receiving a full two minutes. Slides 5–10 reserve **8:50 for console configuration, the functioning website and operational evidence**. Keep the console visible for most of that block to satisfy the brief's emphasis on implementation.
+
+**Timing rules:** Cue tables include narration and navigation. Speaker notes provide wording to use during those cues, not extra time. Preload the pages. Show one configuration fact per view and explain its business purpose while pointing to it; do not read every console row or every paragraph of notes.
+
+**Rehearsal gates:** finish configuration by **9:30**, the website by **10:50**, reliability by **12:20** and the closing by **14:00**. If a console page takes more than ten seconds to load, use its prepared dated screenshot. If late, omit optional direct SQL and repeated metadata; preserve the main diagram, required configuration, working legacy/catalogue journey, observed failover/scale-out and four pillars. Start the closing no later than **14:00** and finish before **15:00**. Do not use the buffer for another experiment.
 
 ## 2. Slide-by-slide authoring content
 
@@ -86,7 +90,7 @@ Member 1: 0:00–3:10. Member 2: 3:10–7:10. Member 3: 7:10–10:50. Member 4: 
 
 ### Slide 2 — Business priorities and the proposed response
 
-**Speaker / duration:** Member 1, 0:50. **Purpose:** Establish the business problem and link the whole proposal to the four stakeholders.
+**Speaker / duration:** Member 1, 0:40. **Purpose:** Establish the business problem and link the whole proposal to the four stakeholders.
 
 **Copy-ready content**
 
@@ -147,7 +151,7 @@ These are areas the proposal addresses, not automatically proven omissions in th
 
 > Follow the customer request from CloudFront and the protected entry point to the public load balancer. Traffic reaches private web and application tiers across two AZs, with managed Oracle availability proposed for the retained application. The highlighted catalogue route reaches a separate Fargate service. It supplies product metadata and image references while other application requests retain their existing path. S3 replaces dependence on the nearly full image server, with CloudFront proposed for global delivery.
 >
-> The diagram also explains our four design priorities. For Operational Excellence, CloudFormation and monitoring make configuration reproducible and service behaviour visible, while the catalogue has an independent release boundary. For Reliability, AZ distribution, health checks and demand-based capacity support continuity; recovery and promotional capacity still require testing. For Security, edge protection, private tiers and controlled encrypted access address attack and data-exposure risks. For Cost Optimisation, capacity follows demand and costs have an owner, preserving the availability and security baseline.
+> The diagram also explains our four design priorities. For Operational Excellence, CloudFormation and monitoring make configuration reproducible and service behaviour visible, while the catalogue has an independent release boundary. For Reliability, AZ distribution, health checks and demand-based capacity support continuity; the prototype has tested database recovery and frontend scale-out, while production recovery and promotional capacity still require validation. For Security, edge protection, private tiers and controlled encrypted access address attack and data-exposure risks. For Cost Optimisation, capacity follows demand and costs have an owner, preserving the availability and security baseline.
 >
 > These decisions address image capacity, operational effort, continuity and expenditure together. The production controls shown are recommendations; next we will show which parts the prototype implements and demonstrate them in the console.
 
@@ -157,7 +161,7 @@ These are areas the proposal addresses, not automatically proven omissions in th
 
 ### Slide 4 — Implemented website prototype
 
-**Speaker / duration:** Member 2, 0:40. **Purpose:** Make the actual implemented scope clear before opening the console.
+**Speaker / duration:** Member 2, 0:30. **Purpose:** Make the actual implemented scope clear before opening the console.
 
 **Copy-ready content**
 
@@ -172,198 +176,237 @@ Footer: **Synthetic data and a Python backend represent the retained application
 
 **Speaker notes**
 
-> The prototype implements the website tiers using four EC2 instances, two load balancers and two catalogue tasks across two AZs. Each AZ has its own managed NAT gateway. The Python backend queries synthetic data in private Multi-AZ Oracle RDS; the catalogue uses DynamoDB and private images. We will demonstrate the actual configuration and results. Real application migration, payment compliance and forecast customer capacity remain production validation work.
+> This is the implemented request path: four EC2 instances, two load balancers and two catalogue tasks across two AZs, with local NAT gateways and private Multi-AZ Oracle. Python represents the retained .NET application and reads real synthetic records. The catalogue has separate metadata and image storage. Production migration, payment compliance and sizing remain acceptance work.
 
 **Transition:** “We first show how that infrastructure is provisioned and operated.”
 
 ### Slide 5 — Repeatable operations for the IT team
 
-**Speaker / duration:** Member 2, 1:20 including console. **Purpose:** Give Operational Excellence substantive coverage and demonstrate CloudFormation as additional infrastructure.
+**Speaker / duration:** Member 2, 1:00 including console. **Purpose:** Explain Operational Excellence and show provisioning/monitoring configuration before the functional demo.
 
 **Copy-ready content**
 
 > **Operational Excellence**
 >
-> - Reduce manual configuration with four connected CloudFormation stacks and startup checks.
-> - Identify releases with immutable image tags, pinned digests and versioned responses.
-> - Monitor service health; assign alert owners and use a shared response runbook.
-> - Make small, reversible changes; test procedures and review incidents to improve them.
-> - Managed catalogue services reduce host administration; staff retain application and security responsibilities.
+> - Provision the platform through four connected CloudFormation stacks.
+> - Observe service behaviour; assign an operations owner and alert responder.
+> - Use identifiable releases, small reversible changes and a shared runbook.
+> - Test failures, review results and refine procedures.
+> - Managed NAT, Oracle and catalogue services reduce host administration; application/security responsibilities remain.
 
-Evidence strip: **[CURRENT RUN/DATE]: four successful stacks; [RELEASE/REVERSAL RESULT AND DIGESTS]. The earlier run verified a configuration release with identical image content; current deployment evidence is required.**
+Evidence footer: **7 Oct 2026: network/core/observability CREATE_COMPLETE; catalogue UPDATE_COMPLETE with a pinned running image. Current changed-code release/reversal and delivered email are not in the saved evidence.**
 
-**Console sequence, about 0:50**
+**Visual:** Highlight the provisioning/operations plane of the architecture. Keep the console as the main recorded view.
 
-1. CloudFormation: show the four stack names and successful statuses in the current deployment.
-2. Show Resources/Outputs on core and the dependent microservice stack. Identify one imported value, such as the internal listener or image bucket.
-3. Briefly show completed configuration-update evidence. Reserve ECS image/task details for Slide 8 and the working feature for Slide 9.
-4. CloudWatch: show the configured health/capacity alarms, catalogue log group and alarm action linked to SNS. Explain which owner responds.
-5. SNS: show the topic and confirmed subscription. Configuration is shown here before the catalogue demonstration; delivered-alert and scaling observations are revisited on Slide 10.
+**Timed console cues — 1:00 total**
 
-**Preparation:** Capture bootstrap success Events if available. Otherwise state that signal policies are configured without claiming an Event capture. Keep console tabs ready so configuration navigation fits the allocated time.
+| Offset | Show | Say / prove |
+|---|---|---|
+| 0:00–0:15 | CloudFormation → four project stacks/statuses | Network, website/database, monitoring and catalogue are managed together |
+| 0:15–0:30 | Core Outputs and catalogue Parameters/Resources, preselected | One dependency: the image bucket or internal listener comes from core; the digest identifies the image |
+| 0:30–0:45 | CloudWatch → project alarms and catalogue log group | Health, capacity, RDS CPU/storage and errors are observable; name the proposed response owner |
+| 0:45–0:55 | SNS → operations topic and confirmed subscription | Alarm actions reach an operator channel; confirmation does not prove delivery |
+| 0:55–1:00 | Diagram / transition | Automation and tested procedures support the small IT team |
 
-**Speaker notes, about 0:30 alongside the console**
+**Speaker notes, spoken during the cues**
 
-> For your IT team, the aim is consistent provisioning and a clear recovery path. These four stacks connect the website, network, Oracle database, monitoring and catalogue. Startup checks expose bootstrap failures and image digests identify releases. Managed NAT and RDS reduce host administration, while CloudWatch and owned procedures support operations. Show the current release/reversal results here; distinguish configuration changes from changed code and explicit reversal from automatic rollback.
+> Your team needs repeatable operations and a clear response path. These stacks define dependencies and expose outputs; startup signals check provisioning and image digests identify what is running. CloudWatch and SNS support observability, with the IT manager as the proposed operations owner. We use a runbook, small reversible changes and failure tests, then review results to improve procedures. Managed services reduce host administration, while application and security work remains. Current release/reversal and delivered-alert claims still need evidence.
 
-**Design improvements beyond the shown console:** Assign an owner for alerts and deployment, maintain the main guide, test failures, record lessons and use managed services to reduce host administration. Use the eight principle areas in [the rubric checklist](Rubric_and_Assessment_Checklist.md#appendix-a--full-four-pillar-assessment-for-submitted-slides) to build any submitted appendix slides.
+**Principle coverage:** Ownership, observability, operations as code, small reversible changes, procedure refinement, anticipated failure, learning and managed services. Expand the full assessment in submitted appendix slides from [the separate rubric checklist](Rubric_and_Assessment_Checklist.md#appendix-a--full-four-pillar-assessment-for-submitted-slides).
 
-**Value:** Reproducible provisioning and a controlled release/reversal process for the small IT team. Assign [OPERATIONS OWNER] and [ALERT OWNER], review procedures and operational metrics, and include training effort in the rollout. Time or productivity savings remain unmeasured.
+**Demo limit:** Do not deploy stacks, publish an image or run a release during recording. Configured reversibility is not a completed changed-code or automatic-rollback test.
+
+**Transition:** “We will locate the deployed tiers and their network paths.”
 
 ### Slide 6 — Two AZs separate public entry from private tiers
 
-**Speaker / duration:** Member 2, 2:00 including console. **Purpose:** Demonstrate all basic network/compute/routing configuration before the feature.
+**Speaker / duration:** Member 2, 2:10 including console. **Purpose:** Show the functioning basic network, EC2 tiers, load balancing and scaling configuration.
 
 **Copy-ready content**
 
-| Layer | Implemented configuration |
+| Layer | Implemented design |
 |---|---|
-| Network | VPC `10.0.0.0/16`; public/app/DB subnets in two AZs |
-| Entry and routing | Public ALB to private frontend; internal ALB to backend or catalogue |
-| Compute/data | Frontend ASG 2–4; backend ASG fixed at 2; private Oracle RDS Multi-AZ |
-| Outbound support | Two AZ-local NAT gateways; S3/DynamoDB gateway endpoints |
+| Network | One VPC; six public/app/DB subnets in `us-east-1a` and `us-east-1b` |
+| Entry | Public ALB → private Apache frontend → internal ALB |
+| Private routing | `/api/*` → backend; `/catalogue/*` → independent catalogue |
+| Capacity | Frontend ASG 2–4; backend ASG fixed at 2 |
+| Outbound | Two AZ-local NAT gateways; S3/DynamoDB gateway endpoints |
 
-Footer: **Configured baseline: 4 EC2; frontend maximum allows 6 total. Capture actual scale-out/scale-in before claiming it works.**
+Footer: **Four EC2 at baseline; six during recorded scale-out. RDS configuration follows on Slide 8.**
 
-**Console sequence, about 1:35**
+**Visual:** Highlight two AZs and the numbered request path on the prototype diagram. Frontend/backend/tasks share the private-app subnets; do not invent dedicated subnets for each tier.
 
-1. VPC → select project VPC → resource map/subnets: identify both AZs and all six subnets.
-2. Route tables/NAT gateways: show the public IGW route, each private app subnet’s route to its same-AZ available NAT gateway, and gateway endpoint routes. DB subnets have no NAT default route.
-3. EC2: show two frontend and two backend instances with private addresses. RDS: show the private subnet group, Oracle SE2, encrypted storage, Multi-AZ/standby AZ and automated backup settings.
-4. Load balancers/target groups: show public versus internal scheme, frontend/backend healthy counts and the internal `/api/*` and `/catalogue/*` listener rules.
-5. Frontend ASG: show minimum/desired 2, maximum 4, both AZs and the request-count target-tracking policy. Backend ASG remains fixed at 2.
+**Timed console cues — 2:10 total**
 
-**Speaker notes, about 0:25 alongside the console**
+| Offset | Prepared console view | What must be visible |
+|---|---|---|
+| 0:00–0:25 | VPC → resource map/subnets | CIDR `10.0.0.0/16`, six subnet names and both AZs |
+| 0:25–0:55 | Route tables / NAT gateways | Public default route to IGW; app default routes to each same-AZ NAT; two available gateways; endpoint routes; DB table has no Internet default route |
+| 0:55–1:15 | EC2 → filtered project instances | Frontend/backend roles, AZs, running state and private addresses. State the actual count; it can be six after load |
+| 1:15–1:45 | Load balancers / target groups / internal listener | Internet-facing versus internal scheme; healthy frontend/backend targets; priorities 50 `/catalogue/*` and 100 `/api/*` |
+| 1:45–2:05 | Frontend ASG → configuration / automatic scaling | Min 2, max 4, current desired count, both AZs and request-count target 50 |
+| 2:05–2:10 | Diagram / speaker handoff | Relate private tiers and local outbound paths to continuity and controlled access |
 
-> Customer traffic reaches private Apache and application instances through the load balancers. Both tiers span two AZs, and each application subnet uses a local NAT gateway. The database is private Multi-AZ Oracle RDS. These settings support continuity; the current load and failover results must establish their observed behaviour.
+**Speaker notes, spoken during the cues**
 
-**Required continuation:** SG/NACL and S3 configuration is shown on Slide 7. CloudWatch/SNS configuration was shown on Slide 5; Slide 10 returns to their operational behaviour. All basic and additional configuration must be shown before the feature on Slide 9.
+> Customer traffic enters the public load balancer and reaches private Apache instances. Their reverse proxy sends API and catalogue requests through the internal load balancer. The tiers span two AZs, and each private application subnet uses its local NAT. Endpoints serve S3 and DynamoDB; database subnets have no Internet default route. The frontend can grow from two to four, while backend capacity stays at two. Later Activity evidence shows that frontend growth occurred.
+
+**Prepare:** Filter by `Project=INFOSYS735-GP2`, identify route-table subnet associations and select the listener/ASG views. Capture a readable app-subnet → NAT → AZ comparison as fallback.
+
+**Demo limit:** Do not change routes or desired capacity manually. SG/NACL/S3 follows on Slide 7; RDS/catalogue configuration on Slide 8.
 
 ### Slide 7 — Layered protection for the website and its data
 
-**Speaker / duration:** Member 3, 1:20 including console. **Purpose:** Address the CISO's attack and data-protection concerns through production design and demonstrated controls.
+**Speaker / duration:** Member 3, 1:10 including console. **Purpose:** Address attacks and data protection through deployed controls and clear production recommendations.
 
 **Copy-ready content**
 
 > **Security**
 >
-> - Protect the entry point: proposed CloudFront, AWS WAF and Shield Standard with restricted origin access.
-> - Isolate tiers: private compute and source-based rules; no public SSH/RDP or database access.
-> - Protect data: private encrypted storage, controlled image delivery, managed secrets and a SELECT-only SQL user; complete production transport protection.
-> - Control and trace access: separate least-privilege roles, audited administration and security controls as code.
-> - Prepare for attacks: owned alerts, investigation procedures and incident-response exercises.
+> - Isolate private tiers with source-based rules and controlled administration.
+> - Protect data with encrypted storage, private images, managed credentials and SELECT-only SQL access.
+> - Define controls as code and retain operational evidence.
+> - Complete production edge/TLS protection, scoped identities, audit and incident exercises.
 
-Evidence footer: **[CURRENT RUN/DATE]: signed/unsigned image and forbidden-network-path results. Shared LabRole, HTTP and private SQL without added transport encryption remain limitations; production edge/audit/TLS controls are proposed. PCI compliance is not established.**
+Evidence footer: **7 Oct 2026: private EC2/RDS, encrypted storage, signed image success and unsigned HTTP 403. HTTP, shared LabRole and private Oracle TCP without added transport encryption remain limits.**
 
-**Visual:** A short allowed-flow diagram: Public ALB → frontend → internal ALB → backend → private RDS, plus internal ALB → catalogue → DynamoDB/S3. Mark frontend → DB as a forbidden path requiring the negative test. Use current-run results for both image denial and the network test; label any unperformed test pending.
+**Visual:** Highlight tier boundaries and the backend-only DB rule. Mark CloudFront/WAF/audit as production proposals. Label frontend → DB “blocked by configured SG; negative-test evidence pending” unless new evidence exists.
 
-**Console sequence, about 0:50**
+**Timed console cues — 1:10 total**
 
-1. Security Groups: show frontend ingress only from public ALB, backend ingress only from internal ALB, and DB TCP 1521 only from backend.
-2. NACLs: show associations and effective rules. Explain that these NACLs are broad and SGs enforce the fine-grained tier boundaries.
-3. S3: show public-access blocking, encryption and deny-insecure-transport. Briefly identify RDS-managed credentials and the separate application secret by metadata; never reveal secret values.
-4. Show the smoke result for signed image access and unsigned HTTP 403. Show frontend-to-DB failed connectivity only if recorded; otherwise label it pending.
-
-**Speaker notes, about 0:30**
-
-> Your previous attacks call for layered protection: edge filtering, restricted origins, private tiers, controlled identities and audited administration. Here, we show security groups and private encrypted storage. The current smoke result should show signed image access and rejected unsigned access; these links are not user authentication. Production TLS, role separation, audit and incident exercises remain required before sensitive customer or payment use.
-
-**Value:** Reduce exposure and give the CISO a defined protection and response plan. Keep staff access through controlled administration rather than routine direct data access. Encryption and private networking alone do not establish compliance.
-
-### Slide 8 — Catalogue service configuration and integration
-
-**Speaker / duration:** Member 3, 1:00 including console. **Purpose:** Show more than one additional component, integration and rationale before the feature demonstration.
-
-**Copy-ready content**
-
-| Component | Role in the prototype | Business / technical rationale |
+| Offset | Show | Explain |
 |---|---|---|
-| CloudFormation | Provision website/service/database dependencies | Consistent configuration for the IT team |
-| RDS Oracle Multi-AZ + Secrets Manager | Persist backend order/customer records; managed credentials | Managed database availability and a SELECT-only application boundary |
-| ECR + ECS/Fargate | Identify and run catalogue image | Independent releases; no worker-node management |
-| DynamoDB | Service-owned synthetic product metadata | Prototype a separate data boundary; validate production access patterns |
-| Private S3 | Product image objects referenced by metadata | Remove image-server capacity dependence; separate storage from compute |
+| 0:00–0:30 | SG inbound rules, preselected | Public ALB → frontend TCP 80; internal ALB → backend TCP 8080; backend SG → DB TCP 1521, no public DB ingress |
+| 0:30–0:42 | NACL associations/rules | Subnet controls exist; these NACLs are broad and SGs enforce fine-grained tier access |
+| 0:42–1:00 | S3 Permissions/Properties/Objects, preloaded | Public-access blocks, encryption, deny-insecure-transport and three image keys; use the saved unsigned HTTP 403 result |
+| 1:00–1:10 | Diagram / production controls | Shared-identity and transport limits; edge protection, audit and incident response are proposed |
 
-**Visual:** CloudFormation provisioning line above ECR digest → Fargate service → DynamoDB + S3 references. Label the ALB listener route that sends catalogue traffic to the tasks.
+**Speaker notes, spoken during the cues**
 
-**Console sequence, about 0:40**
+> Your previous attacks call for layered protection and traceability. Private tiers and source-based security groups restrict access; the database admits only the backend. Storage is encrypted and images are private. Credentials are managed and the SQL user can only read. Controls are in templates, with managed administration. Production still needs scoped identities, TLS, audit, edge filtering and incident exercises. Signed links provide temporary bearer access; they do not authenticate customers or establish PCI compliance.
 
-1. ECR: image tags/digest and immutable tag configuration.
-2. ECS: service desired/running 2, completed rollout and task AZs; show X86_64 task definition with digest-pinned image.
-3. DynamoDB: table partition key `product_id` and records P1001–P1003.
-4. S3: matching image keys; internal ALB: `/catalogue/*` target group/rule. Keep tabs ready.
+**Principle coverage:** Identity, traceability, layered protection, security as code, data protection, reduced direct access and incident preparation span the architecture, this slide and Slide 8. Keep the full assessment in the appendix.
 
-**Speaker notes, about 0:20**
+**Demo limit:** Never reveal secret values, full signed URL query strings or personal subscription addresses. Demonstrate allowed SQL on Slide 9; claim a tested forbidden path only after capturing it.
 
-> This catalogue service answers the CTO's microservices request. Fargate runs it independently, DynamoDB supplies synthetic metadata and S3 stores images. CloudFormation connects the components and ECR identifies the image. Independent releases are the benefit; production data ownership, Oracle synchronisation and datastore suitability still need validation.
+### Slide 8 — Managed Oracle and independent catalogue configuration
 
-**Value:** A separate release boundary for the CTO, scalable image storage and fewer host-management tasks for IT. Explain the trade-off: another service introduces monitoring, data-consistency and operating responsibilities, so start with one catalogue boundary and expand only when justified.
-
-### Slide 9 — Customer browsing through the integrated catalogue
-
-**Speaker / duration:** Member 3, 1:20 including demonstration. **Purpose:** Demonstrate the additional feature after its configuration has been shown.
+**Speaker / duration:** Member 3, 1:40 including console. **Purpose:** Show more than one integrated additional component and its rationale before functional demonstrations.
 
 **Copy-ready content**
 
-- One storefront retrieves catalogue products and images.
-- `/api/*` reads synthetic orders/customer records from real Oracle RDS.
-- `/catalogue/*` serves independent product metadata and signed image access.
-- Show current SQL/catalogue smoke results and healthy targets; identify the run/date.
+| Component | Function / client value |
+|---|---|
+| CloudFormation | Reproducible provisioning and dependency control |
+| RDS Oracle Multi-AZ + Secrets Manager | Persisted retained-app data, managed standby and credentials |
+| ECR + ECS/Fargate | Identifiable catalogue image and independent deployment |
+| DynamoDB | Service-owned prototype catalogue metadata |
+| Private S3 | Images beyond dependence on a fixed-capacity image server |
 
-Footer: **Synthetic catalogue; browser cart counter only; no checkout or Oracle migration.**
+Footer: **Product Catalogue is the selected additional business feature. Managed Oracle strengthens the retained data tier.**
 
-**Demonstration sequence, about 1:00**
+**Visual:** Highlight backend → Oracle and catalogue → DynamoDB/S3. Distinguish ECR provisioning from customer request arrows.
 
-1. Open the public ALB storefront. Show **Legacy system → Your account & orders** with persisted order IDs/statuses and the synthetic customer account; use Refresh account & orders. Then show **Additional feature → Product catalogue**, with the three product cards, images and search.
-2. Open `/api/health`, `/api/db`, `/api/orders` and `/api/account`: identify backend EC2/AZ, SQL accessibility and persisted synthetic orders. The backend queries only the RDS primary endpoint.
-3. Open `/catalogue/products/P1001`: show product metadata from the catalogue path.
-4. Open `/catalogue/ready`: explain DynamoDB and S3 accessibility. `/catalogue/health` is process liveness; readiness alone does not prove data was seeded.
-5. Show a saved smoke PASS and running version. Do not display full presigned query strings in a recording.
+**Timed console cues — 1:40 total**
 
-**Speaker notes, about 0:20**
+| Offset | Show | What to point out |
+|---|---|---|
+| 0:00–0:30 | RDS → `anygroup-gp2-rds-oracle` → details | Oracle SE2, License Included, `db.t3.small`, 20 GiB encrypted gp2, Multi-AZ Yes, different primary/secondary AZs, publicly accessible No, subnet group and one-day backup retention |
+| 0:30–0:40 | Secrets Manager → metadata views | Managed master secret and separate `anygroup-gp2/backend-db` application secret; no embedded passwords |
+| 0:40–0:50 | ECR repository | Immutable `v1` tag/digest; this run has one image, not a code-release/reversal test |
+| 0:50–1:15 | ECS service / tasks / task definition | Desired/running 2, completed rollout, private placement in both AZs, X86_64 and digest-pinned image; serving target health |
+| 1:15–1:35 | DynamoDB → Explore items | `product_id` key, P1001–P1003, `image_key` values matching the S3 objects shown earlier |
+| 1:35–1:40 | Listener/diagram highlight | `/catalogue/*` reaches the independent service; configuration is now complete |
 
-> Customers browse one website while the catalogue supplies metadata and images independently. The retained API reads persisted synthetic orders from Oracle using a SELECT-only user, demonstrating coexistence of both service paths. Show the current smoke result. Products and customers are synthetic, the cart is a browser counter, and checkout/migration are outside this prototype.
+**Speaker notes, spoken during the cues**
 
-**Evidence source:** the current timestamped setup/test/update directories produced by `scripts/lab.sh`. Use actual current URLs and digests; the old baseline/update/reversal directories describe the previous version.
+> Oracle matches the retained database technology. RDS maintains a synchronous standby in another AZ; it cannot serve reads directly, and failover briefly interrupts access. The backend uses a SELECT-only user. Fargate deploys the catalogue independently, with an immutable ECR digest identifying the image. DynamoDB supplies metadata and S3 stores images. This gives the CTO a concrete microservices boundary. Production data ownership, synchronisation, licensing and sizing still need validation.
 
-### Slide 10 — Availability and capacity for launch and promotions
+**Prepare:** Select the important RDS fields and both secret metadata views. The primary AZ can change after another failover; show its actual current value. Use target health as the serving check; container health can be UNKNOWN where no container health check is configured.
 
-**Speaker / duration:** Member 4, 1:30 including console/evidence. **Purpose:** Explain continuity and capacity for the CTO, then demonstrate CloudWatch/SNS/Auto Scaling configuration and actual observations.
+**Demo limit:** No reboot, restore, password retrieval, image build or data edits. Oracle does not use the Aurora console query editor. The optional direct-SQL demonstration follows on Slide 9 after all configuration. [AWS query editor scope](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/query-editor.html).
+
+### Slide 9 — Legacy services and the additional catalogue feature
+
+**Speaker / duration:** Member 3, 1:20 including the working demo. **Purpose:** Show the whole customer-facing prototype after basic/additional configuration.
+
+**Copy-ready content**
+
+- **Legacy system:** account and order records read from Oracle RDS.
+- **Additional feature:** independent product catalogue with images and search.
+- One website integrates both paths through the internal load balancer.
+- Recorded smoke checks passed for SQL, products/images and target health.
+
+Footer: **Synthetic data; browser cart counter only. Real .NET migration, checkout and payments are outside the prototype.**
+
+**Visual:** The actual website, large enough to read both labels. Keep it dominant rather than shrinking it beside a large explanatory table.
+
+**Timed functional demo — 1:20 total**
+
+| Offset | Show / action | Required observation and narration |
+|---|---|---|
+| 0:00–0:20 | ALB storefront → Legacy system; click Refresh account & orders | ORD-1001 Processing, ORD-1002 Ready; Demo Customer Active; API-backed data |
+| 0:20–0:40 | Additional feature → Product catalogue; search `Apples`, then clear | Three products/images; search isolates Fresh Apples; `/catalogue/*` is an independent service |
+| 0:40–0:50 | Prepared `/api/db` and `/catalogue/products/P1001` views | SQL access/seed count and product metadata confirm the two paths; avoid opening every health URL |
+| 0:50–1:10 | Backend Session Manager terminal, optional | Prepared SELECT queries and actual Oracle order/customer rows |
+| 1:10–1:20 | Prepared smoke result / version | Three recorded smoke PASS runs; show the latest user-confirmed labelled page in the recording |
+
+**Speaker notes, spoken during the cues**
+
+> The legacy section reads persisted account and order records from Oracle. The additional feature supplies products and images through the independent catalogue. Search narrows the product list while both paths stay part of one website. The SQL view shows stored records, and smoke results confirm catalogue and image access. Data is synthetic and the cart is a counter; production checkout and application migration need their own implementation and acceptance tests.
+
+**Direct SQL:** Prepare the backend Session Manager view and read-only command in Section 5.3 before recording. If slow or behind schedule, omit this optional 20-second sub-demo and show `/api/orders` and `/api/account` with the already-shown RDS configuration. Do not spend the segment installing clients or finding credentials.
+
+**Demo limit:** No seed edits, checkout claims, public database access, standby queries or displayed signed URL query strings. The labels identify prototype retained/additional services; they do not establish real .NET migration.
+
+### Slide 10 — Tested database recovery and frontend scale-out
+
+**Speaker / duration:** Member 4, 1:30 including console and dated evidence. **Purpose:** Explain Reliability using actual recovery/data preservation and demand-driven instance creation.
 
 **Copy-ready content**
 
 > **Reliability**
 >
-> - Distribute website and catalogue capacity across AZs to reduce single-node dependence.
-> - Use health checks, managed replacement and owned alerts to detect and respond to failures.
-> - Adjust capacity with demand; validate promotional peaks and service quotas before launch.
-> - Agree availability and recovery objectives; test database restore and service recovery.
-> - Use automated, reviewed changes to keep the intended recovery configuration reproducible.
+> - Distribute application capacity across two AZs with local outbound paths.
+> - Recover through managed standby promotion while retaining the endpoint and records.
+> - Add frontend capacity when measured demand exceeds the scaling target.
+> - Automate changes and test recovery/restore against agreed objectives.
 
-Evidence footer: **[CURRENT RUN/DATE]: target health, RDS before/after primary AZ, preserved orders, request failures and scale-out/scale-in result. Use only observed values. Prototype measurements are not a production SLA or capacity forecast.**
+**Evidence strip — 7 Oct 2026**
 
-**Visual:** Highlight AZ distribution, two NAT gateways and the managed Oracle standby. Show a compact dated failover/load evidence strip. Derive any timeline from current JSONL samples and captured AWS events; keep detailed statistics in notes or an evidence appendix.
+| Test | Observed result |
+|---|---|
+| RDS failover | Primary b→a; stable endpoint and preserved orders; 45 failed requests; approximately 61-second sampled interruption |
+| Frontend scale-out | Alarm changed desired 2→4; two successful launches and four healthy targets |
+| HTTP load | 2,400/2,400 HTTP 200 over 479.81 s; approximately 5 requests/s |
 
-**Console/evidence sequence, about 1:00**
+Footer: **One deliberate DB failover and a small HTML-endpoint load. Scale-in, complete EC2 recovery and backup restore are not established by these files.**
 
-1. Show CloudWatch target/capacity/error alarms and catalogue log group. Connect each selected signal to a response in the runbook.
-2. Show SNS confirmed subscription; show a delivered matching message only if preserved. Use the current subscription state; confirmation alone does not prove receipt.
-3. Show the RDS failover trigger, changed primary AZ, stable endpoint and preserved SQL order rows, with actual probe failures/recovery. Show EC2 replacement/restored targets only if also captured.
-4. Show frontend target-tracking policy and its AWS-managed alarm/metric. If no scale-out occurred, state that result and the diagnostic next step; do not claim that generating load proves scaling.
+**Visual:** RDS before/after AZ beside the interruption timeline; ASG Activity beside two→four healthy-target counts. Use readable tables/charts or console views; detailed JSON is preparation material.
 
-**Speaker notes, about 0:30**
+**Timed evidence demo — 1:30 total**
 
-> For launch and promotions, this design combines distributed application capacity, local NAT paths and managed Oracle standby replication. The console shows the recovery/scaling settings and owned alarms. Present the current failover and load results here: whether the primary AZ changed, SQL rows survived and instances actually scaled. Report any interruption. Production also requires restore testing and capacity tests based on real customer behaviour.
+| Offset | Show | Explain / prove |
+|---|---|---|
+| 0:00–0:30 | RDS Events plus before/after AZ and summary | Primary switched, endpoint remained, harness verified preserved orders. Requests failed temporarily; no zero-downtime claim |
+| 0:30–1:00 | ASG Activity and captured capacity/target views | Target-tracking alarm at 04:49:29 UTC changed desired 2→4; two launches succeeded; four targets healthy; not a manual desired change |
+| 1:00–1:15 | Saved `load.json` / CloudWatch scaling view | 2,400 HTTP 200 over eight minutes; HTML requests only, not the full browser workload or production capacity |
+| 1:15–1:25 | Recorded 5xx alarm and SNS action | Failover errors caused a metric-driven alarm; subscription confirmed, delivered email not saved |
+| 1:25–1:30 | Acceptance / Finance transition | Agree production recovery/capacity objectives and test scale-in, restore and full recovery |
 
-**If later evidence is captured:** Replace the pending line with specific observations: trigger time/instance, failed sample count, replacement Activity, restored two-target timestamp, peak ASG count and later scale-in count, matching alarm/email timestamp. Keep the original run labelled if comparing results.
+**Speaker notes, spoken during the cues**
 
-**Production acceptance:** Validate actual RDS failover and backup restore, outbound resilience, capacity, task/backend demand scaling and agreed recovery objectives. Two NAT gateways and Multi-AZ RDS improve the configured design but do not establish full-platform or whole-AZ recovery.
+> RDS promoted its standby in the other AZ, kept its endpoint and preserved orders. The probe observed about a minute of interruption and 45 failures, followed by successful SQL requests. Under load, target tracking grew frontend capacity from two to four; both new instances became healthy and all 2,400 HTML requests succeeded. These support continuity and demand-based capacity. Production requires agreed recovery objectives, realistic peak tests, backup restore and complete application recovery validation.
 
-**Value:** Protect customer access during failures and promotions through an explicit continuity plan and measurable acceptance criteria. The case's 500,000 visits/day does not equal 500,000 HTTP requests/day: size for requests per visit, images, peak concentration and data-access patterns.
+**Interpretation:** Approximately 61 seconds is first failed response → first successful response, not the whole reboot duration, guaranteed RTO or SLA. The test confirmed completion about 183 seconds after its trigger. AWS documents temporary failover interruption and reconnection. [AWS failover behaviour](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.Failover.html).
+
+**Frontend boundary:** Its separate probe had 283/292 successes, seven 502s and two connection errors. No post-test replacement/restored-capacity capture means complete EC2 recovery is unverified. Keep that result in notes or an evidence appendix; do not describe it as uninterrupted availability.
+
+**Demo limit:** Do not run load, reboot RDS, terminate EC2 or wait for scale-in in the recording. Explain the completed experiment and show current configuration where available.
 
 ### Slide 11 — Control production expenditure as demand changes
 
-**Speaker / duration:** Member 4, 1:10 including the production cost comparison or method. **Purpose:** Address the CFO's OPEX/CAPEX and uncertain-demand concerns through a defensible production expenditure model.
+**Speaker / duration:** Member 4, 1:00 including the production cost comparison or method. **Purpose:** Address the CFO's OPEX/CAPEX and uncertain-demand concerns through a defensible production expenditure model.
 
 **Copy-ready content**
 
@@ -379,15 +422,15 @@ Footer: **Compare normal and promotional demand with co-location at equivalent a
 
 **Visual:** A readable production comparison: Co-location / Cloud normal demand / Cloud promotional demand. Show dated estimates only after inputs are populated. Otherwise show the cost categories and decision method, labelled “estimate pending”. Keep the full assumptions table in notes or a submitted appendix. Avoid making the Learners Lab balance or teardown the main visual.
 
-**Presentation sequence, about 0:25**
+**Presentation sequence, about 0:20 within the 1:00 allocation**
 
 1. Show the production scenarios or comparison method, with the proposed region, demand assumptions and price-source date.
 2. Explain what varies with demand and what remains a baseline cost. Link scaling, service ownership and tagging to CFO visibility.
 3. State the financial decision criterion: meeting customer service/security requirements at a justified total cost. Use prototype configuration as supporting evidence; production budgets and billing controls remain proposals unless actually configured and captured.
 
-**Speaker notes, about 0:45**
+**Speaker notes, spoken while showing the comparison**
 
-> You need to support normal demand and promotions without purchasing permanent capacity for every peak. We propose demand-based scaling, a production cost owner and regular reviews of cost per successful catalogue request. Managed services can reduce routine infrastructure work, but we include maintenance, migration and training in the comparison. Finance should compare normal and peak cloud scenarios with co-location at the same availability and security level. Our prototype supports the service integration; attributable spending and production savings have not yet been established.
+> The recorded scale-out shows frontend capacity following demand. Finance should compare normal and promotional cloud scenarios with co-location at the same availability and security level. Include fixed costs such as resilient networking and Oracle, variable usage, operational effort, migration and training. Assign cost ownership, budgets, attribution and reviews of cost per successful catalogue request. Scale-in, attributable spending and production savings are not established by this test.
 
 **Production cost model for presenter notes or a submitted appendix**
 
@@ -406,13 +449,13 @@ Footer: **Compare normal and promotional demand with co-location at equivalent a
 
 **Trade-offs to explain:** Keep the availability/security baseline even when it costs more than a single-node setup. Evaluate image caching and storage lifecycle rules against real access and retention needs; neither automatically lowers total cost. Consider usage commitments only after stable demand is measured. Budget alerts notify owners; they do not automatically cap charges or guarantee sufficient capacity. OPEX changes the spending model but does not by itself prove lower total cost.
 
-**Supporting prototype evidence:** Configured frontend scaling, on-demand DynamoDB, gateway endpoint routing, managed catalogue services and resource inventory illustrate parts of the approach. Demand-driven scale-out and cost efficiency are not yet demonstrated. A successful current-run teardown check demonstrates control of temporary experiment resources; production customer-serving resources remain available. The Academy balance is not a production cost model. `data/cost_model_inputs.json` is a prototype-cost input record, not a completed production forecast.
+**Supporting prototype evidence:** Configured frontend scaling, on-demand DynamoDB, gateway endpoint routing, managed catalogue services and resource inventory illustrate parts of the approach. Demand-driven scale-out is demonstrated; scale-in and cost efficiency remain unverified. Capture a current-run teardown check to demonstrate control of temporary experiment resources; production customer-serving resources remain available. The Academy balance is not a production cost model. `data/cost_model_inputs.json` is a prototype-cost input record, not a completed production forecast.
 
 **Source for presenter notes:** [AWS Cost Optimisation design principles](https://docs.aws.amazon.com/wellarchitected/latest/framework/cost-dp.html). The five bullets above address all five principle areas; use the separate rubric checklist for the full assessment.
 
 ### Slide 12 — Approve the cloud direction and staged rollout
 
-**Speaker / duration:** Member 4, 0:45. **Purpose:** End with a client decision, acceptance criteria and a credible path to production.
+**Speaker / duration:** Member 4, 0:40. **Purpose:** End with a client decision, acceptance criteria and a credible path to production.
 
 **Copy-ready content**
 
@@ -429,7 +472,7 @@ Footer: **Compare normal and promotional demand with co-location at equivalent a
 
 **Speaker notes**
 
-> We recommend AWS as the direction for your New Zealand website, with an independent catalogue introduced through a staged rollout. The prototype demonstrates website and catalogue integration, repeatable configuration and selected access controls. We ask you to endorse that direction and agree owners and a budget for production design and validation. Before customer launch, we will need agreed service objectives, capacity and recovery evidence, production security and data migration plans, and a cost comparison acceptable to Finance. Wider service extraction follows only when the business benefit justifies it.
+> We recommend the AWS website direction with a staged independent-catalogue rollout. The prototype demonstrates integration, real Oracle data, tested database recovery and demand-driven frontend growth. We ask you to endorse the next stage and agree owners and an investment envelope. Before customer launch, complete sizing, security and compliance, migration, restore testing and Finance’s cost comparison. Expand service extraction when the business benefit justifies it.
 
 **Closing rule:** Ask stakeholders to endorse the whole website direction and the next funded rollout stage. Make production launch conditional on acceptance criteria; the prototype has not established production readiness.
 
@@ -479,7 +522,7 @@ flowchart TD
     Browser -->|HTTPS signed image request| S3
 ```
 
-The signed URL response travels back through the normal ALB/frontend request path; the dotted line represents a logical response, not direct Internet exposure of a task. Add actual AZ/subnet boundaries in the finished slide graphic. CloudFront and WAF remain production recommendations. RDS Oracle and synchronous standby replication are configured by the current templates; actual failover behaviour must be captured in the new run.
+The signed URL response travels back through the normal ALB/frontend request path; the dotted line represents a logical response, not direct Internet exposure of a task. Add actual AZ/subnet boundaries in the finished slide graphic. CloudFront and WAF remain production recommendations. RDS Oracle and synchronous standby replication are configured by the current templates; the 7 October run demonstrated a primary-AZ switch with preserved data and measured interruption.
 
 ### 3.3 Connect the diagram to the console demonstration
 
@@ -490,66 +533,132 @@ Use brief highlights of the same architecture before showing each relevant conso
 | 5 — Operational Excellence | Provisioning, monitoring and release controls | CloudFormation dependencies, CloudWatch actions and SNS ownership |
 | 6 — Basic infrastructure | AZ/subnet boundaries and the main request path | VPC routes, NAT, EC2 tiers, ALBs and ASG configuration |
 | 7 — Security | Entry point, tier access boundaries and image storage | SGs, NACLs and S3 controls; production edge/identity/TLS remain labelled proposals |
-| 8 — Additional services | Catalogue route → Fargate → metadata/images | ECS/ECR, DynamoDB, S3 references and listener integration |
-| 9 — Feature | Customer → website → catalogue → image delivery | Trace one browsing request through the implemented components |
-| 10 — Reliability | Two AZs, health checks and demand-based capacity | Target health, metrics, replacement/scaling observations and unresolved validation |
+| 8 — Additional services | Backend → Oracle and catalogue → metadata/images | RDS/secret metadata, ECS/ECR, DynamoDB and listener integration |
+| 9 — Feature | Customer → legacy/Oracle and catalogue/image branches | Account/orders and catalogue/search; optional read-only SQL proof |
+| 10 — Reliability | Oracle primary/standby and frontend scaling | Primary-AZ switch, interruption/data preservation, alarm-driven 2→4 growth and healthy targets |
 | 11 — Cost Optimisation | Baseline capacity, elastic capacity and managed services | Explain fixed/variable production costs and accountable ownership; separate cost assumptions from observed usage |
 
-## 4. Evidence the group can use now
+## 4. Evidence to use in slides and narration
 
-The following observations are historical: the supplied 6 October 2026 run used one NAT instance and dummy DB nodes. They must not be presented as current NAT/RDS verification. Capture a fresh setup/test/failover/load run and replace the main-slide evidence placeholders with its actual results. Preserve older and unsuccessful outcomes under `evidence/`; current commands are in the main IaC guide, Section 4.
+The managed-service implementation has been tested in Learners Lab. The user confirmed current functionality on **8 October 2026 (New Zealand date)**. That confirmation supports the latest code; quantitative claims below come from the **7 October files in `evidence_new/`**. Label results with their recorded date. Saved JSON times are UTC.
 
-| Observation | Supported wording | Source | Boundary |
+| Pitch claim | Recorded support | File under `evidence_new/` | Boundary / slide |
 |---|---|---|---|
-| Functional baseline | Three seeded products/images and legacy paths pass smoke | baseline/smoke.json | Synthetic pilot, dummy DBs |
-| Healthy redundancy | Two healthy frontend, backend and catalogue targets; tasks/ASG members in two AZs | baseline/configuration target/task/autoscaling JSON | Snapshot, not an outage test |
-| Catalogue update/reversal | v1 → v2 → v1 smoke PASS; ECS update replaces tasks | update-v2 and reversal-v1 smoke; ECS service snapshot | Same image digest: configuration release, not changed-code proof |
-| Image access | Signed image GET succeeds; unsigned GET returns 403 | smoke.json | Bearer access, not user authentication |
-| SNS configuration | Email subscription confirmed at update | update-v2/configuration/sns_subscriptions.json | No preserved delivered alert |
-| Functional probe | 273/280 successes; two 502 and five connection/timeout errors | frontend-failure/requests.jsonl and summary | No saved post-failure replacement/capacity proof |
-| Load | 1,200 HTTP 200; 239.81 seconds; 5 requests/s; p95 7.92 ms | scaling/load.json | Scale-out not observed/reliably demonstrated |
-| Cleanup | All matching project resource counts zero; no collection errors | after-teardown/summary.json | Defined tags/names/prefixes; not an account-wide billing result |
+| Website/catalogue integration works | Three smoke PASS runs: SQL orders/customer, products/images and unsigned HTTP 403 | `20261007T042706Z/smoke.json`, `20261007T043249Z/smoke.json`, `20261007T044215Z/smoke.json` | Latest UI is user-confirmed; show it in recording — Slide 9 |
+| Network/tier/data controls deployed | Four private EC2 baseline; two local NATs; private encrypted Multi-AZ Oracle; six SGs; S3 controls | Baseline `configuration/` captures | Configuration does not prove every denied path or compliance — Slides 6–8 |
+| Database recovered after failover | Primary b→a, endpoint stable, orders preserved; 98/143 successes and 45 failures | `rds-failover-20261007T043910Z/` | About 61 s sampled interruption; about 183 s trigger-to-test-confirmation; no whole-AZ/SLA claim — Slide 10 |
+| Frontend scaling created capacity | Alarm-driven 2→4; two successful launches; four healthy targets | `scaling-20261007T044349Z/configuration/frontend_activity.json`, `autoscaling.json`, `frontend_targets.json` | No later scale-in capture — Slide 10 |
+| Load completed successfully | 2,400/2,400 HTTP 200, 479.81 s, 5 requests/s, p95 9.6 ms | `scaling-20261007T044349Z/load.json` | Small HTML workload, not production capacity — Slide 10 |
+| Operations detected DB errors | 5xx alarm activated after failover; subscription confirmed; later alarm OK | Post-failover/scaling `configuration/alarms.json`; `sns_subscriptions.json` | Delivered email absent — Slides 5/10 |
+| Automated backup exists | Backup start/completion Events, retention and LatestRestorableTime | Baseline `configuration/rds.json`, `rds_events.json` | Restore not tested — Slide 8 |
+| Frontend probe observed interruption | 283/292 successes; seven 502s, two connection errors; final success | `frontend-recovery/requests.jsonl`, `requests.summary.json` | No replacement/restored-capacity proof — notes/appendix |
 
-**Preparation still needed:** current NAT/RDS/SQL/security baseline and real DB failover/restore evidence; distinct-code image release if claimed; manual failure trigger and replacement/restored-target evidence; successful demand-driven scale-out/scale-in or an accurate unresolved diagnosis; delivered SNS alert; frontend-to-DB denied connection; owners and incident review; a dated production cost scenario comparison with explicit assumptions; final console recording and graphical slides. Prototype cost/budget captures support temporary-resource management but do not replace the production comparison.
+General code confirmation does not prove scale-in, complete EC2 recovery, email delivery, restore, changed-code release/reversal, the forbidden frontend-to-DB path, teardown/orphan cleanup, production capacity or savings. Treat these as acceptance work, or add specific evidence before changing the wording. The initial catalogue alarm was caused by missing startup datapoints and cleared later; do not call it an established catalogue outage.
 
-Do not hide these gaps in footnotes while claiming they passed in the narration. Use the main guide to capture them before the final recording. If unresolved, describe the design, actual outcome and next validation step explicitly.
+The older `evidence/` and `data/lab_evidence_review.json` describe the NAT-instance/dummy-DB version. Do not mix its same-digest release/reversal or cleanup claims into this run. Raw evidence is excluded from the deployment ZIP; prepare evidence views separately for the recording.
 
-## 5. Console recording and slide-building instructions
+## 5. Demo preparation and recording guide
 
-### Before recording
+### 5.1 Before recording
 
-1. Fill member names and assign one console operator per segment; rehearse speaker handoffs.
-2. Use `./scripts/lab.sh setup your-email@example.com` and the main IaC guide to deploy/test the current managed-service architecture. Use `./scripts/lab.sh failover` and `./scripts/lab.sh load` for separate experiments. Earlier screenshots/JSON are historical, not current resources.
-3. Complete long recovery, scaling and cleanup experiments beforehand. Save dated evidence and clear screenshots. Do not wait for replacement or deploy stacks while the 15-minute recording runs.
-4. Open console tabs in presentation order: CloudFormation; CloudWatch/SNS configuration; VPC/subnets/routes; EC2/ASGs; RDS/subnet group/backup and secret metadata; ALBs/target groups; SGs/NACLs; S3; ECR; ECS; DynamoDB; storefront/API; CloudWatch/SNS/ASG behaviour. Keep the production cost slide ready after the operational evidence.
-5. Place each screenshot/graph beside the claim it proves and label run/date. Show genuine saved evidence if a live navigation issue occurs; explain that it is captured evidence.
-6. Confirm URLs and local files are accessible. Avoid displaying AWS credentials, complete signed URL query strings or personal subscription addresses.
-7. Run a timed rehearsal including switching applications and loading console pages. Cut repeated narration first. Keep architecture diagrams and required component configuration visible and readable.
+1. Assign named speakers/operators. Handoffs occur after Slides 3, 6 and 9. Narration continues while the operator selects the preloaded next view.
+2. Use the main guide and `./scripts/lab.sh setup your-email@example.com` to deploy the latest code. Confirm the Legacy system and Additional feature labels, data, images and search; capture the latest page with a date.
+3. Complete experiments before recording: load is about eight minutes, standard probe about five, failover tool allows up to ten. Keep experiments separate. Use existing verified results if repetition is unnecessary.
+4. Run `./scripts/lab.sh test` on the deployment being filmed. Resolve failures before recording. For scale-in/EC2 recovery claims, collect later Activity and restored-capacity/target-health evidence.
+5. Preload the views below in `us-east-1`; filter project resources and select the relevant fields. Keep website/API tabs ready. Prepare the optional backend Session Manager query before recording.
+6. Prepare dated RDS before/after/interruption, ASG alarm cause/launches/healthy targets, load and smoke result views. Use readable excerpts, not a long JSON scroll.
+7. Prepare a dated screenshot fallback for each required console view. Clearly identify captured evidence if used instead of live navigation.
+8. Rehearse the entire flow with a stopwatch, console pages and handoffs. Keep configuration and diagrams readable at playback size. Reach the timing gates in Section 1.
 
-Before rehearsing, prepare the final Task 1 solution diagram and the actual prototype diagram. Check that their labels and routing match the proposal and implementation, that the catalogue is visibly integrated, and that a viewer can read the diagram at the recording's playback size. Rehearse pointing to components while explaining their role and four-pillar rationale; simply displaying an unexplained diagram does not communicate the design.
+### 5.2 Console click sheet and proof to show
 
-### Slide layout guidance
+This is preparation, not extra recording time. Follow each slide's timed cues. Console labels can vary; locate the underlying settings before rehearsal.
 
-Use 16:9 slides, one main point per title and a consistent service/colour legend. Use readable body text and limit on-slide prose to the copy-ready content. Speaker notes contain the explanation, caveats and transitions. Large architecture diagrams can use incremental highlighting; do not force a full diagram plus a long table onto one slide. Use native/editable text and tables where possible so the group can revise details.
+| Slide | Console / view to preload | Required visible proof |
+|---|---|---|
+| 5 | CloudFormation → project stacks | Four successful statuses, core Outputs, catalogue dependency/image parameters |
+| 5 | CloudWatch Alarms/Log groups; SNS operations topic | Health/capacity/error/RDS alarms, catalogue logs, actions and confirmed subscription |
+| 6 | VPCs / Subnets / Route tables / NAT gateways | CIDR, six subnets/AZs, IGW, same-AZ NAT associations/state, endpoints, isolated DB routes |
+| 6 | EC2 Instances / Load balancers / Target groups / internal listener Rules | Tier/AZ/private IP, public/internal schemes, healthy counts and path priorities |
+| 6 | Frontend ASG | Min 2/max 4, actual desired/AZs, request-count policy/target 50; backend remains 2 |
+| 7 | Security Groups / Network ACLs | Tier sources/ports, backend-only DB access, NACL rules/associations |
+| 7 | S3 image bucket Permissions/Properties/Objects | Public blocking, encryption, secure-transport policy, three image keys |
+| 8 | RDS database details | Available, engine/class/licence, Multi-AZ and primary/secondary AZs, private/encrypted, subnet group, retention/restore point |
+| 8 | Secrets Manager metadata | Master/app credential roles; no Retrieve secret value action |
+| 8 | ECR / ECS service/tasks/task definition | Immutable tag/digest, two tasks in two AZs, private placement, completed rollout, X86_64 pinned image |
+| 8 | DynamoDB → table → Explore items | `product_id`, P1001–P1003 and S3 `image_key` references |
+| 9 | Latest website and prepared API views | Legacy account/orders refresh; catalogue images/search; SQL and product response values |
+| 9 | Backend EC2 → Connect → Session Manager, optional | Actual SELECT queries and Oracle rows through the existing app user |
+| 10 | RDS Events plus saved failover views; ASG Activity plus saved scaling/load views | AZ switch/data preservation/interruption, alarm-driven launches, four healthy targets, 2,400 successes |
+| 11 | Production cost slide / assumptions | Normal/promotion/co-location method, fixed/variable costs and ownership; no invented amounts |
 
-Show four dedicated pillar headings, with the **client need → design alignment or improvement → technical rationale → configuration/observed evidence → business value and material limitation** chain visible across their slides. Explain the whole website solution, with the catalogue highlighted as its additional feature. The Cost Optimisation slide addresses production workload economics; lab cleanup is supporting material.
+Show the specific field, explain why it matters and move on. RDS configuration precedes its recorded recovery behaviour; catalogue configuration precedes live functionality.
 
-Prepare readable submitted appendix slides from the full principle assessment in the separate rubric checklist, including the verified original-design comparison. Apply the production decisions in this guide, especially Slide 11's five Cost Optimisation areas, when expanding that assessment; retain prototype observations as implementation evidence. Keep the main pitch about stakeholder decisions and the proposed solution. Four labels alone are not substantive coverage. Place case-study and AWS principle references in the relevant presenter notes and include a references appendix.
+### 5.3 Optional Oracle row demonstration through the console
 
-### Recording requirements to preserve
+Oracle does not use the Aurora Data API query editor. Use an existing **backend** EC2 instance's Session Manager terminal; it can reach the private database and already has the Python driver/application connection. [Query editor scope](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/query-editor.html), [Session Manager instructions](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-sessions-start.html).
 
-- Finish within 15 minutes, including console navigation and speaker handoffs; every member presents a meaningful portion.
-- Show and narrate the whole solution architecture prominently on Slide 3, using the final Task 1 architecture slide. Trace the integrated additional feature and explain four-pillar alignment, areas for improvement and design updates on the diagram. Show the actual prototype architecture on Slide 4 and connect later demonstrations to it.
-- Demonstrate functioning infrastructure through the AWS Management Console. Show basic and additional configuration first, then demonstrate the catalogue service and its website integration.
-- Explain why each selected service fits the workload and how it contributes to stakeholder outcomes. Keep recommendations, implementation and measured results distinguishable.
-- Close with a clear value proposition and a stakeholder decision about rollout, responsibilities and investment.
+Before recording, open **EC2 → Instances → backend → Connect → Session Manager → Connect**. Prepare this read-only command. During Slide 9, show its SELECT statements and rows within the optional 20 seconds; credentials stay on the backend and are not printed.
 
-### What must be submitted
+```bash
+sudo -i
+set -a
+source /etc/anygroup-backend.env
+set +a
+
+/opt/anygroup-backend-venv/bin/python - <<'PY'
+import sys
+sys.path.insert(0, "/opt")
+from anygroup_backend import OWNER, connect
+
+with connect() as db:
+    with db.cursor() as cursor:
+        for table in ("demo_orders", "demo_customers"):
+            cursor.execute(f"SELECT * FROM {OWNER}.{table}")
+            print("Table:", table)
+            print([column[0] for column in cursor.description])
+            for row in cursor:
+                print(row)
+PY
+```
+
+Expect ORD-1001/ORD-1002 with Processing/Ready, and CUST-1001 / Demo Customer / Active. Do not seed/update, install clients, open network access or display passwords to make the demo work. If the terminal is slow/unavailable, use `/api/orders` and `/api/account` with the already-shown RDS configuration.
+
+### 5.4 Evidence display and fallback
+
+Select RDS Events and ASG Activity for the **recorded test date/time**. A later primary-AZ change or scale-in does not undo the dated result: show current values as current and captured values as recorded. If old Events/Activity have aged out, use labelled saved views rather than restarting the long experiment.
+
+| Problem | Prepared response | Time control |
+|---|---|---|
+| Slow console view | Dated screenshot of the same configuration | Switch after ten seconds |
+| Slow SQL terminal | SQL-backed orders/account API views | Omit optional 20-second SQL segment |
+| ASG now at baseline | Show current baseline plus captured 2→4 Activity/targets | Do not manually raise desired capacity |
+| Website/API unavailable | Identify the issue and use dated evidence; correct it before the final take | Do not claim live success while showing an error |
+| Running behind | Cut repeated metadata, optional SQL and detailed latency statistics | Preserve architecture, required configuration, feature and four pillars |
+
+### 5.5 Slide building and final rehearsal
+
+Use 16:9 slides, readable editable text/tables/diagrams and consistent retained/catalogue/proposed colours. Keep architecture large, with incremental highlighting. Do not put this click sheet or entire speaker notes on slides.
+
+Build submitted principle-assessment appendices from [Rubric_and_Assessment_Checklist.md](Rubric_and_Assessment_Checklist.md), with a references slide and dated detailed evidence where useful. The main pitch still explains architecture, integration, four pillars and design updates. Cost assumptions go in notes/an appendix. Appendices are submitted but **not narrated as extra segments** in the 14-minute recording.
+
+- [ ] Actual names and meaningful speaking portions for every member.
+- [ ] Slide 3: updated Task 1 architecture, whole request path, integrated catalogue and four-pillar callouts for two minutes.
+- [ ] Slide 4: actual NAT/RDS prototype; edge/TLS/audit proposals distinguished.
+- [ ] Slides 5–8: basic/additional configuration before data/feature demonstration.
+- [ ] Slide 9: latest legacy data and catalogue labels, refresh, images and search work.
+- [ ] Slide 10: real RDS/scale-out results including interruption; no live reboot/load waiting.
+- [ ] Slide 11: production normal/peak/co-location method and all five cost principle areas; no savings claim.
+- [ ] No unsupported scale-in, EC2 recovery, restore, delivered email, code rollback, PCI, capacity or zero-downtime claim.
+- [ ] Readable console; no secrets, signed query strings or personal addresses; dated fallbacks.
+- [ ] Full rehearsal reaches 9:30 / 10:50 / 12:20 / 14:00; final recording under 15:00 including handoffs.
+
+## 6. What must be submitted
 
 | Requirement | What to submit | Key check |
 |---|---|---|
-| Presentation slides | Slideshow or PDF | Whole solution architecture, integrated additional feature, four-pillar alignment and design improvements; include the assessment appendix |
-| Presentation recording link | Text file containing an accessible recording URL | Within 15 minutes; every member speaks; AWS Console configuration is shown before the feature demonstration |
-| TeamMates assessment | Each member completes the separate TeamMates assessment | Provide feedback on all other group members; omission incurs the brief's 10% penalty |
+| Presentation slides | Slideshow or PDF | Final diagram, integrated feature, four pillars/design updates, readable assessment/references appendices |
+| Recording link | Text file with an accessible recording URL | Within 15 minutes, every member speaks, AWS Console configuration precedes the feature; test access |
+| TeamMates | Each member completes the separate assessment | Feedback on all other members; omission incurs the stated 10% penalty |
 
-Use [Rubric_and_Assessment_Checklist.md](Rubric_and_Assessment_Checklist.md) for the detailed checks before submission.
+Use [the separate rubric checklist](Rubric_and_Assessment_Checklist.md) for full assessment and [the main IaC guide](IaC_Deployment_and_Usage_Instructions.md) for deployment, experiments and evidence download.
