@@ -66,12 +66,12 @@ Target **14:00**, with **1:00 left inside the 15-minute limit**. Each allocation
 | 7 | How we protect access and data | 1:10 | 6:40–7:50 | Member 3 |
 | 8 | Database and catalogue setup | 1:40 | 7:50–9:30 | Member 3 |
 | 9 | Working orders, account and catalogue | 1:20 | 9:30–10:50 | Member 3 |
-| 10 | Recovery and scaling test results | 1:30 | 10:50–12:20 | Member 4 |
+| 10 | Recovery and scaling test results | 1:30 | 10:50–12:20 | Member 3 |
 | 11 | Planning production costs | 1:00 | 12:20–13:20 | Member 4 |
 | 12 | Our recommended next step | 0:40 | 13:20–14:00 | Member 4 |
 | **Total** | **Speech, diagrams, demo and handoffs** | **14:00** | **0:00–14:00** | **All four** |
 
-Member 1: 3:00; Member 2: 3:40; Member 3: 4:10; Member 4: 3:10. Architecture gets **2:30** across Slides 3–4. Console configuration, website demonstration and test evidence get **8:50** across Slides 5–10. Keep the console visible for most of this block.
+Member 1: 3:00 (Slides 1–3); Member 2: 3:40 (Slides 4–6); Member 3: 5:40 (Slides 7–10); Member 4: 1:40 (Slides 11–12). Architecture gets **2:30** across Slides 3–4. Console configuration, website demonstration and test evidence get **8:50** across Slides 5–10. Keep the console visible for most of this block.
 
 ### Speaking in clear English
 
@@ -409,7 +409,7 @@ Footer: **Test data. Cart is a browser counter; checkout and payments are outsid
 | 0:20–0:40 | Catalogue; search `Apples`, then clear | Three products/images; search shows Fresh Apples |
 | 0:40–0:50 | Prepared `/api/db` and `/catalogue/products/P1001` | Database/seed response and product response show both paths |
 | 0:50–1:10 | Prepared backend Session Manager query, optional | SELECT statements and actual Oracle order/customer rows |
-| 1:10–1:20 | Prepared smoke result / handoff | 8 October post-rotation PASS; current catalogue v2 |
+| 1:10–1:20 | Prepared smoke result / transition | 8 October post-rotation PASS; current catalogue v2 |
 
 **Speaker notes — one paragraph per cue**
 
@@ -421,7 +421,7 @@ Footer: **Test data. Cart is a browser counter; checkout and payments are outsid
 >
 > Here are the stored Oracle rows. They are test data. Checkout is outside this prototype.
 >
-> Our checks passed. Member 4 will explain recovery and scaling.
+> Our checks passed. I will now explain recovery and scaling.
 
 **Optional SQL:** Prepare the read-only command in Section 5.3. If the terminal is slow or time is short, omit that 20-second cue and its paragraph. Keep the working orders/account responses and the RDS view already shown. The slide then takes up to 1:00 and creates spare time; do not add a new demonstration.
 
@@ -429,7 +429,7 @@ Footer: **Test data. Cart is a browser counter; checkout and payments are outsid
 
 ### Slide 10 — Recovery and scaling test results
 
-**Speaker / duration:** Member 4, 1:30 including console and dated evidence. **Purpose:** Explain Reliability with observed results and limits.
+**Speaker / duration:** Member 3, 1:30 including console and dated evidence. **Purpose:** Explain Reliability with observed results and limits.
 
 **Copy-ready content**
 
@@ -453,7 +453,7 @@ Footer: **Prototype results. Production peak capacity, scale-in and backup resto
 | 0:30–1:00 | ASG Activity, saved capacity and target health | Alarm at 04:49:29 UTC changed desired 2 to 4; two successful launches; four healthy frontend targets |
 | 1:00–1:15 | Saved `load.json` / scaling view | 2,400 HTTP 200 over about eight minutes; HTML only |
 | 1:15–1:25 | Saved 5xx alarm / SNS action | Alarm detected failover errors; email delivery not captured |
-| 1:25–1:30 | Next-stage checks / transition | Move to production costs |
+| 1:25–1:30 | Handoff | Member 4 takes production costs |
 
 **Speaker notes — one paragraph per cue**
 
@@ -465,7 +465,7 @@ Footer: **Prototype results. Production peak capacity, scale-in and backup resto
 >
 > Monitoring detected the database errors. Backup restore and full recovery still need testing.
 >
-> Next, production costs.
+> Member 4 will explain production costs.
 
 **Preparation:** Reliability choices include two AZs, local outbound paths, health checks, automatic capacity, managed database standby and changes controlled through templates. Agree recovery targets, run realistic promotion tests, and test scale-in, restore and complete application recovery before launch. Put the full principle assessment in the appendix.
 
@@ -634,7 +634,7 @@ The older `evidence/` and `data/lab_evidence_review.json` describe the NAT-insta
 
 ### 5.1 Before recording
 
-1. Assign named speakers/operators. Handoffs occur after Slides 3, 6 and 9. Narration continues while the operator selects the preloaded next view.
+1. Assign named speakers/operators. Handoffs occur after Slides 3, 6 and 10. Narration continues while the operator selects the preloaded next view.
 2. Use the main guide and `./scripts/lab.sh setup your-email@example.com` to deploy the latest code. Confirm the Legacy system and Additional feature labels, data, images and search; capture the latest page with a date.
 3. Complete experiments before recording: load is about eight minutes, standard probe about five, failover tool allows up to ten. Keep experiments separate. Use existing verified results if repetition is unnecessary.
 4. Run `./scripts/lab.sh test` on the deployment being filmed. Resolve failures before recording. For scale-in/EC2 recovery claims, collect later Activity and restored-capacity/target-health evidence.
@@ -772,10 +772,10 @@ These counts cover **only the quoted speaker scripts**, including handoffs and o
 | 7 | 75 | 0:50 | 1:10 | 0:20 |
 | 8 | 84 | 0:56 | 1:40 | 0:44 |
 | 9 | 73 | 0:49 | 1:20 | 0:31 |
-| 10 | 83 | 0:56 | 1:30 | 0:34 |
+| 10 | 86 | 0:58 | 1:30 | 0:32 |
 | 11 | 65 | 0:44 | 1:00 | 0:16 |
 | 12 | 46 | 0:31 | 0:40 | 0:09 |
-| **Total** | **839** | **9:24** | **14:00** | **4:36** |
+| **Total** | **842** | **9:26** | **14:00** | **4:34** |
 
 Use two rehearsals:
 

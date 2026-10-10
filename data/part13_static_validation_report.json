@@ -22,7 +22,7 @@
   "regression_test_count": 67,
   "source_sha256": {
     "IaC_Deployment_and_Usage_Instructions.md": "823aa081d5e252a40521c26e4d6845407d404f671ef48cbd5972d0276186c09a",
-    "Presentation_and_Slide_Content.md": "3bbd28144723cd6496de304b0e6aaba0fc59cc452aaf2fbc32b840849ded1bd7",
+    "Presentation_and_Slide_Content.md": "355debde8a255c14b44581895a842010d9b8381b245300de09040e2697b9da83",
     "README.md": "73aac536e65033a4f42afbd5f90b51f940fa5f7420a1f2b728469800828dfa4a",
     "Rubric_and_Assessment_Checklist.md": "59f6671005efd1ca7d2db429d42a3391a40098cd16a93ce9a31a95cf61fb9aa4",
     "backend-service/app.py": "b8df908f941f7ccf600e008702d940bf797418a9dc57e4c295d12b0cd9fa038e",
@@ -69,5 +69,5 @@
     "tests/test_secret_rotation.py": "89be992739c4f8144c31950e7823e8b5c466b91bc5707de6e3a81f164583018b",
     "tests/test_storefront.py": "18274a07489aae808e6388bb6f258365eb54334b91878c809e7a5f24e30c0e3a"
   },
-  "documentation_updated_at_utc": "2026-10-08T03:12:07.101686+00:00"
+  "documentation_updated_at_utc": "2026-10-10T22:51:12.830637+00:00"
 }
