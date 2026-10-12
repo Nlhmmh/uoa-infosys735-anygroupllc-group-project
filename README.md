@@ -168,7 +168,7 @@ Submit the slides/PDF and a text file with an accessible recording URL. Every me
 
 ## Local validation and packaging
 
-Local validation checks template/code consistency and mocked behaviour; it does not substitute for runtime tests. The existing local report records the current mocked regression count and CloudFormation lint. Runtime rotation evidence is recorded separately under `evidence_new/`. Use the following commands after implementation changes:
+Local validation checks template/code consistency and mocked behaviour; it does not substitute for runtime tests. The existing local report records the current mocked regression count and CloudFormation lint. Runtime rotation evidence is recorded separately under `evidence_new/`. The deployment ZIP excludes all Markdown files; read the guides from the repository while using CloudShell. Use the following commands after implementation changes:
 
 ```bash
 python3 -m venv .venv

@@ -193,7 +193,6 @@ def main():
         ROOT / "rotation-service" / "requirements.txt",
         ROOT / "scripts" / "part16_package_rotation.py",
         ROOT / "scripts" / "part16_test_secret_rotation.py",
-        ROOT / "README.md",
         ROOT / "frontend" / "index.html",
         ROOT / "cloudformation" / "02-core-infrastructure-stack.yaml",
         ROOT / "scripts" / "lab.sh",
@@ -205,11 +204,16 @@ def main():
         ROOT / "scripts" / "lab_support.py",
         ROOT / "scripts" / "part14_collect_evidence.py",
         ROOT / "scripts" / "part14_probe_availability.py",
-        ROOT / "IaC_Deployment_and_Usage_Instructions.md",
-        ROOT / "Presentation_and_Slide_Content.md",
-        ROOT / "Rubric_and_Assessment_Checklist.md",
         ROOT / "data" / "cost_model_inputs.json",
     ]
+    # Deployment ZIPs omit Markdown; include documentation checks/hashes only when present.
+    support.extend(path for path in (
+        ROOT / "README.md",
+        ROOT / "IaC_Deployment_and_Usage_Instructions.md",
+        ROOT / "Presentation_and_Slide_Content.md",
+        ROOT / "Member_3_Presentation_Guide.md",
+        ROOT / "Rubric_and_Assessment_Checklist.md",
+    ) if path.exists())
     for path in support:
         if path.exists():
             print(f"PASS artefact: {path.relative_to(ROOT)}")

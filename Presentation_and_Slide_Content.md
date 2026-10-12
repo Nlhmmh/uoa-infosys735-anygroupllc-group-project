@@ -43,6 +43,8 @@ Keep three types of statement clear:
 
 The prototype uses synthetic data and a Python backend to represent the retained .NET application. It has not proved real application migration, production capacity, payment compliance or financial savings. Place important limits beside the relevant claim; keep longer evidence details in preparation notes or the appendix.
 
+**Preferred screen content:** Use AWS Management Console pages for configuration and operational behaviour. Use the website for the customer feature and the inbox for an actually received SNS alert. Keep JSON/JSONL files, test summaries and load/probe terminals in preparation; direct SQL in Session Manager is optional. Console history or a clearly labelled AWS Console recording can show the completed long experiments.
+
 **Required demo order:** Show configuration in the **AWS Management Console first**. Slides 5–8 cover basic and additional components. Slide 9 then shows the working account, orders and catalogue. Slide 10 explains completed recovery/scaling tests. Console views are the main demo; saved results support them.
 
 ### Make the architecture the centre of the pitch
@@ -84,7 +86,7 @@ Member 1: 3:00 (Slides 1–3); Member 2: 3:40 (Slides 4–6); Member 3: 5:40 (Sl
 
 Use **90 words per minute as a planning assumption**, allowing space for technical terms. This is not a measured speaking rate. Section 5.7 lists script word counts and estimated speaking time. A full rehearsal with the actual speakers and console is the timing check. Do not speed up to fit extra content.
 
-**Rehearsal gates:** configuration finished by **9:30**; website finished by **10:50**; reliability finished by **12:20**; closing finished by **14:00**. If a console view takes more than ten seconds, switch to its dated screenshot. If behind, omit optional direct SQL and repeated metadata. Keep the main diagram, required configuration, working feature and four pillars. Start the closing by 14:00 at the latest and finish before 15:00. Do not run another experiment in the spare minute.
+**Rehearsal gates:** configuration finished by **9:30**; website finished by **10:50**; reliability finished by **12:20**; closing finished by **14:00**. If a console view takes more than ten seconds, switch to its dated screenshot. If behind, keep the default console flow and shorten repeated metadata or the ECS health view. Keep the main diagram, required configuration, working feature and four pillars. Start the closing by 14:00 at the latest and finish before 15:00. Do not run another experiment in the spare minute.
 
 ## 2. Slide-by-slide authoring content
 
@@ -321,7 +323,7 @@ Footer: **SQL user can read application data only. Lab identity and transport co
 |---|---|---|
 | 0:00–0:30 | Prepared security-group inbound rules | Public ALB to frontend TCP 80; internal ALB to backend TCP 8080; backend SG to Oracle TCP 1521; no public DB rule |
 | 0:30–0:42 | NACL rules / associations | Subnet rules are broad; security groups provide specific tier restrictions |
-| 0:42–1:00 | S3 Permissions / Properties / Objects | Public-access blocking, encryption, deny-insecure-transport policy, three images; saved unsigned-request 403 |
+| 0:42–1:00 | S3 Permissions / Properties / Objects | Public-access blocking, encryption, deny-insecure-transport policy, three image keys; show Permissions/Properties controls directly |
 | 1:00–1:10 | Production controls on diagram | HTTP/shared LabRole/private SQL transport limits; proposed HTTPS, edge filtering and audit |
 
 **Speaker notes — one paragraph per cue**
@@ -380,7 +382,7 @@ Footer: **CloudFormation sets up these services. Product Catalogue is our select
 >
 > Now, the working website.
 
-**Preparation:** For the rotation cue, explain the enabled schedule as configuration; only the initial/manual rotations have been observed. Show last successful rotation and the dated PASS summary, not a password. The test reported preserved orders/account data and a later smoke PASS; it did not probe availability throughout rotation. There is also a separate RDS-managed master secret. Check the linked rotation Lambda's LabRole and private networking before recording; leave those details in the evidence appendix if needed.
+**Preparation:** For the rotation cue, explain the enabled schedule as configuration; only the initial/manual rotations have been observed. Show enabled rotation and the last successful rotation in Secrets Manager; keep the dated PASS summary as an internal check. Do not show a password. The test reported preserved orders/account data and a later smoke PASS; it did not probe availability throughout rotation. There is also a separate RDS-managed master secret. Check the linked rotation Lambda's LabRole and private networking before recording; leave those details in the evidence appendix if needed.
 
 RDS's primary AZ may have changed after another failover; show its current value. The standby uses synchronous replication. Oracle licensing, real data migration, data ownership/synchronisation and production sizing remain decisions to validate. The 8 October ECR repository has different v1/v2 digests; this is not a tested changed-code release and reversal. Use target health to check service availability; container health may say UNKNOWN when no container health check is configured.
 
@@ -388,18 +390,18 @@ RDS's primary AZ may have changed after another failover; show its current value
 
 ### Slide 9 — Working orders, account and catalogue
 
-**Speaker / duration:** Member 3, 1:20 including demo. **Purpose:** Demonstrate the integrated website after configuration.
+**Speaker / duration:** Member 3, 1:20 including demo. **Purpose:** Show the integrated website, then its serving service in the AWS Console.
 
 **Copy-ready content**
 
 - **Legacy system:** orders and account from Oracle.
 - **Additional feature:** products, images and search.
 - Both services work through one website.
-- SQL, catalogue and image checks passed.
+- Healthy services support both request paths.
 
 Footer: **Test data. Cart is a browser counter; checkout and payments are outside this prototype.**
 
-**Visual:** Make the actual website the main view. Both section labels must be readable.
+**Visual:** Make the actual website the main view. Keep both section labels readable, then switch to ECS/target health. No test-output or smoke-result screen is needed.
 
 **Timed functional demo — 1:20 total**
 
@@ -407,9 +409,9 @@ Footer: **Test data. Cart is a browser counter; checkout and payments are outsid
 |---|---|---|
 | 0:00–0:20 | Legacy system; click Refresh account & orders | Two orders: Processing and Ready; Demo Customer Active |
 | 0:20–0:40 | Catalogue; search `Apples`, then clear | Three products/images; search shows Fresh Apples |
-| 0:40–0:50 | Prepared `/api/db` and `/catalogue/products/P1001` | Database/seed response and product response show both paths |
-| 0:50–1:10 | Prepared backend Session Manager query, optional | SELECT statements and actual Oracle order/customer rows |
-| 1:10–1:20 | Prepared smoke result / transition | 8 October post-rotation PASS; current catalogue v2 |
+| 0:40–0:50 | Website → Live platform status | Backend/database connected and stored order count |
+| 0:50–1:10 | AWS Console → ECS catalogue tasks / target-group health | Two running tasks and healthy serving targets; direct SQL is optional instead |
+| 1:10–1:20 | Website / architecture transition | One integrated website; continue to reliability |
 
 **Speaker notes — one paragraph per cue**
 
@@ -417,63 +419,66 @@ Footer: **Test data. Cart is a browser counter; checkout and payments are outsid
 >
 > The catalogue shows products and images. Searching for apples narrows the list. Both services are part of one website.
 >
-> These responses confirm the database and product paths.
+> The website status shows that the backend and database are connected.
 >
-> Here are the stored Oracle rows. They are test data. Checkout is outside this prototype.
+> These two catalogue tasks are running. Healthy targets show the service can receive requests.
 >
-> Our checks passed. I will now explain recovery and scaling.
+> Our website works. I will now explain recovery and scaling.
 
-**Optional SQL:** Prepare the read-only command in Section 5.3. If the terminal is slow or time is short, omit that 20-second cue and its paragraph. Keep the working orders/account responses and the RDS view already shown. The slide then takes up to 1:00 and creates spare time; do not add a new demonstration.
+**Optional terminal:** If direct SQL adds value, substitute the prepared Session Manager query for the 0:50–1:10 ECS cue. Use Section 5.3 and say, “Here are the stored Oracle rows. They are test data. Checkout is outside this prototype.” It replaces that cue and paragraph; it adds no time. Keep the default console flow if the terminal is unnecessary or slow.
 
-**Demo limit:** Do not install clients, retrieve passwords, edit data, query the standby or claim real .NET migration. Do not show full signed URL queries. The cart is only a browser counter.
+**Preparation:** Run smoke/API checks before filming. Keep raw API JSON and smoke summaries as internal support. In the main recording, show the functioning website and AWS Console. Do not install clients, retrieve passwords, edit data, query the standby or claim real .NET migration. Avoid showing full signed URL queries.
 
 ### Slide 10 — Recovery and scaling test results
 
-**Speaker / duration:** Member 3, 1:30 including console and dated evidence. **Purpose:** Explain Reliability with observed results and limits.
+**Speaker / duration:** Member 3, 1:30 including AWS Console and the received SNS email. **Purpose:** Explain Reliability through database recovery, automatic frontend growth, instance replacement and operator notification.
 
 **Copy-ready content**
 
-> **Reliability: recovery and capacity were tested**
+> **Reliability: capacity grows and failed servers are replaced**
 
-| Test on 7 October | Result |
+| Demonstration | What to show |
 |---|---|
-| Database failover | Orders kept; 45 failed requests; about 61 seconds of observed interruption |
-| Automatic scaling | Frontend grew from 2 to 4; both new servers healthy |
-| Small HTML load test | All 2,400 requests succeeded over about 8 minutes |
+| Database failover | RDS Events/primary AZ, available status and working website orders |
+| Automatic scaling | Alarm-driven growth from 2 to 4; four healthy frontend targets |
+| Frontend replacement | Desired stays 4; new instance InService; four healthy targets restored |
+| Operator notification | Matching CloudWatch alarm and an actually received SNS email |
 
-Footer: **Prototype results. Production peak capacity, scale-in and backup restore still need testing.**
+Footer: **Verify replacement and email delivery before claiming them. Production capacity, scale-in and backup restore still need testing.**
 
-**Visual:** Show RDS Events/before-and-after AZs beside a simple interruption timeline, then ASG Activity/healthy targets. Keep a date on captured results.
+**Visual:** Use AWS Console pages: RDS Events, ASG Activity, Instance management, target health and CloudWatch History/Actions. Use the inbox briefly for the real alert. No local JSON, probe summary, load statistics or terminal is shown in the default flow.
 
-**Timed evidence demo — 1:30 total**
+**Timed console and email demo — 1:30 total**
 
 | Offset | Show | Point to / explain |
 |---|---|---|
-| 0:00–0:30 | RDS Events, saved AZ comparison and summary | Primary b to a; same endpoint; preserved orders; temporary failed requests |
-| 0:30–1:00 | ASG Activity, saved capacity and target health | Alarm at 04:49:29 UTC changed desired 2 to 4; two successful launches; four healthy frontend targets |
-| 1:00–1:15 | Saved `load.json` / scaling view | 2,400 HTTP 200 over about eight minutes; HTML only |
-| 1:15–1:25 | Saved 5xx alarm / SNS action | Alarm detected failover errors; email delivery not captured |
+| 0:00–0:20 | RDS Events/current primary AZ and available status; website orders | Completed standby switch and orders available after recovery |
+| 0:20–0:45 | ASG Activity, Instance management and target health | Demand alarm caused 2-to-4 growth; successful launches; four healthy targets |
+| 0:45–1:10 | EC2 termination view/console recording, replacement Activity and targets | Old ID/new ID; desired remained 4; replacement InService and four healthy targets restored |
+| 1:10–1:25 | CloudWatch alarm History/Actions, then received SNS email | Match alarm name, state, reason and event time; identify the actual experiment |
 | 1:25–1:30 | Handoff | Member 4 takes production costs |
 
 **Speaker notes — one paragraph per cue**
 
-> RDS switched to its standby in the other zone. The endpoint stayed the same, and orders were preserved. We observed about sixty-one seconds of interruption and forty-five failed requests.
+> RDS Events show the switch to the standby. The endpoint stayed the same. The website shows that our orders are still available.
 >
 > The scaling alarm increased frontend capacity from two to four. Both new servers became healthy. This was an automatic response to demand.
 >
-> All two thousand four hundred HTML requests passed. This small test does not prove production capacity.
+> We then terminated one frontend server. Desired capacity stayed at four, and the group launched a replacement. We restored four healthy targets and verified product requests.
 >
-> Monitoring detected the database errors. Backup restore and full recovery still need testing.
+> This email matches the alarm shown in CloudWatch. It confirms that the alert reached our operator.
 >
 > Member 4 will explain production costs.
 
-**Preparation:** Reliability choices include two AZs, local outbound paths, health checks, automatic capacity, managed database standby and changes controlled through templates. Agree recovery targets, run realistic promotion tests, and test scale-in, restore and complete application recovery before launch. Put the full principle assessment in the appendix.
+**Before using these notes:** Verify the experiments privately with the saved results and current console state. Compare the endpoint before/after before claiming it stayed the same. The replacement and received-email paragraphs are conditional on actual success/delivery; neither is established by the older frontend probe or confirmed subscription. If no matching alert arrived, stay on CloudWatch Actions and instead say, “CloudWatch is configured to send alerts through SNS. Email delivery remains to be verified.” This alternative replaces the email paragraph inside the same 15-second cue.
 
-About 61 seconds measures the first failed response to the first successful response in the probe. It is not the whole reboot, a guaranteed recovery time or an SLA. The test confirmed completion about 183 seconds after the trigger. The 2,400 requests took 479.81 seconds at about five requests/second and fetched small HTML pages. [AWS failover behaviour](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZ.Failover.html).
+**Preparation:** Run the load command before filming to trigger growth. Run termination/recovery separately and retain its functional probe internally. Keep `load.json`, JSONL, summaries and measured interruption counts in preparation or an appendix. Present the actual ASG growth and replacement through the AWS Console. [Member 3 procedure](Member_3_Presentation_Guide.md#step-2--rebuild-after-destroying-all-resources) covers commands, console views and the email check.
 
-The separate frontend recovery probe had 283/292 successes, seven 502s and two connection errors. No saved post-test replacement/restored-capacity view establishes complete EC2 recovery. Keep that result in the evidence appendix, with its limit. A confirmed SNS subscription is not proof of delivered email.
+**Email selection:** The current templates send CloudWatch alarm-state notifications to SNS, not direct notifications for every ASG launch/termination. The frontend capacity alarm checks below two; losing one of four leaves three and does not breach that capacity threshold. Use a real matching alert, such as the target-5xx alarm from RDS failover, and identify its cause. A subscription-confirmation or manual test email does not prove incident notification. [AWS alarm notification guidance](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Notify_Users_Alarm_Changes.html).
 
-**Demo limit:** Do not run load, reboot RDS, terminate EC2 or wait for scale-in in the recording. Show the completed tests and current configuration.
+**Recording plan:** Prefer live console navigation through the completed experiment's History/Activity and current healthy state. If showing the termination click and before/after state, record the AWS Console experiment separately and edit out the idle wait with a clear “waiting period omitted” label. The shown content stays in the AWS Console. Do not wait several minutes in this 1:30 slot, or imply edited playback is real-time recovery. Keep website configuration/functionality demonstrations live. A Running instance alone is insufficient; verify InService, target health and working requests.
+
+**Limits:** This tests one server failure and one RDS failover, not a whole-AZ outage or guaranteed zero downtime. Production recovery targets, restore, scale-in and realistic peak capacity still need validation. Earlier measured interruption/load figures remain dated support, not default on-screen content. [AWS instance replacement](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-scaling-manually.html).
 
 ### Slide 11 — Planning production costs
 
@@ -606,8 +611,8 @@ Briefly highlight the relevant component on the same diagram before its console 
 | 6 — Basic infrastructure | AZ/subnet boundaries and the main request path | VPC routes, NAT, EC2 tiers, ALBs and ASG configuration |
 | 7 — Security | Entry point, tier access boundaries and image storage | SGs, NACLs and S3 controls; production edge/identity/TLS remain labelled proposals |
 | 8 — Additional services | Backend → Oracle and catalogue → metadata/images | RDS/secret metadata, ECS/ECR, DynamoDB and listener integration |
-| 9 — Feature | Customer → legacy/Oracle and catalogue/image branches | Account/orders and catalogue/search; optional read-only SQL proof |
-| 10 — Reliability | Oracle primary/standby and frontend scaling | Primary-AZ switch, interruption/data preservation, alarm-driven 2→4 growth and healthy targets |
+| 9 — Feature | Customer → legacy/Oracle and catalogue/image branches | Website account/orders, images/search and platform status; ECS health in console; SQL optional |
+| 10 — Reliability | Oracle primary/standby, frontend ASG and monitoring | RDS Events; 2-to-4 and replacement Activity; desired/target health; matched CloudWatch alert and received email |
 | 11 — Cost Optimisation | Baseline capacity, elastic capacity and managed services | Explain fixed/variable production costs and accountable ownership; separate cost assumptions from observed usage |
 
 ## 4. Evidence to use in slides and narration
@@ -620,7 +625,7 @@ The managed-service implementation has been tested in Learners Lab. The user con
 | Network/tier/data controls deployed | Four private EC2 baseline; two local NATs; private encrypted Multi-AZ Oracle; six SGs; S3 controls | Baseline `configuration/` captures | Configuration does not prove every denied path or compliance — Slides 6–8 |
 | Database recovered after failover | Primary b→a, endpoint stable, orders preserved; 98/143 successes and 45 failures | `rds-failover-20261007T043910Z/` | About 61 s sampled interruption; about 183 s trigger-to-test-confirmation; no whole-AZ/SLA claim — Slide 10 |
 | Frontend scaling created capacity | Alarm-driven 2→4; two successful launches; four healthy targets | `scaling-20261007T044349Z/configuration/frontend_activity.json`, `autoscaling.json`, `frontend_targets.json` | No later scale-in capture — Slide 10 |
-| Load completed successfully | 2,400/2,400 HTTP 200, 479.81 s, 5 requests/s, p95 9.6 ms | `scaling-20261007T044349Z/load.json` | Small HTML workload, not production capacity — Slide 10 |
+| Load completed successfully | 2,400/2,400 HTTP 200, 479.81 s, 5 requests/s, p95 9.6 ms | `scaling-20261007T044349Z/load.json` | Small HTML workload, not production capacity — internal check/appendix; omit from main pitch |
 | Operations detected DB errors | 5xx alarm activated after failover; subscription confirmed; later alarm OK | Post-failover/scaling `configuration/alarms.json`; `sns_subscriptions.json` | Delivered email absent — Slides 5/10 |
 | Automated backup exists | Backup start/completion Events, retention and LatestRestorableTime | Baseline `configuration/rds.json`, `rds_events.json` | Restore not tested — Slide 8 |
 | Application credential rotation works | Initial rotation and manual ROTATE_AND_VERIFY PASS; requested version promoted; prior version previous; orders/account preserved by harness; subsequent smoke PASS | `20261008T024000Z/rotation/summary.json`, `rotation-20261008T025207Z/{before_metadata,trigger,after_metadata,summary,smoke}.json` | 30-day schedule configured; no full-window availability probe, future recurrence or measured rotation cost — Slide 8 |
@@ -628,7 +633,7 @@ The managed-service implementation has been tested in Learners Lab. The user con
 
 The 8 October manual rotation completed at 02:52:14.120 UTC. Its requested version is AWSCURRENT, and the prior version is AWSPREVIOUS; AWSPENDING appears on that same current version, not on an unfinished separate version. The harness compared API responses before/after and reported preservation; only post-change rows are archived in its summary, so there is no separately saved before-row snapshot. The two October 8 smoke runs both passed with two healthy targets per service. These files establish completed rotation and post-change functionality, not uninterrupted availability throughout rotation. General code confirmation does not prove scale-in, complete EC2 recovery, email delivery, restore, changed-code release/reversal, the forbidden frontend-to-DB path, teardown/orphan cleanup, production capacity or savings. Treat these as acceptance work, or add specific evidence before changing the wording. The initial catalogue alarm was caused by missing startup datapoints and cleared later; do not call it an established catalogue outage.
 
-The older `evidence/` and `data/lab_evidence_review.json` describe the NAT-instance/dummy-DB version. Do not mix its same-digest release/reversal or cleanup claims into this run. Raw evidence is excluded from the deployment ZIP; prepare evidence views separately for the recording.
+The older `evidence/` and `data/lab_evidence_review.json` describe the NAT-instance/dummy-DB version. Do not mix its same-digest release/reversal or cleanup claims into this run. Raw evidence is excluded from the deployment ZIP; keep raw files as preparation support; show AWS Console views in the recording.
 
 ## 5. Demo preparation and recording guide
 
@@ -638,8 +643,8 @@ The older `evidence/` and `data/lab_evidence_review.json` describe the NAT-insta
 2. Use the main guide and `./scripts/lab.sh setup your-email@example.com` to deploy the latest code. Confirm the Legacy system and Additional feature labels, data, images and search; capture the latest page with a date.
 3. Complete experiments before recording: load is about eight minutes, standard probe about five, failover tool allows up to ten. Keep experiments separate. Use existing verified results if repetition is unnecessary.
 4. Run `./scripts/lab.sh test` on the deployment being filmed. Resolve failures before recording. For scale-in/EC2 recovery claims, collect later Activity and restored-capacity/target-health evidence.
-5. Preload the views below in `us-east-1`; filter project resources and select the relevant fields. Keep website/API tabs ready. Prepare the optional backend Session Manager query before recording.
-6. Prepare dated RDS before/after/interruption, ASG alarm cause/launches/healthy targets, load and smoke result views. Use readable excerpts, not a long JSON scroll.
+5. Preload the views below in `us-east-1`; filter project resources and select the relevant fields. Keep website tabs ready. Prepare Session Manager only if choosing the optional direct-SQL cue; raw API tabs are not part of the default flow.
+6. Preload RDS Events, ASG growth/replacement Activity, instance/target health, CloudWatch History/Actions and the matching received email. Keep test JSON, probe/smoke summaries and load statistics off-screen.
 7. Prepare a dated screenshot fallback for each required console view. Clearly identify captured evidence if used instead of live navigation.
 8. Rehearse the entire flow with a stopwatch, console pages and handoffs. Keep configuration and diagrams readable at playback size. Reach the timing gates in Section 1.
 
@@ -660,9 +665,9 @@ This is preparation, not extra recording time. Follow each slide's timed cues. C
 | 8 | Secrets Manager metadata / app Rotation view | Master/app credential roles, enabled 30-day schedule, linked Lambda and captured last successful rotation; no secret values |
 | 8 | ECR / ECS service/tasks/task definition | Immutable tag/digest, two tasks in two AZs, private placement, completed rollout, X86_64 pinned image |
 | 8 | DynamoDB → table → Explore items | `product_id`, P1001–P1003 and S3 `image_key` references |
-| 9 | Latest website and prepared API views | Legacy account/orders refresh; catalogue images/search; SQL and product response values |
+| 9 | Latest website plus ECS/target health | Orders/account refresh; catalogue images/search; platform status; healthy serving service |
 | 9 | Backend EC2 → Connect → Session Manager, optional | Actual SELECT queries and Oracle rows through the existing app user |
-| 10 | RDS Events plus saved failover views; ASG Activity plus saved scaling/load views | AZ switch/data preservation/interruption, alarm-driven launches, four healthy targets, 2,400 successes |
+| 10 | RDS Events; ASG Activity/Instance management; target health; CloudWatch History/Actions; inbox | AZ switch/available status; alarm-driven 2-to-4; old ID/new ID; desired 4 and restored healthy targets; matching received alert |
 | 11 | Production cost slide / assumptions | Normal/promotion/co-location method, fixed/variable costs and ownership; no invented amounts |
 
 Show the specific field, explain why it matters and move on. RDS configuration precedes its recorded recovery behaviour; catalogue configuration precedes live functionality.
@@ -671,7 +676,7 @@ Show the specific field, explain why it matters and move on. RDS configuration p
 
 Oracle does not use the Aurora Data API query editor. Use an existing **backend** EC2 instance's Session Manager terminal; it can reach the private database and already has the Python driver/application connection. [Query editor scope](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/query-editor.html), [Session Manager instructions](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-sessions-start.html).
 
-Before recording, open **EC2 → Instances → backend → Connect → Session Manager → Connect**. Prepare this read-only command. During Slide 9, show its SELECT statements and rows within the optional 20 seconds; credentials stay on the backend and are not printed.
+Before recording, open **EC2 → Instances → backend → Connect → Session Manager → Connect**. Prepare this read-only command. If choosing direct SQL instead of the default ECS cue on Slide 9, show its SELECT statements and rows within those same 20 seconds; credentials stay on the backend and are not printed.
 
 ```bash
 sudo -i
@@ -704,10 +709,10 @@ Select RDS Events and ASG Activity for the **recorded test date/time**. A later 
 | Problem | Prepared response | Time control |
 |---|---|---|
 | Slow console view | Dated screenshot of the same configuration | Switch after ten seconds |
-| Slow SQL terminal | SQL-backed orders/account API views | Omit optional 20-second SQL segment |
+| Slow SQL terminal | Default ECS/target-health view and working website | Keep the normal console cue; add no terminal waiting |
 | ASG now at baseline | Show current baseline plus captured 2→4 Activity/targets | Do not manually raise desired capacity |
 | Website/API unavailable | Identify the issue and use dated evidence; correct it before the final take | Do not claim live success while showing an error |
-| Running behind | Cut repeated metadata, optional SQL and detailed latency statistics | Preserve architecture, required configuration, feature and four pillars |
+| Running behind | Use the default console flow and cut repeated metadata | Preserve architecture, required configuration, feature and four pillars |
 
 ### 5.5 Slide building and final rehearsal
 
@@ -719,11 +724,11 @@ Build submitted principle-assessment appendices from [Rubric_and_Assessment_Chec
 - [ ] Slide 3: updated Task 1 architecture, whole request path, integrated catalogue and four-pillar callouts for two minutes.
 - [ ] Slide 4: actual NAT/RDS prototype; edge/TLS/audit proposals distinguished.
 - [ ] Slides 5–8: basic/additional configuration before data/feature demonstration.
-- [ ] Slide 9: latest legacy data and catalogue labels, refresh, images and search work.
-- [ ] Slide 10: real RDS/scale-out results including interruption; no live reboot/load waiting.
+- [ ] Slide 9: website data/images/search and ECS/target health; terminal is optional, and raw API/test outputs are off-screen.
+- [ ] Slide 10: AWS Console shows RDS recovery, 2-to-4 growth and verified replacement; received SNS email matches CloudWatch; no test-file display or long idle wait.
 - [ ] Slide 11: production normal/peak/co-location method and all five cost principle areas; no savings claim.
 - [ ] No unsupported scale-in, EC2 recovery, restore, delivered email, code rollback, PCI, capacity or zero-downtime claim.
-- [ ] Readable console; no secrets, signed query strings or personal addresses; dated fallbacks.
+- [ ] Readable console/inbox; personal address and subscription links hidden; optional console-only fallback labelled with its date.
 - [ ] Each member can say their script clearly; difficult terms are practised, and cue timings include pointing and navigation.
 - [ ] Full rehearsal reaches 9:30 / 10:50 / 12:20 / 14:00; final recording under 15:00 including handoffs.
 
@@ -759,7 +764,7 @@ This is a learning sheet for the presenters, not another slide to read aloud. Us
 
 ### 5.7 Script lengths and rehearsal checks
 
-These counts cover **only the quoted speaker scripts**, including handoffs and optional SQL wording. Stage directions, slide copy, cue tables and preparation notes are excluded. Speaking time uses the **90 words/minute planning assumption**, rounded up to a second. Remaining time is for pauses, pointing and navigation within the allocation. The one-minute recording buffer is separate. Actual speakers may need more time, especially for names and technical terms.
+These counts cover **only the quoted speaker scripts**, including handoffs and the default console wording. Optional SQL substitutes one cue. Stage directions, slide copy, cue tables and preparation notes are excluded. Speaking time uses the **90 words/minute planning assumption**, rounded up to a second. Remaining time is for pauses, pointing and navigation within the allocation. The one-minute recording buffer is separate. Actual speakers may need more time, especially for names and technical terms.
 
 | Slide | Script words | Estimated speech | Full allocation | Time for pauses/navigation |
 |---|---:|---:|---:|---:|
@@ -771,16 +776,16 @@ These counts cover **only the quoted speaker scripts**, including handoffs and o
 | 6 | 102 | 1:08 | 2:10 | 1:02 |
 | 7 | 75 | 0:50 | 1:10 | 0:20 |
 | 8 | 84 | 0:56 | 1:40 | 0:44 |
-| 9 | 73 | 0:49 | 1:20 | 0:31 |
-| 10 | 86 | 0:58 | 1:30 | 0:32 |
+| 9 | 75 | 0:50 | 1:20 | 0:30 |
+| 10 | 92 | 1:02 | 1:30 | 0:28 |
 | 11 | 65 | 0:44 | 1:00 | 0:16 |
 | 12 | 46 | 0:31 | 0:40 | 0:09 |
-| **Total** | **842** | **9:26** | **14:00** | **4:34** |
+| **Total** | **850** | **9:31** | **14:00** | **4:29** |
 
 Use two rehearsals:
 
 1. **Each member practises their section.** Read the quoted words aloud, with pauses, while pointing to the prepared views. Check every cue; do not carry unused time from a long cue into a short one. Replace “Member 2/3/4” with the actual name and recount if the wording changes. Mark difficult words and practise them separately.
-2. **The group records one full practice.** Include the real console clicks and all handoffs. Check the 9:30, 10:50, 12:20 and 14:00 gates. Listen for clear meaning and check that fields/diagrams are readable. If late, cut optional SQL or repeated details. If still late, shorten wording while keeping each design reason and evidence limit; rehearse again.
+2. **The group records one full practice.** Include the real console clicks and all handoffs. Check the 9:30, 10:50, 12:20 and 14:00 gates. Listen for clear meaning and check that fields/diagrams are readable. If late, shorten repeated details while keeping the console-first flow. If still late, shorten wording while keeping each design reason and evidence limit; rehearse again.
 
 The word counts are a planning aid, not proof that a recording fits. Do not fill navigation time with new explanations. Submitted assessment appendices give depth without adding narrated segments. Keep the closing within 15 minutes, including any opening or ending added by the recording software.
 

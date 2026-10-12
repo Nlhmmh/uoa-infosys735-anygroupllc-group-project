@@ -52,7 +52,7 @@ The class changes the cost. Do not switch to BYOL without licences or silently s
 
 ### Get the current project
 
-Upload `anygroup-gp2-deployment.zip` to CloudShell and extract it into a **fresh directory**, so an older script/template is not accidentally used:
+Upload `anygroup-gp2-deployment.zip` to CloudShell and extract it into a **fresh directory**, so an older script/template is not accidentally used. The ZIP excludes all Markdown files; keep this guide open from the repository on your computer:
 
 ```bash
 mkdir -p anygroup-managed-lab
@@ -342,6 +342,6 @@ python scripts/part13_validate_iac.py --require-lint --tests --write-report
 python scripts/part13_package.py
 ```
 
-The validator checks core JSON/source consistency, CloudFormation schema/imports, user-data shell/embedded Python, storefront JavaScript and mocked regressions. The ZIP uses a source allowlist and excludes live evidence, credentials and the virtual environment. Local PASS does not establish lab deployment, IAM permission, RDS failover or actual spending.
+The validator checks core JSON/source consistency, CloudFormation schema/imports, user-data shell/embedded Python, storefront JavaScript and mocked regressions. The ZIP uses a source allowlist and excludes all Markdown files, live evidence, credentials and the virtual environment. The validator checks documentation only when those files are present, so the extracted deployment can be validated without them. Local PASS does not establish lab deployment, IAM permission, RDS failover or actual spending.
 
 Sources: [assignment](instructions.md), [case study](AnyGroupLLC_case_study.md), [NAT comparison](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-comparison.html), [RDS Multi-AZ](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.MultiAZSingleStandby.html), [RDS managed credentials](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-secrets-manager.html), [Oracle licensing](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Oracle.Concepts.Licensing.html), [DB CloudFormation reference](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-rds-dbinstance.html).
